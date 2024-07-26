@@ -6,6 +6,10 @@ This is the README for your extension "grandfilenavigator". After writing up a b
 
 See `vsc-extension-quickstart.md` for running and debugging the extension.
 
+For debugging webviews specifically, use the `Developer: Toggle Developer Tools` command to inspect and debug any webviews.
+
+For more details, see https://code.visualstudio.com/api/extension-guides/webview
+
 ## Features
 
 Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.

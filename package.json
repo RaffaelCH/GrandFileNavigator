@@ -9,13 +9,19 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onWebviewPanel:grandFileNavigator"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "grandfilenavigator.helloWorld",
-        "title": "Hello World"
+        "command": "grandfilenavigator.openVisualization",
+        "title": "Open GrandFileNavigator Visualization"
+      },
+      {
+        "command": "grandfilenavigator.setVisualizationLocation",
+        "title": "Send Main View Location To Visualization"
       }
     ]
   },
@@ -26,6 +32,9 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
+  },
+  "dependencies": {
+    "vscode": "*"
   },
   "devDependencies": {
     "@types/vscode": "^1.91.0",
