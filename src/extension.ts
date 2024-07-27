@@ -1,8 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import {
-  writeFile,
-  readdir,
   readdirSync,
   writeFileSync,
   readFileSync,
@@ -10,6 +8,7 @@ import {
   mkdirSync,
 } from "fs";
 import * as vscode from "vscode";
+import { PositionHistory, updateLocationTracking } from "./location-tracking";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -126,6 +125,14 @@ export function activate(context: vscode.ExtensionContext) {
       }
     )
   );
+
+  // Track user position.
+  var positionHistory = new PositionHistory();
+  setInterval(() => {
+    updateLocationTracking(positionHistory);
+    console.log(JSON.stringify(positionHistory));
+  }, 1000);
+  // TODO: Add listener for vscode.window.onDidChangeTextEditorVisibleRanges
 }
 
 // TODO: Move to separate package.
