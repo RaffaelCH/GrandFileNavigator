@@ -17,11 +17,13 @@
     "commands": [
       {
         "command": "grandfilenavigator.openVisualization",
-        "title": "Open GrandFileNavigator Visualization"
+        "title": "Open GrandFileNavigator Visualization",
+        "when": "editorLangId == java"
       },
       {
         "command": "grandfilenavigator.setVisualizationLocation",
-        "title": "Send Main View Location To Visualization"
+        "title": "Send Main View Location To Visualization",
+        "when": "editorLangId == java"
       }
     ]
   },

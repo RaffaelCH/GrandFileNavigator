@@ -1,5 +1,14 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+import {
+  writeFile,
+  readdir,
+  readdirSync,
+  writeFileSync,
+  readFileSync,
+  existsSync,
+  mkdirSync,
+} from "fs";
 import * as vscode from "vscode";
 
 // This method is called when your extension is activated
@@ -10,6 +19,31 @@ export function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "grandfilenavigator" is now active!'
   );
+
+  const backupFilename = "backup";
+  let storageLocation = context.storageUri;
+
+  if (storageLocation === undefined) {
+    vscode.window.showInformationMessage("storage location not defined");
+  } else {
+    if (!existsSync(storageLocation.fsPath)) {
+      mkdirSync(storageLocation.fsPath);
+    }
+
+    vscode.window.showInformationMessage(storageLocation.fsPath);
+    var existingFiles = readdirSync(storageLocation.fsPath);
+
+    var filePath = vscode.Uri.joinPath(storageLocation, backupFilename);
+    if (existingFiles.length === 0) {
+      writeFileSync(filePath.fsPath, JSON.stringify({ data: 1 }));
+    } else {
+      var backupContent = readFileSync(filePath.fsPath).toString();
+      var backupData = JSON.parse(backupContent);
+      vscode.window.showInformationMessage(
+        "Found existing backup with data: " + backupData.data
+      );
+    }
+  }
 
   // Track the current panel with a webview
   let visualizationPanel: vscode.WebviewPanel | undefined = undefined;
