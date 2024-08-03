@@ -8,7 +8,7 @@ import {
   mkdirSync,
 } from "fs";
 import * as vscode from "vscode";
-import { PositionHistory, updateLocationTracking } from "./location-tracking";
+import { updateLocationTracking } from "./location-tracking";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -126,13 +126,15 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // Track user position.
-  var positionHistory = new PositionHistory();
-  setInterval(() => {
-    updateLocationTracking(positionHistory);
-    console.log(JSON.stringify(positionHistory));
-  }, 1000);
-  // TODO: Add listener for vscode.window.onDidChangeTextEditorVisibleRanges
+  vscode.window.onDidChangeActiveTextEditor(() => {
+    console.log("changed active editor");
+    updateLocationTracking();
+  });
+
+  vscode.window.onDidChangeTextEditorVisibleRanges(() => {
+    console.log("changed visible ranges");
+    updateLocationTracking();
+  });
 }
 
 // TODO: Move to separate package.
