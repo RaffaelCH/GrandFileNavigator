@@ -127,12 +127,10 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   vscode.window.onDidChangeActiveTextEditor(() => {
-    console.log("changed active editor");
     updateLocationTracking();
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(() => {
-    console.log("changed visible ranges");
     updateLocationTracking();
   });
 }

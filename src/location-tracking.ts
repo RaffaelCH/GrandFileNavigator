@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-export class PositionData {
+export class RangeData {
   constructor(startLine: number, endLine: number, totalDuration: number) {
     this.startLine = startLine;
     this.endLine = endLine;
@@ -13,7 +13,7 @@ export class PositionData {
 }
 
 export class PositionHistory {
-  [key: string]: PositionHistory | PositionData[] | undefined;
+  [key: string]: PositionHistory | RangeData[] | undefined;
 }
 
 export function getPositionHistory() {
@@ -106,14 +106,22 @@ function addLastLocationToHistory() {
       let positionDataArray = currentLocationDataNode[nextKey];
       if (Array.isArray(positionDataArray)) {
         lastVisibleRanges?.forEach((visibleRange) => {
-          // TODO: Compactify array.
-          positionDataArray.push(
-            new PositionData(
-              visibleRange.start.line,
-              visibleRange.end.line,
-              viewDuration
-            )
+          var existingRange = positionDataArray.find(
+            (range) =>
+              range.startLine === visibleRange.start.line &&
+              range.endLine === visibleRange.end.line
           );
+          if (existingRange) {
+            existingRange.totalDuration += viewDuration;
+          } else {
+            positionDataArray.push(
+              new RangeData(
+                visibleRange.start.line,
+                visibleRange.end.line,
+                viewDuration
+              )
+            );
+          }
         });
       }
     }
