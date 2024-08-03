@@ -2,6 +2,7 @@
   "name": "grandfilenavigator",
   "displayName": "GrandFileNavigator",
   "description": "",
+  "publisher": "grandFileNavigator",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.91.0"
@@ -10,7 +11,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onWebviewPanel:grandFileNavigator"
+    "onWebviewPanel:grandFileNavigator",
+    "onLanguage:java"
   ],
   "main": "./out/extension.js",
   "contributes": {
