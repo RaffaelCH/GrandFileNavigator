@@ -17,7 +17,7 @@ export class PositionHistory {
   [key: string]: PositionHistory | RangeData[] | undefined;
 }
 
-export function getPositionHistory() {
+export function getPositionHistory(): PositionHistory {
   return positionHistory;
 }
 
@@ -32,7 +32,7 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
   var filePath = vscode.Uri.joinPath(storageLocation, backupFilename);
   if (existsSync(filePath.fsPath)) {
     var backupContent = readFileSync(filePath.fsPath).toString();
-    var backupData = JSON.parse(backupContent);
+    var backupData = JSON.parse(backupContent); // TODO: Convert type.
     positionHistory = backupData;
     vscode.window.showInformationMessage("Found existing backup with data");
   } else {

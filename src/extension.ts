@@ -7,6 +7,7 @@ import {
   savePositionHistory,
   updateLocationTracking,
 } from "./location-tracking";
+import { HotspotsProvider } from "./HotspotsProvider";
 
 var storageLocation: vscode.Uri | undefined;
 
@@ -33,6 +34,22 @@ export function activate(context: vscode.ExtensionContext) {
     );
     loadPositionHistory(storageLocation);
   }
+
+  const rootPath =
+    vscode.workspace.workspaceFolders &&
+    vscode.workspace.workspaceFolders.length > 0
+      ? vscode.workspace.workspaceFolders[0].uri.fsPath
+      : undefined;
+  vscode.window.registerTreeDataProvider(
+    "hotspots",
+    new HotspotsProvider(rootPath)
+  );
+
+  const hotspotsProvider = new HotspotsProvider(rootPath);
+  vscode.window.registerTreeDataProvider("hotspots", hotspotsProvider);
+  vscode.commands.registerCommand("hotspots.refreshEntry", () =>
+    hotspotsProvider.refresh()
+  );
 
   // Track the current panel with a webview
   let visualizationPanel: vscode.WebviewPanel | undefined = undefined;

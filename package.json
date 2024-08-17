@@ -26,8 +26,33 @@
         "command": "grandfilenavigator.setVisualizationLocation",
         "title": "Send Main View Location To Visualization",
         "when": "editorLangId == java"
+      },
+      {
+        "command": "hotspots.refreshEntry",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "hotspots",
+          "name": "File Hotspots"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "hotspots.refreshEntry",
+          "when": "view == hotspots",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
