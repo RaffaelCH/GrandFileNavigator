@@ -1,3 +1,4 @@
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import * as vscode from "vscode";
 
 export class RangeData {
@@ -18,6 +19,25 @@ export class PositionHistory {
 
 export function getPositionHistory() {
   return positionHistory;
+}
+
+var backupFilename = "backup.json"; // TODO: Allow multiple files.
+
+export function savePositionHistory(storageLocation: vscode.Uri) {
+  var filePath = vscode.Uri.joinPath(storageLocation, backupFilename);
+  writeFileSync(filePath.fsPath, JSON.stringify(getPositionHistory()));
+}
+
+export function loadPositionHistory(storageLocation: vscode.Uri) {
+  var filePath = vscode.Uri.joinPath(storageLocation, backupFilename);
+  if (existsSync(filePath.fsPath)) {
+    var backupContent = readFileSync(filePath.fsPath).toString();
+    var backupData = JSON.parse(backupContent);
+    positionHistory = backupData;
+    vscode.window.showInformationMessage("Found existing backup with data");
+  } else {
+    vscode.window.showInformationMessage("no backup found");
+  }
 }
 
 // Track user position.
@@ -67,9 +87,9 @@ function shouldTrackWindow() {
   var currentDocument = vscode.window.activeTextEditor.document;
 
   // Only track .java files.
-  // if (currentDocument.languageId !== "java") {
-  //   return false;
-  // }
+  if (currentDocument.languageId !== "java") {
+    return false;
+  }
 
   if (currentDocument.uri.scheme !== "file") {
     return false;
