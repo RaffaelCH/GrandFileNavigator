@@ -7,6 +7,7 @@ import {
   RangeData,
 } from "./location-tracking";
 
+// Used for listing the hotspots in the sidebar.
 export class HotspotsProvider implements vscode.TreeDataProvider<HotspotNode> {
   constructor(private workspaceRoot: string | undefined) {}
 
@@ -99,6 +100,7 @@ export class HotspotsProvider implements vscode.TreeDataProvider<HotspotNode> {
     return true;
   }
 
+  // React to a tree node being changed.
   private _onDidChangeTreeData: vscode.EventEmitter<
     HotspotNode | undefined | null | void
   > = new vscode.EventEmitter<HotspotNode | undefined | null | void>();

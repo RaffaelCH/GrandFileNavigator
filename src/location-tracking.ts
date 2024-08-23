@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import * as vscode from "vscode";
 
+// Encapsulates the information about one node (hotspot).
 export class RangeData {
   constructor(startLine: number, endLine: number, totalDuration: number) {
     this.startLine = startLine;
@@ -10,7 +11,7 @@ export class RangeData {
   startLine: number;
   endLine: number;
   totalDuration: number; // in ms
-  // TODO: Add more info (e.g., class/method).
+  // TODO: Add more info (e.g., class/method, viewing/editing).
 }
 
 export class PositionHistory {
@@ -28,6 +29,7 @@ export function savePositionHistory(storageLocation: vscode.Uri) {
   writeFileSync(filePath.fsPath, JSON.stringify(getPositionHistory()));
 }
 
+// Load history from file.
 export function loadPositionHistory(storageLocation: vscode.Uri) {
   var filePath = vscode.Uri.joinPath(storageLocation, backupFilename);
   if (existsSync(filePath.fsPath)) {
@@ -40,9 +42,10 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
   }
 }
 
-// Track user position.
+// Tracks user position.
 var positionHistory = new PositionHistory();
 
+// Whenever the editor location changes, add previous location to history.
 var isTracking = false; // is the current window being tracked
 var lastDocument: vscode.TextDocument;
 var lastVisibleRanges: readonly vscode.Range[];
@@ -51,6 +54,7 @@ var lastVisibleRangeUpdate = Date.now();
 //vscode.window.onDidChangeWindowState
 //vscode.workspace.onDidChangeTextDocument
 
+// Adds current view to history.
 export function updateLocationTracking() {
   if (shouldUpdateTracking()) {
     addLastLocationToHistory();
@@ -67,6 +71,7 @@ export function updateLocationTracking() {
   lastVisibleRangeUpdate = Date.now();
 }
 
+// If previous position was relevant for location tracking.
 function shouldUpdateTracking() {
   if (!isTracking) {
     return false;
@@ -108,7 +113,7 @@ function addLastLocationToHistory() {
     let nextKey = identifierKeys[i];
     let positionNode = currentLocationDataNode[nextKey];
 
-    // no file node yet
+    // no file node yet -> add PositionHistory
     if (i < identifierKeys.length - 1) {
       if (positionNode === undefined) {
         currentLocationDataNode[nextKey] = new PositionHistory();
@@ -118,7 +123,7 @@ function addLastLocationToHistory() {
         currentLocationDataNode = currentLocationDataNode[nextKey];
       }
     }
-    // reached file node
+    // reached file node -> add RangeData[]
     else {
       if (positionNode === undefined) {
         currentLocationDataNode[nextKey] = [];
