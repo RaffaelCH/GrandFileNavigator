@@ -30,9 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
       mkdirSync(storageLocation.fsPath);
     }
 
-    vscode.window.showInformationMessage(
-      "Storage location: " + storageLocation.fsPath
-    );
+    console.log("Storage location: " + storageLocation.fsPath);
     loadPositionHistory(storageLocation);
   }
 

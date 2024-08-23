@@ -34,8 +34,8 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
   var filePath = vscode.Uri.joinPath(storageLocation, backupFilename);
   if (existsSync(filePath.fsPath)) {
     var backupContent = readFileSync(filePath.fsPath).toString();
-    var backupData = JSON.parse(backupContent); // TODO: Convert type.
-    positionHistory = backupData;
+    var backupData = JSON.parse(backupContent);
+    positionHistory = convertPositionHistoryValue(backupData);
     vscode.window.showInformationMessage("Found existing backup with data");
   } else {
     vscode.window.showInformationMessage("no backup found");
@@ -151,4 +151,30 @@ function addLastLocationToHistory() {
       }
     }
   }
+}
+
+function convertPositionHistoryValue(
+  value: any
+): PositionHistory | RangeData | any {
+  if (value?.startLine && value?.endLine && value?.totalDuration) {
+    return new RangeData(value.startLine, value.endLine, value.totalDuration);
+  } else if (Array.isArray(value)) {
+    let fileHistory: RangeData[] = [];
+    value.forEach((entry) => {
+      fileHistory.push(convertPositionHistoryValue(entry));
+    });
+    return fileHistory;
+  } else if (isObject(value) && !(value instanceof PositionHistory)) {
+    let positionHistory = new PositionHistory();
+    Object.keys(value).forEach((key) => {
+      positionHistory[key] = convertPositionHistoryValue(value[key]);
+    });
+    return positionHistory;
+  } else {
+    return value;
+  }
+}
+
+function isObject(value: any): boolean {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
