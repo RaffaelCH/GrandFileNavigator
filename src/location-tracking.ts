@@ -156,7 +156,7 @@ function addLastLocationToHistory() {
 function convertPositionHistoryValue(
   value: any
 ): PositionHistory | RangeData | any {
-  if (value?.startLine && value?.endLine && value?.totalDuration) {
+  if ("startLine" in value && "endLine" in value && "totalDuration" in value) {
     return new RangeData(value.startLine, value.endLine, value.totalDuration);
   } else if (Array.isArray(value)) {
     let fileHistory: RangeData[] = [];
