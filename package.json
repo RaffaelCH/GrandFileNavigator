@@ -34,6 +34,14 @@
           "light": "src/media/refresh_light.svg",
           "dark": "src/media/refresh_dark.svg"
         }
+      },
+      {
+        "command": "hotspots.openRange",
+        "title": "Jump To",
+        "icon": {
+          "light": "src/media/refresh_light.svg",
+          "dark": "src/media/refresh_dark.svg"
+        }
       }
     ],
     "views": {
@@ -50,6 +58,16 @@
           "command": "hotspots.refreshEntry",
           "when": "view == hotspots",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "hotspots.openRange",
+          "when": "view == hotspots && viewItem == range",
+          "icon": {
+            "light": "src/media/refresh_light.svg",
+            "dark": "src/media/refresh_dark.svg"
+          }
         }
       ]
     }

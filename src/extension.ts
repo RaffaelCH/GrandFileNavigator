@@ -7,7 +7,7 @@ import {
   savePositionHistory,
   updateLocationTracking,
 } from "./location-tracking";
-import { HotspotsProvider } from "./HotspotsProvider";
+import { HotspotsProvider, revealLocation } from "./HotspotsProvider";
 import { registerWebviewVisualization } from "./WebviewVisualization";
 
 var storageLocation: vscode.Uri | undefined;
@@ -49,6 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("hotspots.refreshEntry", () =>
     hotspotsProvider.refresh()
   );
+  vscode.commands.registerCommand("hotspots.openRange", revealLocation);
 
   vscode.window.onDidChangeActiveTextEditor(() => {
     updateLocationTracking();

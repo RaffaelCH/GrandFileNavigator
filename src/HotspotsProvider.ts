@@ -39,7 +39,7 @@ export class HotspotsProvider
   private getTrackedNodes(): (DirectoryNode | RangeNode)[] {
     var positionHistory = getPositionHistory();
 
-    var treePositions = this.convertPositionsToTree("", positionHistory);
+    var treePositions = this.convertPositionsToTree("", "", positionHistory);
     if (treePositions === undefined) {
       return [];
     }
@@ -49,6 +49,7 @@ export class HotspotsProvider
 
   // Join paths back together, with all the ranges for each file.
   private convertPositionsToTree(
+    fullPath: string,
     relativePath: string,
     positionNode: PositionHistory | RangeData[] | undefined
   ): (DirectoryNode | RangeNode)[] | undefined {
@@ -61,6 +62,7 @@ export class HotspotsProvider
       var convertedNodes = positionNode.map((rangeData) => {
         return new RangeNode(
           "Placeholder", // TODO: Give name.
+          fullPath,
           rangeData.totalDuration,
           rangeData.startLine,
           rangeData.endLine
@@ -76,13 +78,18 @@ export class HotspotsProvider
     // Only one tracked subdirectory -> combine directories.
     if (Object.keys(positionNode).length === 1) {
       var key = Object.keys(positionNode)[0];
+      var fullPath = fullPath + "/" + key;
       var subPath = relativePath + "/" + key;
-      return this.convertPositionsToTree(subPath, positionNode[key]);
+      return this.convertPositionsToTree(fullPath, subPath, positionNode[key]);
     }
 
     var children: DirectoryNode[] = [];
     for (var key in positionNode) {
-      var childNodes = this.convertPositionsToTree(key, positionNode[key]);
+      var childNodes = this.convertPositionsToTree(
+        fullPath + "/" + key,
+        key,
+        positionNode[key]
+      );
 
       if (childNodes === undefined) {
         continue;
@@ -149,6 +156,7 @@ class DirectoryNode extends vscode.TreeItem {
 class RangeNode extends vscode.TreeItem {
   constructor(
     public readonly label: string,
+    public readonly filePath: string,
     public readonly importance: number,
     public readonly startLine: number,
     public readonly endLine: number
@@ -156,6 +164,8 @@ class RangeNode extends vscode.TreeItem {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.tooltip = `${this.label}-${importance}-[${this.startLine}, ${this.endLine}]`;
     this.description = importance.toString();
+    this.filePath = filePath;
+    this.contextValue = "range"; // used to determine when command is shown in item context
   }
 
   // TODO: Implement icons.
@@ -178,4 +188,33 @@ class RangeNode extends vscode.TreeItem {
       "dependency.svg"
     ),
   };
+}
+
+export function revealLocation(node: RangeNode) {
+  var rootUri =
+    vscode.workspace.workspaceFolders &&
+    vscode.workspace.workspaceFolders.length > 0
+      ? vscode.workspace.workspaceFolders[0].uri.fsPath.replaceAll("\\", "/")
+      : undefined;
+
+  if (rootUri === undefined) {
+    return;
+  }
+
+  var file = rootUri + node.filePath;
+  vscode.workspace.openTextDocument(file).then(
+    (document: vscode.TextDocument) => {
+      vscode.window.showTextDocument(document, 1, false).then((editor) => {
+        editor.revealRange(
+          new vscode.Range(
+            new vscode.Position(node.startLine, 0),
+            new vscode.Position(node.endLine, 0)
+          )
+        );
+      });
+    },
+    (error: any) => {
+      console.error(error);
+    }
+  );
 }
