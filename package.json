@@ -31,8 +31,8 @@
         "command": "hotspots.refreshEntry",
         "title": "Refresh",
         "icon": {
-          "light": "resources/light/refresh.svg",
-          "dark": "resources/dark/refresh.svg"
+          "light": "src/media/refresh_light.svg",
+          "dark": "src/media/refresh_dark.svg"
         }
       }
     ],

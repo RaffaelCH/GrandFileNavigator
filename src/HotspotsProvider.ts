@@ -130,6 +130,7 @@ class HotspotNode extends vscode.TreeItem {
     this.description = importance;
   }
 
+  // iconPath = new vscode.ThemeIcon("refresh"); // reference built-in icon
   iconPath = {
     light: path.join(
       __filename,
