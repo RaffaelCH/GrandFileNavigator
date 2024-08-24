@@ -8,30 +8,26 @@ import {
 } from "./location-tracking";
 
 // Used for listing the hotspots in the sidebar.
-export class HotspotsProvider implements vscode.TreeDataProvider<HotspotNode> {
+export class HotspotsProvider
+  implements vscode.TreeDataProvider<DirectoryNode | RangeNode>
+{
   constructor(private workspaceRoot: string | undefined) {}
 
-  getTreeItem(element: HotspotNode): vscode.TreeItem {
+  getTreeItem(element: DirectoryNode | RangeNode): vscode.TreeItem {
     return element;
   }
 
-  getChildren(element?: HotspotNode): Thenable<HotspotNode[]> {
+  getChildren(
+    element?: DirectoryNode
+  ): Thenable<(DirectoryNode | RangeNode)[]> {
     if (!this.workspaceRoot) {
       vscode.window.showInformationMessage("No dependency in empty workspace");
       return Promise.resolve([]);
     }
 
-    // Node gets expanded -> show only ranges.
-    if (element !== undefined) {
-      var ranges = element.ranges.map(
-        (range) =>
-          new HotspotNode(
-            "RangeName", // placeholder
-            [range],
-            vscode.TreeItemCollapsibleState.None
-          )
-      );
-      return Promise.resolve(ranges);
+    // Node is directory -> expand subdirectories
+    if (element instanceof DirectoryNode) {
+      return Promise.resolve(element.children);
     }
 
     return Promise.resolve(this.getTrackedNodes());
@@ -40,7 +36,7 @@ export class HotspotsProvider implements vscode.TreeDataProvider<HotspotNode> {
   /**
    * Convert the tracked ranges/nodes to tree nodes.
    */
-  private getTrackedNodes(): HotspotNode[] {
+  private getTrackedNodes(): (DirectoryNode | RangeNode)[] {
     var positionHistory = getPositionHistory();
 
     var treePositions = this.convertPositionsToTree("", positionHistory);
@@ -48,47 +44,65 @@ export class HotspotsProvider implements vscode.TreeDataProvider<HotspotNode> {
       return [];
     }
 
-    var treeViewNodes = treePositions.map(
-      (treePosition) =>
-        new HotspotNode(
-          treePosition.key,
-          treePosition.ranges,
-          vscode.TreeItemCollapsibleState.Collapsed
-        )
-    );
-
-    return treeViewNodes;
+    return treePositions;
   }
 
   // Join paths back together, with all the ranges for each file.
   private convertPositionsToTree(
     relativePath: string,
     positionNode: PositionHistory | RangeData[] | undefined
-  ): { key: string; ranges: RangeData[] }[] | undefined {
+  ): (DirectoryNode | RangeNode)[] | undefined {
     if (positionNode === undefined) {
       return undefined;
     }
-    if (!(positionNode instanceof PositionHistory)) {
-      return [{ key: relativePath, ranges: positionNode }];
+
+    // Node is RangeData[] -> create leaf nodes.
+    if (Array.isArray(positionNode) && positionNode[0] instanceof RangeData) {
+      var convertedNodes = positionNode.map((rangeData) => {
+        return new RangeNode(
+          "Placeholder", // TODO: Give name.
+          rangeData.totalDuration,
+          rangeData.startLine,
+          rangeData.endLine
+        );
+      });
+      return convertedNodes;
     }
 
-    var convertedNodes: { key: string; ranges: RangeData[] }[] = [];
+    if (!(positionNode instanceof PositionHistory)) {
+      return undefined;
+    }
+
+    // Only one tracked subdirectory -> combine directories.
+    if (Object.keys(positionNode).length === 1) {
+      var key = Object.keys(positionNode)[0];
+      var subPath = relativePath + "/" + key;
+      return this.convertPositionsToTree(subPath, positionNode[key]);
+    }
+
+    var children: DirectoryNode[] = [];
     for (var key in positionNode) {
-      var subPath = `${relativePath}/${key}`;
-      var convertedSubNodes = this.convertPositionsToTree(
-        subPath,
-        positionNode[key]
-      );
-      if (convertedSubNodes === undefined) {
+      var childNodes = this.convertPositionsToTree(key, positionNode[key]);
+
+      if (childNodes === undefined) {
         continue;
       }
 
-      convertedSubNodes.forEach((subNode) => {
-        convertedNodes.push(subNode);
-      });
+      let node = new DirectoryNode(
+        key,
+        childNodes,
+        vscode.TreeItemCollapsibleState.Collapsed
+      );
+      children.push(node);
     }
 
-    return convertedNodes;
+    return [
+      new DirectoryNode(
+        relativePath,
+        children,
+        vscode.TreeItemCollapsibleState.Collapsed
+      ),
+    ];
   }
 
   private pathExists(p: string): boolean {
@@ -102,10 +116,12 @@ export class HotspotsProvider implements vscode.TreeDataProvider<HotspotNode> {
 
   // React to a tree node being changed.
   private _onDidChangeTreeData: vscode.EventEmitter<
-    HotspotNode | undefined | null | void
-  > = new vscode.EventEmitter<HotspotNode | undefined | null | void>();
+    DirectoryNode | RangeNode | undefined | null | void
+  > = new vscode.EventEmitter<
+    DirectoryNode | RangeNode | undefined | null | void
+  >();
   readonly onDidChangeTreeData: vscode.Event<
-    HotspotNode | undefined | null | void
+    DirectoryNode | RangeNode | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
   refresh(): void {
@@ -113,23 +129,36 @@ export class HotspotsProvider implements vscode.TreeDataProvider<HotspotNode> {
   }
 }
 
-class HotspotNode extends vscode.TreeItem {
+class DirectoryNode extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    public readonly ranges: RangeData[],
+    public readonly children: (DirectoryNode | RangeNode)[],
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
   ) {
-    var importance = ranges
-      .reduce(
-        (accumulator, nextElement) => accumulator + nextElement.totalDuration,
-        0
-      )
-      .toString();
     super(label, collapsibleState);
-    this.tooltip = `${this.label}-${importance}`;
-    this.description = importance;
+    this.importance = children.reduce(
+      (accumulator, nextElement) => accumulator + nextElement.importance,
+      0
+    );
+    this.tooltip = `${this.label}-${this.importance}`;
+    this.description = "Importance: " + this.importance.toString();
+  }
+  importance: number;
+}
+
+class RangeNode extends vscode.TreeItem {
+  constructor(
+    public readonly label: string,
+    public readonly importance: number,
+    public readonly startLine: number,
+    public readonly endLine: number
+  ) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.tooltip = `${this.label}-${importance}-[${this.startLine}, ${this.endLine}]`;
+    this.description = importance.toString();
   }
 
+  // TODO: Implement icons.
   // iconPath = new vscode.ThemeIcon("refresh"); // reference built-in icon
   iconPath = {
     light: path.join(
