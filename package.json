@@ -31,16 +31,16 @@
         "command": "hotspots.refreshEntry",
         "title": "Refresh",
         "icon": {
-          "light": "src/media/refresh_light.svg",
-          "dark": "src/media/refresh_dark.svg"
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
         }
       },
       {
         "command": "hotspots.openRange",
         "title": "Jump To",
         "icon": {
-          "light": "src/media/refresh_light.svg",
-          "dark": "src/media/refresh_dark.svg"
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
         }
       }
     ],
@@ -65,8 +65,8 @@
           "command": "hotspots.openRange",
           "when": "view == hotspots && viewItem == range",
           "icon": {
-            "light": "src/media/refresh_light.svg",
-            "dark": "src/media/refresh_dark.svg"
+            "light": "resources/light/refresh.svg",
+            "dark": "resources/dark/refresh.svg"
           }
         }
       ]

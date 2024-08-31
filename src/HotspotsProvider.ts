@@ -151,6 +151,25 @@ class DirectoryNode extends vscode.TreeItem {
     this.description = "Importance: " + this.importance.toString();
   }
   importance: number;
+
+  iconPath = {
+    light: path.join(
+      __filename,
+      "..",
+      "..",
+      "resources",
+      "light",
+      "symbol-file.svg"
+    ),
+    dark: path.join(
+      __filename,
+      "..",
+      "..",
+      "resources",
+      "dark",
+      "symbol-file.svg"
+    ),
+  };
 }
 
 class RangeNode extends vscode.TreeItem {
@@ -177,7 +196,7 @@ class RangeNode extends vscode.TreeItem {
       "..",
       "resources",
       "light",
-      "dependency.svg"
+      "list-selection.svg"
     ),
     dark: path.join(
       __filename,
@@ -185,7 +204,7 @@ class RangeNode extends vscode.TreeItem {
       "..",
       "resources",
       "dark",
-      "dependency.svg"
+      "list-selection.svg"
     ),
   };
 }
