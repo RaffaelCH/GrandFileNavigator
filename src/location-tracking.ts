@@ -178,3 +178,26 @@ function convertPositionHistoryValue(
 function isObject(value: any): boolean {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+
+export function categorizePositionsByFileName(): { [fileName: string]: number } {
+  const positionHistory = getPositionHistory();
+  const fileCountMap: { [fileName: string]: number } = {};
+
+  function traverseHistory(history: PositionHistory, path: string[] = []) {
+    for (const key in history) {
+      const value = history[key];
+      if (value instanceof PositionHistory) {
+        traverseHistory(value, [...path, key]);
+      } else if (Array.isArray(value)) {
+        const fileName = path.join("/");
+        if (!fileCountMap[fileName]) {
+          fileCountMap[fileName] = 0;
+        }
+        fileCountMap[fileName] += 1;
+      }
+    }
+  }
+
+  traverseHistory(positionHistory);
+  return fileCountMap;
+}

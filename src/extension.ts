@@ -6,6 +6,7 @@ import {
   loadPositionHistory,
   savePositionHistory,
   updateLocationTracking,
+  categorizePositionsByFileName
 } from "./location-tracking";
 import { HotspotsProvider, revealLocation } from "./HotspotsProvider";
 import { registerWebviewVisualization } from "./WebviewVisualization";
@@ -15,11 +16,7 @@ var storageLocation: vscode.Uri | undefined;
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log(
-    'Congratulations, your extension "grandfilenavigator" is now active!'
-  );
+  console.log('Congratulations, your extension "grandfilenavigator" is now active!');
 
   storageLocation = context.storageUri;
 
@@ -39,10 +36,6 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.workspaceFolders.length > 0
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : undefined;
-  vscode.window.registerTreeDataProvider(
-    "hotspots",
-    new HotspotsProvider(rootPath)
-  );
 
   const hotspotsProvider = new HotspotsProvider(rootPath);
   vscode.window.registerTreeDataProvider("hotspots", hotspotsProvider);
@@ -53,14 +46,25 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.window.onDidChangeActiveTextEditor(() => {
     updateLocationTracking();
+    console.log("Updated location tracking after active editor change.");
+    const fileCounts = categorizePositionsByFileName();
+    console.log("File counts after active editor change:", fileCounts);
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(() => {
     updateLocationTracking();
+    console.log("Updated location tracking after visible ranges change.");
+    const fileCounts = categorizePositionsByFileName();
+    console.log("File counts after visible ranges change:", fileCounts);
   });
 
   registerWebviewVisualization(context);
+
+  // Initial categorization after loading position history
+  const fileCounts = categorizePositionsByFileName();
+  console.log("Initial file counts:", fileCounts);
 }
+
 
 export function deactivate(context: vscode.ExtensionContext) {
   var location: vscode.Uri | undefined;
@@ -75,3 +79,5 @@ export function deactivate(context: vscode.ExtensionContext) {
     savePositionHistory(location);
   }
 }
+
+
