@@ -42,6 +42,14 @@
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
         }
+      },
+      {
+        "command": "extension.showHistogram",
+        "title": "Show File Access Histogram",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       }
     ],
     "views": {
@@ -72,6 +80,13 @@
       ]
     }
   },
+  "keybindings": [
+    {
+      "command": "extension.showHistogram",
+      "key": "cmd+alt+h",
+      "when": "editorTextFocus"
+    }
+  ],
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",

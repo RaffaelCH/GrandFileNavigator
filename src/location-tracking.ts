@@ -188,16 +188,14 @@ export function categorizePositionsByFileName(): { [fileName: string]: number } 
       const value = history[key];
       if (value instanceof PositionHistory) {
         traverseHistory(value, [...path, key]);
-      } else if (Array.isArray(value)) {
-        const fileName = path.join("/");
-        if (!fileCountMap[fileName]) {
-          fileCountMap[fileName] = 0;
-        }
-        fileCountMap[fileName] += 1;
+      } else if (Array.isArray(value) && value.length > 0) {
+        const fileName = [...path, key].join("/");
+        fileCountMap[fileName] = (fileCountMap[fileName] || 0) + value.length;
       }
     }
   }
 
   traverseHistory(positionHistory);
+
   return fileCountMap;
 }

@@ -13,7 +13,7 @@ For example, if the user viewed file `path/to/file.java`, lines 20-40 for 5 seco
 
 ### Control Flow
 
-The lcoation tracking is implemented in `src/location-tracking.ts`.
+The location tracking is implemented in `src/location-tracking.ts`.
 Whenever the editor location changes (open/focused file changes, scrolling), `updateLocationTracking` is called from the main extension file.
 There it is first determined if the tracking should be updated, based on the **previously open** file (is file with correct language, and last update was >100ms ago to handle scrolling).
 If the tracking should be updated, the location history is updated with the file path, the visible range (lines in the editor) and the duration for which it was visible.
@@ -23,7 +23,7 @@ After that, it is determined if the **current** file should be tracked. This is 
 
 ### View Properties
 
-To show the position history and enable simple navigations, the `HotspotsProvider` was implemented. It takes the position history described above and transforms it into a tree view, which can then be viewed on the side in the Explorer (under `File Hotspots`). Clicking an entry expands it, showing the contained nodes (i.e., the subdirectories, files and indivudual ranges of the position history).
+To show the position history and enable simple navigations, the `HotspotsProvider` was implemented. It takes the position history described above and transforms it into a tree view, which can then be viewed on the side in the Explorer (under `File Hotspots`). Clicking an entry expands it, showing the contained nodes (i.e., the subdirectories, files and individual ranges of the position history).
 
 ### Hotspots Provider
 
