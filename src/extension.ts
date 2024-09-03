@@ -64,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
   const fileCounts = categorizePositionsByFileName();
   console.log("Initial file counts:", fileCounts);
 
-  vscode.commands.registerCommand('extension.showHistogram', () => {
+  const showHistogramCommand = vscode.commands.registerCommand('extension.showHistogram', () => {
     const panel = vscode.window.createWebviewPanel(
       'fileAccessHistogram',
       'File Access Histogram',
@@ -72,10 +72,12 @@ export function activate(context: vscode.ExtensionContext) {
       {}
     );
   
-    const fileCounts = categorizePositionsByFileName();
+    //const fileCounts = categorizePositionsByFileName();
     panel.webview.html = getWebviewContent(fileCounts);
   });
   
+  context.subscriptions.push(showHistogramCommand);
+
 }
 
 
@@ -93,9 +95,35 @@ export function deactivate(context: vscode.ExtensionContext) {
   }
 }
 
+
 function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
-  const labels = Object.keys(fileCounts).map(fileName => `'${fileName}'`);
+  const labels = Object.keys(fileCounts).map(filePath => filePath.split('/').pop());
   const data = Object.values(fileCounts);
+
+  const maxCount = Math.max(...data);
+  const svgHeight = 400;
+  const svgWidth = 800;
+  const barWidth = svgWidth / data.length;
+  const textAreaHeight = 100; // Extra space for the file names
+
+  // Generate random colors for each bar
+  const colors = labels.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`);
+
+  let barsHtml = data.map((count, index) => {
+    const barHeight = (count / maxCount) * svgHeight;
+    const color = colors[index];
+    const xPosition = index * barWidth + barWidth / 2;
+
+    // Determine whether to place the count inside or above the bar
+    const yTextPosition = barHeight > 20 ? svgHeight - barHeight + 15 : svgHeight - barHeight - 20;
+    const textAnchor = barHeight > 20 ? "middle" : "start";
+
+    return `
+      <rect x="${index * barWidth}" y="${svgHeight - barHeight}" width="${barWidth - 2}" height="${barHeight}" fill="${color}"></rect>
+      <text x="${xPosition}" y="${yTextPosition}" fill="white" text-anchor="middle" font-size="12">${count}</text>
+      <text x="${xPosition}" y="${svgHeight + 10}" fill="white" text-anchor="middle" font-size="10" transform="rotate(-90, ${xPosition}, ${svgHeight + 10})">${labels[index]}</text>
+    `;
+  }).join('');
 
   return `
     <!DOCTYPE html>
@@ -104,37 +132,32 @@ function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>File Access Histogram</title>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <style>
+        text {
+          word-wrap: break-word;
+        }
+      </style>
     </head>
     <body>
-      <canvas id="myChart" width="400" height="400"></canvas>
-      <script>
-        const ctx = document.getElementById('myChart').getContext('2d');
-        const myChart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: [${labels.join(',')}],
-            datasets: [{
-              label: 'File Access Counts',
-              data: [${data.join(',')}],
-              backgroundColor: 'rgba(75, 192, 192, 0.2)',
-              borderColor: 'rgba(75, 192, 192, 1)',
-              borderWidth: 1
-            }]
-          },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true
-              }
-            }
-          }
-        });
-      </script>
+      <h1>File Access Histogram</h1>
+      <svg width="${svgWidth}" height="${svgHeight + textAreaHeight}">
+        ${barsHtml}
+      </svg>
     </body>
     </html>
   `;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
