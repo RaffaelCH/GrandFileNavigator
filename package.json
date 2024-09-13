@@ -12,8 +12,7 @@
   ],
   "activationEvents": [
     "onWebviewPanel:grandFileNavigator",
-    "onLanguage:java",
-    "onCommand:extension.showHistogram"
+    "onLanguage:java"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -97,8 +96,7 @@
     "test": "vscode-test"
   },
   "dependencies": {
-    "chartjs": "^0.3.24",
-    "vscode": "*"
+    "chart.js": "^4.4.1"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",
