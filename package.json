@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "grandfilenavigator",
   "displayName": "GrandFileNavigator",
   "description": "",

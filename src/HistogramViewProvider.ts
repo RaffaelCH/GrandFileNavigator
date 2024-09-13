@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as chartjs from "chart.js";
 
 class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-sidebar-view";
@@ -87,6 +88,11 @@ class HistogramViewProvider implements vscode.WebviewViewProvider {
 				<title>Cat Colors</title>
 			</head>
 			<body>
+        <div style="width: 800px;"><canvas id="acquisitions"></canvas></div>
+
+        <!-- <script type="module" src="dimensions.js"></script> -->
+        <script type="module" src="acquisitions.js"></script>
+
 				<ul class="color-list">
 				</ul>
 
@@ -106,4 +112,40 @@ function getNonce() {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
+}
+
+function histogramGenerator(document: any) {
+  const ctx = document.getElementById("histogram").getContext("2d");
+
+  const chart = new chartjs.Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [0, 1, 2, 3, 4],
+      datasets: [
+        {
+          label: "Number of Arrivals",
+          data: [19, 28, 20, 16],
+          backgroundColor: "green",
+        },
+      ],
+    },
+    options: {
+      scales: {
+        x: 
+          {
+            display: true,
+            ticks: {
+              autoSkip: false,
+          },
+        ,
+        yAxes: [
+          {
+            ticks: {
+              beginAtZero: true,
+            },
+          },
+        ],
+      },
+    },
+  });
 }

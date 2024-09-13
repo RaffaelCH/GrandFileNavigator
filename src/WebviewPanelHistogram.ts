@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { categorizePositionsByFileName } from "./location-tracking";
+import { categorizePositionsByFileName } from "./location-tracking.js";
 
 export function registerWebviewPanelHistogram(
   context: vscode.ExtensionContext

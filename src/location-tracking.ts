@@ -201,3 +201,21 @@ export function categorizePositionsByFileName(): {
 
   return fileCountMap;
 }
+
+export function getFileRangeData(file: vscode.Uri): RangeData[] {
+  function traverseHistory(history: PositionHistory, path: string[] = []) {
+    for (const key in history) {
+      const value = history[key];
+      if (value instanceof PositionHistory) {
+        traverseHistory(value, [...path, key]);
+      } else if (Array.isArray(value) && value.length > 0) {
+        return value;
+      }
+    }
+    return [];
+  }
+
+  var fileIdentifier = vscode.workspace.asRelativePath(file);
+  var identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
+  return traverseHistory(getPositionHistory(), identifierKeys);
+}

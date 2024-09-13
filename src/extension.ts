@@ -7,10 +7,10 @@ import {
   savePositionHistory,
   updateLocationTracking,
   categorizePositionsByFileName,
-} from "./location-tracking";
-import { HotspotsProvider, revealLocation } from "./HotspotsProvider";
-import { registerWebviewVisualization } from "./WebviewVisualization";
-import { registerWebviewPanelHistogram } from "./WebviewPanelHistogram";
+} from "./location-tracking.js";
+import { HotspotsProvider, revealLocation } from "./HotspotsProvider.js";
+import { registerWebviewVisualization } from "./WebviewVisualization.js";
+import { registerWebviewPanelHistogram } from "./WebviewPanelHistogram.js";
 
 var storageLocation: vscode.Uri | undefined;
 
