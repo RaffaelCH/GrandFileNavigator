@@ -50,7 +50,7 @@ class HistogramViewProvider implements vscode.WebviewViewProvider {
   private _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "main.js")
+      vscode.Uri.joinPath(this._extensionUri, "src", "create-histogram.js")
     );
 
     // Do the same for the stylesheet.
@@ -76,29 +76,34 @@ class HistogramViewProvider implements vscode.WebviewViewProvider {
 					Use a content security policy to only allow loading styles from our extension directory,
 					and only allow scripts that have a specific nonce.
 					(See the 'webview-sample' extension sample for img-src content security policy examples)
-				-->
+				
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+
+        <link href="${styleResetUri}" rel="stylesheet">
+				<link href="${styleVSCodeUri}" rel="stylesheet">
+				<link href="${styleMainUri}" rel="stylesheet">
+        -->
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-				<link href="${styleResetUri}" rel="stylesheet">
-				<link href="${styleVSCodeUri}" rel="stylesheet">
-				<link href="${styleMainUri}" rel="stylesheet">
+				
 
 				<title>Cat Colors</title>
 			</head>
 			<body>
-        <div style="width: 800px;"><canvas id="acquisitions"></canvas></div>
+        <div style="width: 800px;"><canvas id="histogram"></canvas></div>
 
         <!-- <script type="module" src="dimensions.js"></script> -->
-        <script type="module" src="acquisitions.js"></script>
+        <!-- <script type="module" src="create-histogram.js"></script> -->
 
 				<ul class="color-list">
 				</ul>
 
 				<button class="add-color-button">Add Color</button>
 
-				<script nonce="${nonce}" src="${scriptUri}"></script>
+				<!-- <script nonce="${nonce}" src="${scriptUri}"></script> -->
+        script src="${scriptUri}"></script>
+        <script>createHistogram(document)</script>
 			</body>
 			</html>`;
   }
@@ -131,20 +136,17 @@ function histogramGenerator(document: any) {
     },
     options: {
       scales: {
-        x: 
-          {
-            display: true,
-            ticks: {
-              autoSkip: false,
+        x: {
+          display: true,
+          ticks: {
+            autoSkip: false,
           },
-        ,
-        yAxes: [
-          {
-            ticks: {
-              beginAtZero: true,
-            },
+        },
+        y: {
+          ticks: {
+            //beginAtZero: true,
           },
-        ],
+        },
       },
     },
   });

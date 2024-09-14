@@ -3,10 +3,7 @@ import * as vscode from "vscode";
 import { getFileRangeData } from "./location-tracking.js";
 import { start } from "repl";
 
-export function createHistogram(
-  document: any,
-  data: [{ lineNumbers: string; importance: number }]
-) {
+export function createHistogram(document: any) {
   var bucketedData,
     labels = getCurrentFileRangeData();
 
