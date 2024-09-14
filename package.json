@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "name": "grandfilenavigator",
   "displayName": "GrandFileNavigator",
   "description": "",
@@ -53,7 +52,24 @@
         }
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "grandfilenavigator-sidebar-view",
+          "title": "File Visualization",
+          "icon": "resources/dep.svg"
+        }
+      ]
+    },
     "views": {
+      "grandfilenavigator-sidebar-view": [
+        {
+          "type": "webview",
+          "id": "grandfilenavigator-histogram",
+          "name": "File Histogram",
+          "icon": "media/dep.svg"
+        }
+      ],
       "explorer": [
         {
           "id": "hotspots",
@@ -97,7 +113,6 @@
     "test": "vscode-test"
   },
   "dependencies": {
-    "vscode": "*",
     "chart.js": "^4.4.1"
   },
   "devDependencies": {

@@ -11,6 +11,7 @@ import {
 import { HotspotsProvider, revealLocation } from "./HotspotsProvider.js";
 import { registerWebviewVisualization } from "./WebviewVisualization.js";
 import { registerWebviewPanelHistogram } from "./WebviewPanelHistogram.js";
+import { HistogramViewProvider } from "./HistogramViewProvider.js";
 
 var storageLocation: vscode.Uri | undefined;
 
@@ -61,9 +62,18 @@ export function activate(context: vscode.ExtensionContext) {
     console.log("File counts after visible ranges change:", fileCounts);
   });
 
-  registerWebviewVisualization(context);
+  // registerWebviewVisualization(context);
 
-  registerWebviewPanelHistogram(context);
+  // registerWebviewPanelHistogram(context);
+
+  const provider = new HistogramViewProvider(context.extensionUri);
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      HistogramViewProvider.viewType,
+      provider
+    )
+  );
 }
 
 export function deactivate(context: vscode.ExtensionContext) {
