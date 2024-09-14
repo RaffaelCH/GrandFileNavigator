@@ -204,15 +204,19 @@ export function categorizePositionsByFileName(): {
 
 export function getFileRangeData(file: vscode.Uri): RangeData[] {
   function traverseHistory(history: PositionHistory, path: string[] = []) {
-    for (const key in history) {
-      const value = history[key];
-      if (value instanceof PositionHistory) {
-        traverseHistory(value, [...path, key]);
-      } else if (Array.isArray(value) && value.length > 0) {
-        return value;
-      }
+    if (path.length === 0) {
+      return [];
     }
-    return [];
+    var nextKey = path[0];
+    var value = history[nextKey];
+    if (value === undefined) {
+      return [];
+    }
+    if (Array.isArray(value)) {
+      return value;
+    }
+    var subPath = path.slice(1);
+    return traverseHistory(value, subPath);
   }
 
   var fileIdentifier = vscode.workspace.asRelativePath(file);

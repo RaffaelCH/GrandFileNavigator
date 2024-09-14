@@ -7,6 +7,7 @@ import {
   savePositionHistory,
   updateLocationTracking,
   categorizePositionsByFileName,
+  getPositionHistory,
 } from "./location-tracking.js";
 import { HotspotsProvider, revealLocation } from "./HotspotsProvider.js";
 import { registerWebviewVisualization } from "./WebviewVisualization.js";
@@ -62,9 +63,11 @@ export function activate(context: vscode.ExtensionContext) {
     console.log("File counts after visible ranges change:", fileCounts);
   });
 
-  // registerWebviewVisualization(context);
+  registerWebviewVisualization(context);
 
-  // registerWebviewPanelHistogram(context);
+  registerWebviewPanelHistogram(context);
+
+  console.log(getPositionHistory());
 
   const provider = new HistogramViewProvider(context.extensionUri);
 

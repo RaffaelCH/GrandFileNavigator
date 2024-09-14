@@ -1,6 +1,7 @@
 //import Chart from "chart.js/auto";
 import * as vscode from "vscode";
 import { getFileRangeData } from "./location-tracking.js";
+import { start } from "repl";
 
 // export function createHistogram(document: any) {
 //   var bucketedData,
@@ -58,46 +59,77 @@ export function getCurrentFileRangeData(): [number[], string[]] {
   var rangeData = getFileRangeData(currentFile.uri);
 
   const splitCount = 20; // TODO: Make dynamic
-
   var totalLineCount = currentFile.lineCount;
-  var bucketSize =
-    totalLineCount < splitCount
-      ? totalLineCount
-      : Math.ceil(totalLineCount / splitCount);
 
   var buckets = new Array(splitCount).fill(0);
   var labels = new Array(splitCount).fill("");
 
-  rangeData.forEach((range) => {
-    var startBucket = Math.floor((range.startLine / totalLineCount) * 20);
-    var endBucket = Math.min(
-      Math.floor((range.startLine / totalLineCount) * 20),
-      20
-    );
+  var startLines = getBucketStartLines(totalLineCount, splitCount);
 
-    if (startBucket === endBucket) {
-      buckets[startBucket] += range.totalDuration;
+  rangeData.forEach((range) => {
+    var indexAfterStartBucket = startLines.findIndex(
+      (line) => line > range.startLine
+    );
+    var startBucketIndex =
+      indexAfterStartBucket === -1 ? splitCount - 1 : indexAfterStartBucket - 1;
+
+    var indexAfterEndBucket = startLines.findIndex(
+      (line) => line > range.endLine
+    );
+    var endBucketIndex =
+      indexAfterEndBucket === -1 ? splitCount - 1 : indexAfterEndBucket;
+
+    if (startBucketIndex === endBucketIndex) {
+      buckets[startBucketIndex] += range.totalDuration;
       return;
     }
 
     var currentLine = range.startLine;
-    var currentBucket = startBucket;
+    var currentBucketIndex = startBucketIndex;
     while (currentLine < range.endLine) {
-      var bucketEndLine = currentBucket * bucketSize;
+      var bucketEndLine: number;
+      if (range.endLine >= totalLineCount) {
+        bucketEndLine = totalLineCount;
+      } else {
+        bucketEndLine = startLines[currentBucketIndex + 1] - 1;
+      }
       var linesInBucket = bucketEndLine - currentLine + 1;
       var weightedImportance =
         linesInBucket / (range.endLine - range.startLine);
-      buckets[currentBucket] += weightedImportance * range.totalDuration;
-      currentBucket++;
+      buckets[currentBucketIndex] += weightedImportance * range.totalDuration;
+      currentBucketIndex++;
       currentLine = bucketEndLine + 1;
     }
   });
 
   for (var i = 0; i < splitCount; ++i) {
-    var startLine = i * bucketSize;
-    var endLine = i * (bucketSize + 1) - 1;
+    var startLine = startLines[i];
+    var endLine: number;
+    if (i + 1 >= splitCount) {
+      endLine = totalLineCount;
+    } else {
+      endLine = startLines[i + 1] - 1;
+    }
     labels[i] = `${startLine} - ${endLine}`;
   }
 
   return [buckets, labels];
+}
+
+function getBucketStartLines(
+  totalLineCount: number,
+  splitCount: number
+): number[] {
+  var bucketSize =
+    totalLineCount < splitCount
+      ? totalLineCount
+      : Math.ceil(totalLineCount / splitCount);
+
+  var bucketStartLines = [splitCount];
+  for (var i = 0; i < splitCount; ++i) {
+    let startLine = i * bucketSize + 1;
+    bucketStartLines[i] = startLine;
+  }
+
+  return bucketStartLines;
 }
