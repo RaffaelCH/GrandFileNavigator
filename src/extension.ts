@@ -49,20 +49,6 @@ export function activate(context: vscode.ExtensionContext) {
   );
   vscode.commands.registerCommand("hotspots.openRange", revealLocation);
 
-  vscode.window.onDidChangeActiveTextEditor(() => {
-    updateLocationTracking();
-    console.log("Updated location tracking after active editor change.");
-    const fileCounts = categorizePositionsByFileName();
-    console.log("File counts after active editor change:", fileCounts);
-  });
-
-  vscode.window.onDidChangeTextEditorVisibleRanges(() => {
-    updateLocationTracking();
-    console.log("Updated location tracking after visible ranges change.");
-    const fileCounts = categorizePositionsByFileName();
-    console.log("File counts after visible ranges change:", fileCounts);
-  });
-
   registerWebviewVisualization(context);
 
   registerWebviewPanelHistogram(context);
@@ -77,6 +63,21 @@ export function activate(context: vscode.ExtensionContext) {
       provider
     )
   );
+
+  vscode.window.onDidChangeActiveTextEditor(async () => {
+    updateLocationTracking();
+    console.log("Updated location tracking after active editor change.");
+    const fileCounts = categorizePositionsByFileName();
+    console.log("File counts after active editor change:", fileCounts);
+    await provider.reloadView();
+  });
+
+  vscode.window.onDidChangeTextEditorVisibleRanges(() => {
+    updateLocationTracking();
+    console.log("Updated location tracking after visible ranges change.");
+    const fileCounts = categorizePositionsByFileName();
+    console.log("File counts after visible ranges change:", fileCounts);
+  });
 }
 
 export function deactivate(context: vscode.ExtensionContext) {

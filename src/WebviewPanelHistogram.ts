@@ -33,7 +33,7 @@ function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
   const data = Object.values(fileCounts);
 
   const maxCount = Math.max(...data);
-  const svgHeight = 400;
+  const svgHeight = 1200;
   const svgWidth = 800;
   const barWidth = svgWidth / data.length;
   const textAreaHeight = 100; // Extra space for the file names

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { getCurrentFileRangeData } from "./loadHistogramData.js";
+import { getFileHistogramData } from "./loadHistogramData.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -8,7 +8,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
-  public resolveWebviewView(
+  public async resolveWebviewView(
     webviewView: vscode.WebviewView,
     context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
@@ -20,10 +20,20 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this._extensionUri],
     };
 
-    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+    webviewView.webview.html = await this._getHtmlForWebview(
+      webviewView.webview
+    );
   }
 
-  private _getHtmlForWebview(webview: vscode.Webview) {
+  public async reloadView() {
+    if (!this._view) {
+      return;
+    }
+
+    this._view.webview.html = await this._getHtmlForWebview(this._view.webview);
+  }
+
+  private async _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
     const chartJsUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, "resources", "chart.js")
@@ -32,7 +42,14 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       vscode.Uri.joinPath(this._extensionUri, "src", "insertHistogram.js")
     );
 
-    var [importance, labels] = getCurrentFileRangeData();
+    var activeTextEditor = vscode.window.activeTextEditor;
+    if (!activeTextEditor) {
+      return "No file open";
+    }
+
+    var [importance, labels] = await getFileHistogramData(
+      activeTextEditor.document.uri
+    );
     var importanceJson = JSON.stringify(importance);
     var labelsJson = JSON.stringify(labels);
 
@@ -55,7 +72,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 				<meta name="viewport" content="width=device-width, height=device-height initial-scale=1.0">
 			</head>
 			<body>
-      <div>Here be chart</div>
+        <p id="errorMessage"></p>
         <div><canvas id="histogram"></canvas></div>
         <script src="${chartJsUri}"></script>
 				<script type="module" id="histogram-inserter" data-importance='${importanceJson}' data-labels='${labelsJson}' nonce="${nonce}" src="${scriptUri}"></script>

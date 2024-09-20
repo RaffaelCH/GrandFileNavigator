@@ -48,18 +48,21 @@ import { start } from "repl";
 //   });
 // }
 
-export function getCurrentFileRangeData(): [number[], string[]] {
-  var activeEditor = vscode.window.activeTextEditor;
+export async function getFileHistogramData(
+  fileUri: vscode.Uri
+): Promise<[number[], string[]]> {
+  var rangeData = getFileRangeData(fileUri);
 
-  if (activeEditor === undefined) {
+  if (rangeData.length === 0) {
     return [[], []];
   }
 
-  var currentFile = activeEditor.document;
-  var rangeData = getFileRangeData(currentFile.uri);
-
   const splitCount = 20; // TODO: Make dynamic
-  var totalLineCount = currentFile.lineCount;
+  var totalLineCount = await vscode.workspace
+    .openTextDocument(fileUri)
+    .then((textDocument) => {
+      return textDocument.lineCount;
+    });
 
   var buckets = new Array(splitCount).fill(0);
   var labels = new Array(splitCount).fill("");

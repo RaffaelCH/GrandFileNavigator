@@ -13,6 +13,12 @@
   var bucketedData = JSON.parse(bucketedDataJson);
   var labels = JSON.parse(labelsJson);
 
+  if (bucketedData.length === 0 || labels.length === 0) {
+    let errorMessageContainer = document.getElementById("errorMessage");
+    errorMessageContainer.textContent = "No histogram data found";
+    return;
+  }
+
   new Chart(document.getElementById("histogram"), {
     type: "bar",
     data: {
