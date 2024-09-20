@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log("Updated location tracking after active editor change.");
     const fileCounts = categorizePositionsByFileName();
     console.log("File counts after active editor change:", fileCounts);
-    await provider.reloadView();
+    await provider.updateHistogramData();
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(() => {

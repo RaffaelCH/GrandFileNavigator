@@ -23,14 +23,52 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = await this._getHtmlForWebview(
       webviewView.webview
     );
+
+    this.setupMessageHandlers();
+    this.updateHistogramData();
   }
 
-  public async reloadView() {
+  public async updateHistogramData() {
     if (!this._view) {
       return;
     }
 
-    this._view.webview.html = await this._getHtmlForWebview(this._view.webview);
+    var activeTextEditor = vscode.window.activeTextEditor;
+    if (!activeTextEditor) {
+      return;
+    }
+
+    var [importance, labels] = await getFileHistogramData(
+      activeTextEditor.document.uri
+    );
+
+    this._view.webview.postMessage({
+      command: "updateData",
+      importance: importance,
+      labels: labels,
+    });
+    //this._view.webview.html = await this._getHtmlForWebview(this._view.webview);
+  }
+
+  private setupMessageHandlers() {
+    if (this._view === undefined) {
+      return;
+    }
+
+    // Handle messages from the webview
+    this._view.webview.onDidReceiveMessage((message) => {
+      console.log(message);
+      switch (message.command) {
+        case "showRange":
+          vscode.window.activeTextEditor?.revealRange(
+            new vscode.Range(
+              new vscode.Position(message.startLine, 0),
+              new vscode.Position(message.endLine, 0)
+            )
+          );
+          return;
+      }
+    }, undefined);
   }
 
   private async _getHtmlForWebview(webview: vscode.Webview) {
@@ -38,20 +76,27 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     const chartJsUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, "resources", "chart.js")
     );
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "src", "insertHistogram.js")
+    const insertHistogramUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        "src",
+        "webview_scripts",
+        "insertHistogram.js"
+      )
+    );
+    const messageHandlerUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        "src",
+        "webview_scripts",
+        "visualizationMessageHandler.js"
+      )
     );
 
     var activeTextEditor = vscode.window.activeTextEditor;
     if (!activeTextEditor) {
       return "No file open";
     }
-
-    var [importance, labels] = await getFileHistogramData(
-      activeTextEditor.document.uri
-    );
-    var importanceJson = JSON.stringify(importance);
-    var labelsJson = JSON.stringify(labels);
 
     // Use a nonce to only allow a specific script to be run.
     const nonce = getNonce();
@@ -70,12 +115,17 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         -->
 
 				<meta name="viewport" content="width=device-width, height=device-height initial-scale=1.0">
+        <script>
+          const vscodeApi = acquireVsCodeApi(); // Set global const with reference to keep track of it.
+        </script>
 			</head>
 			<body>
         <p id="errorMessage"></p>
         <div><canvas id="histogram"></canvas></div>
         <script src="${chartJsUri}"></script>
-				<script type="module" id="histogram-inserter" data-importance='${importanceJson}' data-labels='${labelsJson}' nonce="${nonce}" src="${scriptUri}"></script>
+				<script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
+        <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
+        <button onclick="vscodeApi.postMessage({command:'showRange', startLine: 0, endLine: 1});">Jump to Top</button>
 			</body>
 			</html>`;
   }

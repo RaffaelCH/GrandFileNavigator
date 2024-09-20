@@ -1,17 +1,15 @@
-(async function () {
-  console.log("Loading chart");
-  var bucketedDataJson = document
-    .getElementById("histogram-inserter")
-    .getAttribute("data-importance");
-  var labelsJson = document
-    .getElementById("histogram-inserter")
-    .getAttribute("data-labels");
+oldChart = undefined;
 
-  console.log(bucketedDataJson);
-  console.log(labelsJson);
+async function insertHistogram() {
+  var bucketedDataJson = localStorage.getItem("importance");
+  var labelsJson = localStorage.getItem("labels");
 
   var bucketedData = JSON.parse(bucketedDataJson);
   var labels = JSON.parse(labelsJson);
+
+  if (oldChart !== undefined) {
+    oldChart.destroy();
+  }
 
   if (bucketedData.length === 0 || labels.length === 0) {
     let errorMessageContainer = document.getElementById("errorMessage");
@@ -19,7 +17,7 @@
     return;
   }
 
-  new Chart(document.getElementById("histogram"), {
+  oldChart = new Chart(document.getElementById("histogram"), {
     type: "bar",
     data: {
       labels: labels,
@@ -58,4 +56,4 @@
       },
     },
   });
-})();
+}
