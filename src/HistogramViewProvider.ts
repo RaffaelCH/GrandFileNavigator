@@ -47,7 +47,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       importance: importance,
       labels: labels,
     });
-    //this._view.webview.html = await this._getHtmlForWebview(this._view.webview);
   }
 
   private setupMessageHandlers() {
@@ -57,13 +56,12 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
     // Handle messages from the webview
     this._view.webview.onDidReceiveMessage((message) => {
-      console.log(message);
       switch (message.command) {
         case "showRange":
           vscode.window.activeTextEditor?.revealRange(
             new vscode.Range(
               new vscode.Position(message.startLine, 0),
-              new vscode.Position(message.endLine, 0)
+              new vscode.Position(message.endLine, 1)
             )
           );
           return;
@@ -121,8 +119,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 			</head>
 			<body>
         <p id="errorMessage"></p>
-        <div><canvas id="histogram"></canvas></div>
-        <script src="${chartJsUri}"></script>
+        <svg id="histogram-container" style="width:100%;height:800px;"></svg>
 				<script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
         <button onclick="vscodeApi.postMessage({command:'showRange', startLine: 0, endLine: 1});">Jump to Top</button>

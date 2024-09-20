@@ -1,15 +1,9 @@
-oldChart = undefined;
-
-async function insertHistogram() {
+function insertHistogram() {
   var bucketedDataJson = localStorage.getItem("importance");
   var labelsJson = localStorage.getItem("labels");
 
   var bucketedData = JSON.parse(bucketedDataJson);
   var labels = JSON.parse(labelsJson);
-
-  if (oldChart !== undefined) {
-    oldChart.destroy();
-  }
 
   if (bucketedData.length === 0 || labels.length === 0) {
     let errorMessageContainer = document.getElementById("errorMessage");
@@ -17,43 +11,39 @@ async function insertHistogram() {
     return;
   }
 
-  oldChart = new Chart(document.getElementById("histogram"), {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "File Chunk Importance",
-          data: bucketedData,
-          backgroundColor: [
-            "rgba(255, 99, 132, 0.2)",
-            "rgba(255, 159, 64, 0.2)",
-          ],
-          borderColor: ["rgb(255, 99, 132)", "rgb(255, 159, 64)"],
-          borderWidth: 1,
-          barPercentage: 1.25,
-        },
-      ],
-    },
-    options: {
-      indexAxis: "y",
-      // Elements options apply to all of the options unless overridden in a dataset
-      // In this case, we are setting the border of each horizontal bar to be 2px wide
-      elements: {
-        bar: {
-          borderWidth: 2,
-        },
-      },
-      responsive: true,
-      plugins: {
-        //   legend: {
-        //     position: 'right',
-        //   },
-        title: {
-          display: false,
-          //text: 'Chart.js Horizontal Bar Chart'
-        },
-      },
-    },
-  });
+  var histogramContainer = document.getElementById("histogram-container");
+  var containerRect = histogramContainer.getBoundingClientRect();
+
+  const metricMax = Math.max(...bucketedData);
+  const svgHeight = containerRect.height;
+  const svgWidth = containerRect.width;
+  const barHeight = (0.9 * svgHeight) / bucketedData.length;
+
+  // Generate random colors for each bar
+  const colors = bucketedData.map(
+    () => `hsl(${Math.random() * 360}, 70%, 60%)`
+  );
+
+  let barsHtml = bucketedData
+    .map((count, index) => {
+      const barWidth = (count / metricMax) * svgWidth;
+      const color = colors[index];
+
+      // Determine whether to place the count inside or above the bar
+      const yTextPosition = index * barHeight + barHeight / 2;
+
+      return `
+        <rect x="20" y="${index * barHeight}"
+          width="${barWidth - 2}"
+          height="${barHeight}"
+          fill="${color}">
+        </rect>
+        <text x="0" y="${yTextPosition}" fill="white" text-anchor="start" font-size="12">${
+        labels[index]
+      }</text>
+      `;
+    })
+    .join("");
+
+  histogramContainer.innerHTML = barsHtml;
 }

@@ -74,7 +74,7 @@ export async function getFileHistogramData(
     } else {
       endLine = startLines[i + 1] - 1;
     }
-    labels[i] = `${startLine} - ${endLine}`;
+    labels[i] = `${startLine}-${endLine}`;
   }
 
   return [buckets, labels];
