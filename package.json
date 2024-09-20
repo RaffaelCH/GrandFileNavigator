@@ -51,6 +51,10 @@
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
         }
+      },
+      {
+        "command": "extension.analyzeHotspots",
+        "title": "Analyze Hotspots"
       }
     ],
     "views": {

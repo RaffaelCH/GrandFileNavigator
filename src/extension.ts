@@ -6,10 +6,12 @@ import {
   loadPositionHistory,
   savePositionHistory,
   updateLocationTracking,
-  categorizePositionsByFileName
+  categorizePositionsByFileName,
+  getPositionHistory
 } from "./location-tracking";
 import { HotspotsProvider, revealLocation } from "./HotspotsProvider";
 import { registerWebviewVisualization } from "./WebviewVisualization";
+import { enrichHotspotsByType } from "./HotspotsGrouper";
 
 var storageLocation: vscode.Uri | undefined;
 
@@ -44,18 +46,33 @@ export function activate(context: vscode.ExtensionContext) {
   );
   vscode.commands.registerCommand("hotspots.openRange", revealLocation);
 
-  vscode.window.onDidChangeActiveTextEditor(() => {
+    // Function to enrich and save hotspots whenever location tracking is updated
+    async function updateEnrichedHotspots() {
+      const hotspots = getPositionHistory();
+      if (!hotspots) {
+        vscode.window.showErrorMessage('No hotspots found.');
+        return;
+      }
+  
+      const enrichedHotspots = await enrichHotspotsByType(hotspots, context);
+      //vscode.window.showInformationMessage(`Enriched Hotspots updated with ${enrichedHotspots.length} entries.`);
+    }
+
+
+  vscode.window.onDidChangeActiveTextEditor(async () => {
     updateLocationTracking();
     console.log("Updated location tracking after active editor change.");
     const fileCounts = categorizePositionsByFileName();
     console.log("File counts after active editor change:", fileCounts);
+    await updateEnrichedHotspots();
   });
 
-  vscode.window.onDidChangeTextEditorVisibleRanges(() => {
+  vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
     updateLocationTracking();
     console.log("Updated location tracking after visible ranges change.");
     const fileCounts = categorizePositionsByFileName();
     console.log("File counts after visible ranges change:", fileCounts);
+    await updateEnrichedHotspots();
   });
 
   registerWebviewVisualization(context);
@@ -77,6 +94,21 @@ export function activate(context: vscode.ExtensionContext) {
   });
   
   context.subscriptions.push(showHistogramCommand);
+
+  const analyzeHotspotsCommand = vscode.commands.registerCommand('extension.analyzeHotspots', async () => {
+    const hotspots = getPositionHistory();
+
+    if (!hotspots) {
+        vscode.window.showErrorMessage('No hotspots found.');
+        return;
+    }
+
+    const groupedHotspots = await enrichHotspotsByType(hotspots, context);
+
+    vscode.window.showInformationMessage(`Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`);
+});
+
+context.subscriptions.push(analyzeHotspotsCommand);
 
 }
 
