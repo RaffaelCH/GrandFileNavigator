@@ -120,9 +120,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 			<body>
         <p id="errorMessage"></p>
         <svg id="histogram-container" style="width:100%;height:800px;"></svg>
+        <button onclick="vscodeApi.postMessage({command:'showRange', startLine: 0, endLine: 1});">Jump to Top</button>
 				<script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
-        <button onclick="vscodeApi.postMessage({command:'showRange', startLine: 0, endLine: 1});">Jump to Top</button>
+        <script>insertHistogram();</script>
 			</body>
 			</html>`;
   }
