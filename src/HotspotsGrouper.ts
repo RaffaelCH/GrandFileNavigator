@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { RangeData, PositionHistory } from './location-tracking';
 import * as path from 'path';
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { existsSync, writeFileSync } from "fs";
 
 interface EnrichedHotspot {
     filePath: string;
@@ -15,7 +15,7 @@ interface EnrichedHotspot {
 }
 
 const enrichedHotspotsFilename = "enrichedHotspots.json"; // File name
-let importanceArray: [number, string][] = [];  // Global 2D array to store importance and labels
+let importanceArray: [number, string, string][] = [];  // Global 2D array to store importance, file name, and line range
 
 export async function enrichHotspotsByType(hotspots: PositionHistory, context: vscode.ExtensionContext): Promise<EnrichedHotspot[]> {
     const enrichedHotspots: EnrichedHotspot[] = [];
@@ -47,15 +47,39 @@ export async function enrichHotspotsByType(hotspots: PositionHistory, context: v
         vscode.window.showErrorMessage(`Error saving enriched hotspots: ${error.message}`);
     }
 
-    importanceArray = enrichedHotspots.map(hotspot => [
-        hotspot.importance,  
-        `${hotspot.rangeData.startLine}-${hotspot.rangeData.endLine}`  
-    ]);
+    // Group and sort the importance array by file and line range
+    const groupedAndSortedArray = enrichedHotspots
+        .reduce((acc, hotspot) => {
+            const fileName = path.basename(hotspot.filePath);
+            if (!acc[fileName]) {
+                acc[fileName] = [];
+            }
+            acc[fileName].push([
+                hotspot.importance,  // Importance value
+                fileName,            // File name
+                `${hotspot.rangeData.startLine}-${hotspot.rangeData.endLine}`  // Line range as label
+            ]);
+            return acc;
+        }, {} as { [key: string]: Array<[number, string, string]> });
 
-    console.log("Updated Importance Array:", importanceArray);
+    // Sort each group by the start line of the range
+    for (const file in groupedAndSortedArray) {
+        groupedAndSortedArray[file].sort((a, b) => {
+            const startLineA = parseInt(a[2].split('-')[0], 10);
+            const startLineB = parseInt(b[2].split('-')[0], 10);
+            return startLineA - startLineB;
+        });
+    }
+
+    // Flatten the sorted groups into a single array
+    importanceArray = Object.values(groupedAndSortedArray).flat();
+
+    // Print the updated importance array
+    console.log("Sorted Importance Array by Line Range and File:", importanceArray);
 
     const importanceArrayFilename = "importanceArray.json";
 
+    // Save the sorted importance array to a JSON file
     try {
         const storageUri = context.storageUri || context.globalStorageUri;
         if (storageUri) {
@@ -72,9 +96,8 @@ export async function enrichHotspotsByType(hotspots: PositionHistory, context: v
     return enrichedHotspots;
 }
 
-
-// retrieve the 2D array of importance and line range
-export function getImportanceArray(): [number, string][] {
+// Retrieve the 2D array of importance and line range
+export function getImportanceArray(): [number, string, string][] {
     return importanceArray;
 }
 
@@ -92,13 +115,13 @@ const symbolWeights: { [key: number]: number } = {
     [vscode.SymbolKind.Namespace]: 6,
 };
 
+// Function to calculate the importance of a hotspot
 function calculateImportance(symbols: Array<{ symbolType: number, symbolName: string }>, timeSpent: number): number {
     const symbolImportance = symbols.reduce((total, symbol) => {
         const weight = symbolWeights[symbol.symbolType] || 1;
         return total + weight;
     }, 0);
 
-    
     // scaling time spent to smooth out long durations
     const timeFactor = 1 + Math.log(timeSpent + 1);
 
@@ -125,7 +148,7 @@ async function traverseHotspots(
 
                 const document = await vscode.workspace.openTextDocument(resolvedFilePath);
 
-                // Get symbols 
+                // Get symbols for the document
                 const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
                     'vscode.executeDocumentSymbolProvider', document.uri
                 );
@@ -181,4 +204,3 @@ function findAllMatchingSymbols(symbols: vscode.DocumentSymbol[], rangeData: Ran
     findSymbols(symbols); 
     return matchingSymbols;
 }
-
