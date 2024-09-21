@@ -99,6 +99,7 @@ function calculateImportance(symbols: Array<{ symbolType: number, symbolName: st
         return total + weight;
     }, 0);
 
+    
     // scaling time spent to smooth out long durations
     const timeFactor = 1 + Math.log(timeSpent + 1);
 
