@@ -179,7 +179,9 @@ function isObject(value: any): boolean {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function categorizePositionsByFileName(): { [fileName: string]: number } {
+export function categorizePositionsByFileName(): {
+  [fileName: string]: number;
+} {
   const positionHistory = getPositionHistory();
   const fileCountMap: { [fileName: string]: number } = {};
 
@@ -198,4 +200,26 @@ export function categorizePositionsByFileName(): { [fileName: string]: number } 
   traverseHistory(positionHistory);
 
   return fileCountMap;
+}
+
+export function getFileRangeData(file: vscode.Uri): RangeData[] {
+  function traverseHistory(history: PositionHistory, path: string[] = []) {
+    if (path.length === 0) {
+      return [];
+    }
+    var nextKey = path[0];
+    var value = history[nextKey];
+    if (value === undefined) {
+      return [];
+    }
+    if (Array.isArray(value)) {
+      return value;
+    }
+    var subPath = path.slice(1);
+    return traverseHistory(value, subPath);
+  }
+
+  var fileIdentifier = vscode.workspace.asRelativePath(file);
+  var identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
+  return traverseHistory(getPositionHistory(), identifierKeys);
 }
