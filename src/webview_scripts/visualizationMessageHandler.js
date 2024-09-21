@@ -8,15 +8,15 @@
           "histogramNodes",
           JSON.stringify(message.histogramNodes)
         );
+        insertHistogram();
         break;
       case "reloadHotspotsData":
         localStorage.setItem(
           "hotspotNodes",
           JSON.stringify(message.hotspotNodes)
         );
+        insertHotspotNodes();
         break;
     }
-
-    insertHistogram();
   });
 })();

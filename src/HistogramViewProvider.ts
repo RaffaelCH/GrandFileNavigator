@@ -7,6 +7,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
 
   private _view?: vscode.WebviewView;
+  private _visualizationType: string = "histogram";
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -61,9 +62,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     }
 
     var hotspotsData = getImportanceArray();
-    hotspotsData = hotspotsData.filter(
-      (data) => data[1] === activeTextEditor?.document.fileName
-    );
+    // TODO: Filter based on current file.
+    // hotspotsData = hotspotsData.filter(
+    //   (data) => data[1] === activeTextEditor?.document.fileName
+    // );
 
     // TODO: Adjust hotspots type to be more structured.
     var hotspotNodes = hotspotsData.map(
@@ -77,7 +79,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         )
     );
     hotspotNodes.sort((node) => node.metricValue);
-    hotspotNodes.slice(-6); // take 6 elements with highest metrics
+    hotspotNodes = hotspotNodes.slice(-6); // take 6 elements with highest metrics
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
@@ -93,6 +95,14 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     // Handle messages from the (histogram) webview.
     this._view.webview.onDidReceiveMessage((message) => {
       switch (message.command) {
+        case "switchVisualization":
+          if (this._visualizationType === "histogram") {
+            this._visualizationType = "hotspots";
+            this.updateHotspotsData();
+          } else {
+            this._visualizationType = "histogram";
+            this.updateHistogramData();
+          }
         case "showRange":
           vscode.window.activeTextEditor?.revealRange(
             new vscode.Range(
@@ -101,21 +111,13 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
             )
           );
           return;
-      }
-    }, undefined);
-
-    // Handle messages from the (hotpots) webview.
-    // TODO: Handle jumping to other files.
-    this._view.webview.onDidReceiveMessage((message) => {
-      switch (message.command) {
-        case "showLocation":
+        case "showLocation": // TODO: Handle jumping to other files.
           vscode.window.activeTextEditor?.revealRange(
             new vscode.Range(
               new vscode.Position(message.startLine, 0),
               new vscode.Position(message.endLine, 1)
             )
           );
-          return;
       }
     }, undefined);
   }
@@ -128,6 +130,14 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         "src",
         "webview_scripts",
         "insertHistogram.js"
+      )
+    );
+    const insertHotspotsUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        "src",
+        "webview_scripts",
+        "insertHotspots.js"
       )
     );
     const messageHandlerUri = webview.asWebviewUri(
@@ -157,21 +167,29 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 					and only allow scripts that have a specific nonce.
 					(See the 'webview-sample' extension sample for img-src content security policy examples)
 				
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${
+          webview.cspSource
+        }; script-src 'nonce-${nonce}';">
         -->
 
 				<meta name="viewport" content="width=device-width, height=device-height initial-scale=1.0">
         <script>
           const vscodeApi = acquireVsCodeApi(); // Set global const with reference to keep track of it.
         </script>
+        <script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
+        <script id="hotspots-inserter" nonce="${nonce}" src="${insertHotspotsUri}"></script>
+        <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
 			</head>
 			<body>
         <p id="errorMessage"></p>
-        <svg id="histogram-container" style="width:100%;height:800px;"></svg>
-        <button onclick="vscodeApi.postMessage({command:'showRange', startLine: 0, endLine: 1});">Jump to Top</button>
-				<script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
-        <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
-        <script>insertHistogram();</script>
+        <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
+        <svg id="histogram-container" style="width:100%;height:800px;">
+        <div id="hotspots-container" style="width:100%;">
+        ${
+          this._visualizationType === "histogram"
+            ? `<script>insertHistogram();</script>`
+            : `<script>insertHotspots();</script>`
+        }
 			</body>
 			</html>`;
   }
