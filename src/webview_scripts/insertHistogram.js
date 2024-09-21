@@ -35,8 +35,9 @@ function insertHistogram() {
       const yTextPosition = index * barHeight + barHeight / 2;
 
       return `
-        <rect x="20" y="${index * barHeight}"
-          width="${barWidth - 2}"
+        <rect index=${index}
+          x="20" y="${index * barHeight}"
+          width="${barWidth + 1}"
           height="${barHeight}"
           fill="${color}">
         </rect>
@@ -48,4 +49,14 @@ function insertHistogram() {
     .join("");
 
   histogramContainer.innerHTML = barsHtml;
+
+  histogramContainer.addEventListener("click", function (event) {
+    var index = event.target.attributes.index.value;
+    var histogramNode = histogramNodes[index];
+    vscodeApi.postMessage({
+      command: "showRange",
+      startLine: histogramNode.startLine,
+      endLine: histogramNode.endLine,
+    });
+  });
 }
