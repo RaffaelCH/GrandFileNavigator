@@ -1,7 +1,7 @@
 //import Chart from "chart.js/auto";
 import * as vscode from "vscode";
-import { getFileRangeData } from "./location-tracking.js";
-import { HistogramNode } from "./sidebar_types/histogramNode.js";
+import { getFileRangeData } from "./location-tracking";
+import { HistogramNode } from "./sidebar_types/histogramNode";
 
 export async function getFileHistogramData(
   fileUri: vscode.Uri

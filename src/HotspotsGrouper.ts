@@ -94,12 +94,6 @@ export async function enrichHotspotsByType(
   // Flatten the sorted groups into a single array
   importanceArray = Object.values(groupedAndSortedArray).flat();
 
-  // Print the updated importance array
-  console.log(
-    "Sorted Importance Array by Line Range and File:",
-    importanceArray
-  );
-
   const importanceArrayFilename = "importanceArray.json";
 
   // Save the sorted importance array to a JSON file
