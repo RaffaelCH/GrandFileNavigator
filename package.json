@@ -44,7 +44,7 @@
         }
       },
       {
-        "command": "extension.showHistogram",
+        "command": "grandFileNavigator.showFileHistogram",
         "title": "Show File Access Histogram",
         "icon": {
           "light": "resources/light/refresh.svg",
@@ -103,7 +103,7 @@
   },
   "keybindings": [
     {
-      "command": "extension.showHistogram",
+      "command": "grandfilenavigator.showFileHistogram",
       "key": "cmd+alt+h",
       "when": "editorTextFocus"
     }

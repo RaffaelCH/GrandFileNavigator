@@ -91,9 +91,6 @@ export function activate(context: vscode.ExtensionContext) {
     await updateEnrichedHotspots();
   });
 
-  registerWebviewPanelHistogram(context);
-  registerWebviewVisualization(context);
-
   const analyzeHotspotsCommand = vscode.commands.registerCommand(
     "extension.analyzeHotspots",
     async () => {
