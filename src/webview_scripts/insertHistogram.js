@@ -1,11 +1,8 @@
 function insertHistogram() {
-  var bucketedDataJson = localStorage.getItem("importance");
-  var labelsJson = localStorage.getItem("labels");
+  var histogramNodesJson = localStorage.getItem("histogramNodes");
+  var histogramNodes = JSON.parse(histogramNodesJson);
 
-  var bucketedData = JSON.parse(bucketedDataJson);
-  var labels = JSON.parse(labelsJson);
-
-  if (bucketedData.length === 0 || labels.length === 0) {
+  if (histogramNodes.length === 0) {
     let errorMessageContainer = document.getElementById("errorMessage");
     errorMessageContainer.textContent = "No histogram data found";
     return;
@@ -14,10 +11,12 @@ function insertHistogram() {
   var histogramContainer = document.getElementById("histogram-container");
   var containerRect = histogramContainer.getBoundingClientRect();
 
-  const metricMax = Math.max(...bucketedData);
+  var metricValues = histogramNodes.map((node) => node.metricValue);
+
+  const metricMax = Math.max(...metricValues);
   const svgHeight = containerRect.height;
   const svgWidth = containerRect.width;
-  const barHeight = (0.9 * svgHeight) / bucketedData.length;
+  const barHeight = (0.9 * svgHeight) / histogramNodes.length;
 
   // Generate random colors for each bar
   const colors = bucketedData.map(
@@ -27,7 +26,7 @@ function insertHistogram() {
       )}, 0)`
   );
 
-  let barsHtml = bucketedData
+  let barsHtml = histogramNodes
     .map((count, index) => {
       const barWidth = (count / metricMax) * svgWidth;
       const color = colors[index];

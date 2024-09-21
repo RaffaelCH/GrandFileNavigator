@@ -9,7 +9,7 @@ import {
   categorizePositionsByFileName,
   getPositionHistory,
 } from "./location-tracking.js";
-import { HotspotsProvider, revealLocation } from "./HotspotsProvider.js";
+import { HotspotsProvider, revealNodeLocation } from "./HotspotsProvider.js";
 import { registerWebviewVisualization } from "./WebviewVisualization.js";
 import { registerWebviewPanelHistogram } from "./WebviewPanelHistogram.js";
 import { HistogramViewProvider } from "./HistogramViewProvider.js";
@@ -47,7 +47,10 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("hotspots.refreshEntry", () =>
     hotspotsProvider.refresh()
   );
-  vscode.commands.registerCommand("hotspots.openRange", revealLocation);
+  vscode.commands.registerCommand(
+    "hotspots.openNodeLocation",
+    revealNodeLocation
+  );
 
   registerWebviewVisualization(context);
 

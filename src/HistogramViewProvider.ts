@@ -38,14 +38,13 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    var [importance, labels] = await getFileHistogramData(
+    var histogramNodes = await getFileHistogramData(
       activeTextEditor.document.uri
     );
 
     this._view.webview.postMessage({
-      command: "updateData",
-      importance: importance,
-      labels: labels,
+      command: "reloadData",
+      histogramNodes: histogramNodes,
     });
   }
 
@@ -71,9 +70,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
   private async _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
-    const chartJsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "resources", "chart.js")
-    );
     const insertHistogramUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
         this._extensionUri,
