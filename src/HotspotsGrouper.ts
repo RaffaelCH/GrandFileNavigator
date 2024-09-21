@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { RangeData, PositionHistory } from './location-tracking';
-import { lstatSync } from 'fs';
 import * as path from 'path';
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
