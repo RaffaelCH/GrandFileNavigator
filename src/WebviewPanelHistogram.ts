@@ -38,7 +38,7 @@ function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
   const barWidth = svgWidth / data.length;
   const textAreaHeight = 100; // Extra space for the file names
 
-  // Generate random colors for each bar
+  // Generate random colors for each bar using a correct template string
   const colors = labels.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`);
 
   let barsHtml = data

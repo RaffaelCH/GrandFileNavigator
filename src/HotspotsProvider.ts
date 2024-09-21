@@ -6,6 +6,7 @@ import {
   PositionHistory,
   RangeData,
 } from "./location-tracking.js";
+import { revealLocation } from "./revealLocation.js";
 
 // Used for listing the hotspots in the sidebar.
 export class HotspotsProvider
@@ -209,31 +210,6 @@ class RangeNode extends vscode.TreeItem {
   };
 }
 
-export function revealLocation(node: RangeNode) {
-  var rootUri =
-    vscode.workspace.workspaceFolders &&
-    vscode.workspace.workspaceFolders.length > 0
-      ? vscode.workspace.workspaceFolders[0].uri.fsPath.replaceAll("\\", "/")
-      : undefined;
-
-  if (rootUri === undefined) {
-    return;
-  }
-
-  var file = rootUri + node.filePath;
-  vscode.workspace.openTextDocument(file).then(
-    (document: vscode.TextDocument) => {
-      vscode.window.showTextDocument(document, 1, false).then((editor) => {
-        editor.revealRange(
-          new vscode.Range(
-            new vscode.Position(node.startLine, 0),
-            new vscode.Position(node.endLine, 0)
-          )
-        );
-      });
-    },
-    (error: any) => {
-      console.error(error);
-    }
-  );
+export function revealNodeLocation(node: RangeNode) {
+  revealLocation(node.filePath, node.startLine, node.endLine);
 }

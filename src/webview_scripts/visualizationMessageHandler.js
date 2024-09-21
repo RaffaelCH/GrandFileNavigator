@@ -3,9 +3,11 @@
     const message = event.data; // The JSON data our extension sent
 
     switch (message.command) {
-      case "updateData":
-        localStorage.setItem("importance", JSON.stringify(message.importance));
-        localStorage.setItem("labels", JSON.stringify(message.labels));
+      case "reloadData":
+        localStorage.setItem(
+          "histogramNodes",
+          JSON.stringify(message.histogramNodes)
+        );
         break;
     }
 

@@ -1,14 +1,15 @@
 //import Chart from "chart.js/auto";
 import * as vscode from "vscode";
 import { getFileRangeData } from "./location-tracking.js";
+import { HistogramNode } from "./sidebar_types/histogramNode.js";
 
 export async function getFileHistogramData(
   fileUri: vscode.Uri
-): Promise<[number[], string[]]> {
+): Promise<HistogramNode[]> {
   var rangeData = getFileRangeData(fileUri);
 
   if (rangeData.length === 0) {
-    return [[], []];
+    return [];
   }
 
   var totalLineCount = await vscode.workspace
@@ -22,7 +23,6 @@ export async function getFileHistogramData(
   var splitCount = Math.ceil(totalLineCount / bucketSize);
 
   var buckets = new Array(splitCount).fill(0);
-  var labels = new Array(splitCount).fill("");
 
   var startLines = [splitCount];
   for (var i = 0; i < splitCount; ++i) {
@@ -66,6 +66,7 @@ export async function getFileHistogramData(
     }
   });
 
+  var histogramNodes = new Array(splitCount);
   for (var i = 0; i < splitCount; ++i) {
     var startLine = startLines[i];
     var endLine: number;
@@ -74,8 +75,15 @@ export async function getFileHistogramData(
     } else {
       endLine = startLines[i + 1] - 1;
     }
-    labels[i] = `${startLine}-${endLine}`;
+    var label = `${startLine}-${endLine}`;
+    histogramNodes[i] = new HistogramNode(
+      label,
+      buckets[i],
+      fileUri.fsPath.replaceAll("\\", "/"),
+      startLine,
+      endLine
+    );
   }
 
-  return [buckets, labels];
+  return histogramNodes;
 }

@@ -1,11 +1,8 @@
 function insertHistogram() {
-  var bucketedDataJson = localStorage.getItem("importance");
-  var labelsJson = localStorage.getItem("labels");
+  var histogramNodesJson = localStorage.getItem("histogramNodes");
+  var histogramNodes = JSON.parse(histogramNodesJson);
 
-  var bucketedData = JSON.parse(bucketedDataJson);
-  var labels = JSON.parse(labelsJson);
-
-  if (bucketedData.length === 0 || labels.length === 0) {
+  if (histogramNodes.length === 0) {
     let errorMessageContainer = document.getElementById("errorMessage");
     errorMessageContainer.textContent = "No histogram data found";
     return;
@@ -14,39 +11,52 @@ function insertHistogram() {
   var histogramContainer = document.getElementById("histogram-container");
   var containerRect = histogramContainer.getBoundingClientRect();
 
-  const metricMax = Math.max(...bucketedData);
+  var metricValues = histogramNodes.map((node) => node.metricValue);
+
+  const metricMax = Math.max(...metricValues);
   const svgHeight = containerRect.height;
   const svgWidth = containerRect.width;
-  const barHeight = (0.9 * svgHeight) / bucketedData.length;
+  const barHeight = (0.9 * svgHeight) / histogramNodes.length;
 
-  // Generate random colors for each bar
-  const colors = bucketedData.map(
-    (data) =>
-      `rgb(${Math.floor((255 * data) / metricMax)}, ${Math.floor(
-        255 * (1 - data / metricMax)
+  // Generate colors ranging from green to red, based on metric value.
+  const colors = metricValues.map(
+    (metricValue) =>
+      `rgb(${Math.floor((255 * metricValue) / metricMax)}, ${Math.floor(
+        255 * (1 - metricValue / metricMax)
       )}, 0)`
   );
 
-  let barsHtml = bucketedData
-    .map((count, index) => {
-      const barWidth = (count / metricMax) * svgWidth;
+  let barsHtml = histogramNodes
+    .map((histogramNode, index) => {
+      const barWidth = (histogramNode.metricValue / metricMax) * svgWidth;
       const color = colors[index];
 
       // Determine whether to place the count inside or above the bar
       const yTextPosition = index * barHeight + barHeight / 2;
 
       return `
-        <rect x="20" y="${index * barHeight}"
-          width="${barWidth - 2}"
+        <rect index=${index}
+          x="20" y="${index * barHeight}"
+          width="${barWidth + 1}"
           height="${barHeight}"
           fill="${color}">
         </rect>
         <text x="0" y="${yTextPosition}" fill="white" text-anchor="start" font-size="12">${
-        labels[index]
+        histogramNode.displayName
       }</text>
       `;
     })
     .join("");
 
   histogramContainer.innerHTML = barsHtml;
+
+  histogramContainer.addEventListener("click", function (event) {
+    var index = event.target.attributes.index.value;
+    var histogramNode = histogramNodes[index];
+    vscodeApi.postMessage({
+      command: "showRange",
+      startLine: histogramNode.startLine,
+      endLine: histogramNode.endLine,
+    });
+  });
 }
