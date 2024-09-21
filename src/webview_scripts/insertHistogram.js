@@ -21,7 +21,10 @@ function insertHistogram() {
 
   // Generate random colors for each bar
   const colors = bucketedData.map(
-    () => `hsl(${Math.random() * 360}, 70%, 60%)`
+    (data) =>
+      `rgb(${Math.floor((255 * data) / metricMax)}, ${Math.floor(
+        255 * (1 - data / metricMax)
+      )}, 0)`
   );
 
   let barsHtml = bucketedData
