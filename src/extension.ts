@@ -18,9 +18,7 @@ var storageLocation: vscode.Uri | undefined;
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  console.log(
-    'Congratulations, your extension "grandfilenavigator" is now active!'
-  );
+  console.log('Congratulations, your extension "grandfilenavigator" is now active!');
 
   storageLocation = context.storageUri;
 
@@ -60,14 +58,15 @@ export function activate(context: vscode.ExtensionContext) {
       //vscode.window.showInformationMessage(`Enriched Hotspots updated with ${enrichedHotspots.length} entries.`);
     }
 
+  // Commenting 'provider.updateHistogramData()' until provider gets defined, maybe in a new merge?
 
+  
   vscode.window.onDidChangeActiveTextEditor(async () => {
     updateLocationTracking();
     console.log("Updated location tracking after active editor change.");
     const fileCounts = categorizePositionsByFileName();
     console.log("File counts after active editor change:", fileCounts);
     await updateEnrichedHotspots();
-    await provider.updateHistogramData();
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
@@ -141,8 +140,8 @@ function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
   const barWidth = svgWidth / data.length;
   const textAreaHeight = 100; // Extra space for the file names
 
-  // Generate random colors for each bar
-  const colors = labels.map(() => hsl(${Math.random() * 360}, 70%, 60%));
+  // Generate random colors for each bar using a correct template string
+  const colors = labels.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`);
 
   let barsHtml = data.map((count, index) => {
     const barHeight = (count / maxCount) * svgHeight;
@@ -153,14 +152,14 @@ function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
     const yTextPosition = barHeight > 20 ? svgHeight - barHeight + 15 : svgHeight - barHeight - 20;
     const textAnchor = barHeight > 20 ? "middle" : "start";
 
-    return 
+    return `
       <rect x="${index * barWidth}" y="${svgHeight - barHeight}" width="${barWidth - 2}" height="${barHeight}" fill="${color}"></rect>
       <text x="${xPosition}" y="${yTextPosition}" fill="white" text-anchor="middle" font-size="12">${count}</text>
       <text x="${xPosition}" y="${svgHeight + 10}" fill="white" text-anchor="middle" font-size="10" transform="rotate(-90, ${xPosition}, ${svgHeight + 10})">${labels[index]}</text>
-    ;
+    `;
   }).join('');
 
-  return 
+  return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -180,5 +179,5 @@ function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
       </svg>
     </body>
     </html>
-  ;
+  `;
 }
