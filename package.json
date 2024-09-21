@@ -12,8 +12,7 @@
   ],
   "activationEvents": [
     "onWebviewPanel:grandFileNavigator",
-    "onLanguage:java",
-    "onCommand:extension.showHistogram"
+    "onLanguage:java"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -57,7 +56,24 @@
         "title": "Analyze Hotspots"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "grandfilenavigator-sidebar-view",
+          "title": "File Visualization",
+          "icon": "resources/dep.svg"
+        }
+      ]
+    },
     "views": {
+      "grandfilenavigator-sidebar-view": [
+        {
+          "type": "webview",
+          "id": "grandfilenavigator-histogram",
+          "name": "File Histogram",
+          "icon": "media/dep.svg"
+        }
+      ],
       "explorer": [
         {
           "id": "hotspots",
@@ -100,10 +116,7 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
-  "dependencies": {
-    "chartjs": "^0.3.24",
-    "vscode": "*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",

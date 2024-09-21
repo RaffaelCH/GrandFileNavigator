@@ -5,28 +5,28 @@ import {
   getPositionHistory,
   PositionHistory,
   RangeData,
-} from "./location-tracking";
+} from "./location-tracking.js";
 
 // Used for listing the hotspots in the sidebar.
 export class HotspotsProvider
-  implements vscode.TreeDataProvider<DirectoryNode | RangeNode>
+  implements vscode.TreeDataProvider<FilesystemNode | RangeNode>
 {
   constructor(private workspaceRoot: string | undefined) {}
 
-  getTreeItem(element: DirectoryNode | RangeNode): vscode.TreeItem {
+  getTreeItem(element: FilesystemNode | RangeNode): vscode.TreeItem {
     return element;
   }
 
   getChildren(
-    element?: DirectoryNode
-  ): Thenable<(DirectoryNode | RangeNode)[]> {
+    element?: FilesystemNode
+  ): Thenable<(FilesystemNode | RangeNode)[]> {
     if (!this.workspaceRoot) {
       vscode.window.showInformationMessage("No dependency in empty workspace");
       return Promise.resolve([]);
     }
 
     // Node is directory -> expand subdirectories
-    if (element instanceof DirectoryNode) {
+    if (element instanceof FilesystemNode) {
       return Promise.resolve(element.children);
     }
 
@@ -36,7 +36,7 @@ export class HotspotsProvider
   /**
    * Convert the tracked ranges/nodes to tree nodes.
    */
-  private getTrackedNodes(): (DirectoryNode | RangeNode)[] {
+  private getTrackedNodes(): (FilesystemNode | RangeNode)[] {
     var positionHistory = getPositionHistory();
 
     var treePositions = this.convertPositionsToTree("", "", positionHistory);
@@ -52,7 +52,7 @@ export class HotspotsProvider
     fullPath: string,
     relativePath: string,
     positionNode: PositionHistory | RangeData[] | undefined
-  ): (DirectoryNode | RangeNode)[] | undefined {
+  ): (FilesystemNode | RangeNode)[] | undefined {
     if (positionNode === undefined) {
       return undefined;
     }
@@ -83,7 +83,7 @@ export class HotspotsProvider
       return this.convertPositionsToTree(fullPath, subPath, positionNode[key]);
     }
 
-    var children: DirectoryNode[] = [];
+    var children: FilesystemNode[] = [];
     for (var key in positionNode) {
       var childNodes = this.convertPositionsToTree(
         fullPath + "/" + key,
@@ -95,7 +95,7 @@ export class HotspotsProvider
         continue;
       }
 
-      let node = new DirectoryNode(
+      let node = new FilesystemNode(
         key,
         childNodes,
         vscode.TreeItemCollapsibleState.Collapsed
@@ -104,7 +104,7 @@ export class HotspotsProvider
     }
 
     return [
-      new DirectoryNode(
+      new FilesystemNode(
         relativePath,
         children,
         vscode.TreeItemCollapsibleState.Collapsed
@@ -123,12 +123,12 @@ export class HotspotsProvider
 
   // React to a tree node being changed.
   private _onDidChangeTreeData: vscode.EventEmitter<
-    DirectoryNode | RangeNode | undefined | null | void
+    FilesystemNode | RangeNode | undefined | null | void
   > = new vscode.EventEmitter<
-    DirectoryNode | RangeNode | undefined | null | void
+    FilesystemNode | RangeNode | undefined | null | void
   >();
   readonly onDidChangeTreeData: vscode.Event<
-    DirectoryNode | RangeNode | undefined | null | void
+    FilesystemNode | RangeNode | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
   refresh(): void {
@@ -136,10 +136,10 @@ export class HotspotsProvider
   }
 }
 
-class DirectoryNode extends vscode.TreeItem {
+class FilesystemNode extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    public readonly children: (DirectoryNode | RangeNode)[],
+    public readonly children: (FilesystemNode | RangeNode)[],
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
   ) {
     super(label, collapsibleState);
