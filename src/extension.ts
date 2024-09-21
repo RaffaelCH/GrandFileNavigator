@@ -76,18 +76,12 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.window.onDidChangeActiveTextEditor(async () => {
     updateLocationTracking();
-    console.log("Updated location tracking after active editor change.");
-    const fileCounts = categorizePositionsByFileName();
-    console.log("File counts after active editor change:", fileCounts);
     provider.updateHistogramData();
     await updateEnrichedHotspots();
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
     updateLocationTracking();
-    console.log("Updated location tracking after visible ranges change.");
-    const fileCounts = categorizePositionsByFileName();
-    console.log("File counts after visible ranges change:", fileCounts);
     await updateEnrichedHotspots();
   });
 

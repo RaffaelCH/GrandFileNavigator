@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import { getFileHistogramData } from "./loadHistogramData.js";
+import { getImportanceArray } from "./HotspotsGrouper.js";
+import { HotspotNode } from "./sidebar_types/HotspotNode.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -43,8 +45,43 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     );
 
     this._view.webview.postMessage({
-      command: "reloadData",
+      command: "reloadHistogramData",
       histogramNodes: histogramNodes,
+    });
+  }
+
+  public async updateHotspotsData() {
+    if (!this._view) {
+      return;
+    }
+
+    var activeTextEditor = vscode.window.activeTextEditor;
+    if (!activeTextEditor) {
+      return;
+    }
+
+    var hotspotsData = getImportanceArray();
+    hotspotsData = hotspotsData.filter(
+      (data) => data[1] === activeTextEditor?.document.fileName
+    );
+
+    // TODO: Adjust hotspots type to be more structured.
+    var hotspotNodes = hotspotsData.map(
+      (data) =>
+        new HotspotNode(
+          data[2],
+          data[0],
+          data[1],
+          parseInt(data[2].split("-")[0]),
+          parseInt(data[2].split("-")[1])
+        )
+    );
+    hotspotNodes.sort((node) => node.metricValue);
+    hotspotNodes.slice(-6); // take 6 elements with highest metrics
+
+    this._view.webview.postMessage({
+      command: "reloadHotspotsData",
+      hotspotNodes: hotspotNodes,
     });
   }
 
@@ -53,10 +90,25 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    // Handle messages from the webview
+    // Handle messages from the (histogram) webview.
     this._view.webview.onDidReceiveMessage((message) => {
       switch (message.command) {
         case "showRange":
+          vscode.window.activeTextEditor?.revealRange(
+            new vscode.Range(
+              new vscode.Position(message.startLine, 0),
+              new vscode.Position(message.endLine, 1)
+            )
+          );
+          return;
+      }
+    }, undefined);
+
+    // Handle messages from the (hotpots) webview.
+    // TODO: Handle jumping to other files.
+    this._view.webview.onDidReceiveMessage((message) => {
+      switch (message.command) {
+        case "showLocation":
           vscode.window.activeTextEditor?.revealRange(
             new vscode.Range(
               new vscode.Position(message.startLine, 0),
