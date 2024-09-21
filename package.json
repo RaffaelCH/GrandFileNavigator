@@ -112,9 +112,7 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
-  "dependencies": {
-    "chart.js": "^4.4.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
