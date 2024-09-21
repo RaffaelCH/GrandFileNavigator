@@ -53,13 +53,9 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   registerWebviewVisualization(context);
-
   registerWebviewPanelHistogram(context);
 
-  console.log(getPositionHistory());
-
   const provider = new HistogramViewProvider(context.extensionUri);
-
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       HistogramViewProvider.viewType,

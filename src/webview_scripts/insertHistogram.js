@@ -18,17 +18,17 @@ function insertHistogram() {
   const svgWidth = containerRect.width;
   const barHeight = (0.9 * svgHeight) / histogramNodes.length;
 
-  // Generate random colors for each bar
-  const colors = bucketedData.map(
-    (data) =>
-      `rgb(${Math.floor((255 * data) / metricMax)}, ${Math.floor(
-        255 * (1 - data / metricMax)
+  // Generate colors ranging from green to red, based on metric value.
+  const colors = metricValues.map(
+    (metricValue) =>
+      `rgb(${Math.floor((255 * metricValue) / metricMax)}, ${Math.floor(
+        255 * (1 - metricValue / metricMax)
       )}, 0)`
   );
 
   let barsHtml = histogramNodes
-    .map((count, index) => {
-      const barWidth = (count / metricMax) * svgWidth;
+    .map((histogramNode, index) => {
+      const barWidth = (histogramNode.metricValue / metricMax) * svgWidth;
       const color = colors[index];
 
       // Determine whether to place the count inside or above the bar
@@ -41,7 +41,7 @@ function insertHistogram() {
           fill="${color}">
         </rect>
         <text x="0" y="${yTextPosition}" fill="white" text-anchor="start" font-size="12">${
-        labels[index]
+        histogramNode.displayName
       }</text>
       `;
     })
