@@ -63,6 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
       provider
     )
   );
+
   // Function to enrich and save hotspots whenever location tracking is updated
   async function updateEnrichedHotspots() {
     const hotspots = getPositionHistory();
@@ -70,6 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showErrorMessage("No hotspots found.");
       return;
     }
+    await enrichHotspotsByType(hotspots, context);
   }
 
   vscode.window.onDidChangeActiveTextEditor(async () => {
