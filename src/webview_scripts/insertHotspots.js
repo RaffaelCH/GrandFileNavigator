@@ -17,6 +17,7 @@ function insertHotspotNodes() {
   // var containerRect = hotspotContainer.getBoundingClientRect();
   var nodeWidth = 250; //containerRect.width;
 
+  // TODO: Add icon based on NodeType.
   let barsHtml = hotspotNodes
     .map((hotspotNode, index) => {
       const color = "blue"; // TODO: Adjust based on type?

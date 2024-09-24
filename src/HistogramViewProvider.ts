@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { getFileHistogramData } from "./loadHistogramData.js";
 import { getImportanceArray } from "./HotspotsGrouper.js";
-import { HotspotNode } from "./sidebar_types/HotspotNode.js";
+import SidebarNode from "./sidebar_types/SidebarNode.js";
+import { NodeType } from "./sidebar_types/NodeType.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -70,9 +71,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     // TODO: Adjust hotspots type to be more structured.
     var hotspotNodes = hotspotsData.map(
       (data) =>
-        new HotspotNode(
+        new SidebarNode(
           data[2],
           data[0],
+          NodeType.Other, // TODO: Replace with actual node type.
           data[1],
           parseInt(data[2].split("-")[0]),
           parseInt(data[2].split("-")[1])

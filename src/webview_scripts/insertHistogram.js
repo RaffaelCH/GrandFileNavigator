@@ -39,6 +39,7 @@ function insertHistogram() {
       // Determine whether to place the count inside or above the bar
       const yTextPosition = index * barHeight + barHeight / 2;
 
+      // TODO: Add icon based on NodeType.
       return `
         <rect index=${index}
           x="20" y="${index * barHeight}"
