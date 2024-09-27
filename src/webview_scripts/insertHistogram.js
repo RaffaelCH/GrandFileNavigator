@@ -7,13 +7,18 @@ function insertHistogram() {
   var histogramNodes = JSON.parse(histogramNodesJson);
 
   let errorMessageContainer = document.getElementById("errorMessage");
+  var visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
   var histogramContainer = document.getElementById("histogram-container");
 
   if (histogramNodes.length === 0) {
     errorMessageContainer.textContent = "No histogram data found";
+    visualizationContainer.style.display = "none";
     return;
   } else {
     errorMessageContainer.textContent = "";
+    visualizationContainer.style.display = "initial";
     histogramContainer.style.display = "initial";
     document.getElementById("hotspots-container").style.display = "none";
   }

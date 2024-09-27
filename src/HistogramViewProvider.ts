@@ -9,6 +9,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
   private _visualizationType: string = "histogram";
+  private histogramUpdateTimer = setInterval(() => this.updateView(), 5000);
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -29,7 +30,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     );
 
     this.setupMessageHandlers();
+    this.updateView();
+  }
 
+  public async updateView() {
     if (this._visualizationType === "histogram") {
       this.updateHistogramData();
     } else {
@@ -37,15 +41,15 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  public async indicateFileLocation(visibleRange: vscode.Range) {
+  public async indicateFileLocation(startLine: number, endLine: number) {
     if (!this._view) {
       return;
     }
 
     this._view.webview.postMessage({
       command: "indicateRange",
-      startLine: visibleRange.start.line,
-      endLine: visibleRange.end.line,
+      startLine: startLine,
+      endLine: endLine,
     });
   }
 
@@ -68,7 +72,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       histogramNodes: histogramNodes,
     });
 
-    this.indicateFileLocation(activeTextEditor.visibleRanges[0]); // TODO: Include all ranges.
+    this.indicateFileLocation(
+      activeTextEditor.visibleRanges[0].start.line,
+      activeTextEditor.visibleRanges.at(-1)?.end.line!
+    );
   }
 
   public async updateHotspotsData() {
@@ -204,8 +211,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 			<body>
         <p id="errorMessage"></p>
         <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
-        <svg id="histogram-container" style="width:100%;height:800px;">
-        <div id="hotspots-container" style="width:100%; display: flex; align-items: center; justify-content: center; flex-direction:column;">
+        <div id="visualization-container">
+          <svg id="histogram-container" style="width:100%;height:800px;">
+          <div id="hotspots-container" style="width:100%; display: flex; align-items: center; justify-content: center; flex-direction:column;">
+        </div>
         ${
           this._visualizationType === "histogram"
             ? `<script>insertHistogram();</script>`

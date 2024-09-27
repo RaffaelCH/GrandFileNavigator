@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import * as vscode from "vscode";
+import { LocationTracker } from "./LocationTracker";
 
 // Encapsulates the information about one node (hotspot).
 export class RangeData {
@@ -42,73 +43,21 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
   }
 }
 
-var a = [{ a: 1 }, { a: 2 }];
-a.slice;
-
 // Tracks user position.
 var positionHistory = new PositionHistory();
-
-// Whenever the editor location changes, add previous location to history.
-var isTracking = false; // is the current window being tracked
-var lastDocument: vscode.TextDocument;
-var lastVisibleRanges: readonly vscode.Range[];
-var lastVisibleRangeUpdate = Date.now();
 
 //vscode.window.onDidChangeWindowState
 //vscode.workspace.onDidChangeTextDocument
 
-// Adds current view to history.
-export function updateLocationTracking() {
-  if (shouldUpdateTracking()) {
-    addLastLocationToHistory();
+export function addLastLocationToHistory() {
+  if (LocationTracker.lastDocument === undefined) {
+    return;
   }
 
-  if (shouldTrackWindow()) {
-    if (vscode.window.activeTextEditor) {
-      isTracking = true;
-      lastDocument = vscode.window.activeTextEditor.document;
-      lastVisibleRanges = vscode.window.activeTextEditor.visibleRanges;
-    }
-  }
-
-  lastVisibleRangeUpdate = Date.now();
-}
-
-// If previous position was relevant for location tracking.
-function shouldUpdateTracking() {
-  if (!isTracking) {
-    return false;
-  }
-
-  if (Date.now() - lastVisibleRangeUpdate < 100) {
-    return false;
-  }
-
-  return true;
-}
-
-function shouldTrackWindow() {
-  if (!vscode.window.activeTextEditor) {
-    return false;
-  }
-
-  var currentDocument = vscode.window.activeTextEditor.document;
-
-  // Only track .java files.
-  if (currentDocument.languageId !== "java") {
-    return false;
-  }
-
-  if (currentDocument.uri.scheme !== "file") {
-    return false;
-  }
-
-  return true;
-}
-
-function addLastLocationToHistory() {
-  var viewDuration = Date.now() - lastVisibleRangeUpdate;
-  let fileIdentifier = vscode.workspace.asRelativePath(lastDocument.uri);
+  var viewDuration = Date.now() - LocationTracker.lastVisibleRangeUpdate;
+  let fileIdentifier = vscode.workspace.asRelativePath(
+    LocationTracker.lastDocument.uri
+  );
   var identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
 
   var currentLocationDataNode = positionHistory;
@@ -133,7 +82,7 @@ function addLastLocationToHistory() {
       }
       let positionDataArray = currentLocationDataNode[nextKey];
       if (Array.isArray(positionDataArray)) {
-        lastVisibleRanges?.forEach((visibleRange) => {
+        LocationTracker.lastVisibleRanges?.forEach((visibleRange) => {
           var existingRange = positionDataArray.find(
             (range) =>
               range.startLine === visibleRange.start.line &&
