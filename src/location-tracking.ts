@@ -42,6 +42,9 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
   }
 }
 
+var a = [{ a: 1 }, { a: 2 }];
+a.slice;
+
 // Tracks user position.
 var positionHistory = new PositionHistory();
 

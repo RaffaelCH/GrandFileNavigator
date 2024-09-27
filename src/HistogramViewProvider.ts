@@ -29,7 +29,24 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     );
 
     this.setupMessageHandlers();
-    this.updateHistogramData();
+
+    if (this._visualizationType === "histogram") {
+      this.updateHistogramData();
+    } else {
+      this.updateHotspotsData();
+    }
+  }
+
+  public async indicateFileLocation(visibleRange: vscode.Range) {
+    if (!this._view) {
+      return;
+    }
+
+    this._view.webview.postMessage({
+      command: "indicateRange",
+      startLine: visibleRange.start.line,
+      endLine: visibleRange.end.line,
+    });
   }
 
   public async updateHistogramData() {
@@ -50,6 +67,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       command: "reloadHistogramData",
       histogramNodes: histogramNodes,
     });
+
+    this.indicateFileLocation(activeTextEditor.visibleRanges[0]); // TODO: Include all ranges.
   }
 
   public async updateHotspotsData() {
@@ -186,7 +205,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         <p id="errorMessage"></p>
         <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
         <svg id="histogram-container" style="width:100%;height:800px;">
-        <div id="hotspots-container" style="width:100%;">
+        <div id="hotspots-container" style="width:100%; display: flex; align-items: center; justify-content: center; flex-direction:column;">
         ${
           this._visualizationType === "histogram"
             ? `<script>insertHistogram();</script>`

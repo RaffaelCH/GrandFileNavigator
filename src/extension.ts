@@ -74,28 +74,10 @@ export function activate(context: vscode.ExtensionContext) {
     await enrichHotspotsByType(hotspots, context);
   }
 
-  vscode.window.onDidChangeActiveTextEditor(async () => {
-    updateLocationTracking();
-    provider.updateHistogramData();
-    await updateEnrichedHotspots();
-  });
-
-  vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
-    updateLocationTracking();
-    await updateEnrichedHotspots();
-  });
-
   const analyzeHotspotsCommand = vscode.commands.registerCommand(
     "extension.analyzeHotspots",
     async () => {
-      const hotspots = getPositionHistory();
-
-      if (!hotspots) {
-        vscode.window.showErrorMessage("No hotspots found.");
-        return;
-      }
-
-      const groupedHotspots = await enrichHotspotsByType(hotspots, context);
+      const groupedHotspots = updateEnrichedHotspots();
 
       vscode.window.showInformationMessage(
         `Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`
@@ -104,6 +86,23 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(analyzeHotspotsCommand);
+
+  vscode.window.onDidChangeActiveTextEditor(async () => {
+    updateLocationTracking();
+    provider.updateHistogramData();
+    await updateEnrichedHotspots();
+  });
+
+  vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
+    updateLocationTracking();
+    if (vscode.window.activeTextEditor) {
+      // TODO: Only update when stopped scrolling.
+      provider.indicateFileLocation(
+        vscode.window.activeTextEditor.visibleRanges[0] // TODO: Include all ranges.
+      );
+    }
+    await updateEnrichedHotspots(); // TODO: Only update when stopped scrolling.
+  });
 }
 
 export function deactivate(context: vscode.ExtensionContext) {
