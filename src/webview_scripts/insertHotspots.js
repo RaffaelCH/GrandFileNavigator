@@ -3,14 +3,19 @@ function insertHotspotNodes() {
   var hotspotNodes = JSON.parse(hotspotNodesJson);
 
   var hotspotContainer = document.getElementById("hotspots-container");
+  var visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
   let errorMessageContainer = document.getElementById("errorMessage");
 
   if (hotspotNodes.length === 0) {
     errorMessageContainer.textContent = "No hotspot data found";
+    visualizationContainer.style.display = "none";
     return;
   } else {
     errorMessageContainer.textContent = "";
-    hotspotContainer.style.display = "block";
+    visualizationContainer.style.display = "initial";
+    hotspotContainer.style.display = "flex";
     document.getElementById("histogram-container").style.display = "none";
   }
 

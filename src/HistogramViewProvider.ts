@@ -9,6 +9,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
   private _visualizationType: string = "histogram";
+  private histogramUpdateTimer = setInterval(() => this.updateView(), 5000);
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -29,7 +30,27 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     );
 
     this.setupMessageHandlers();
-    this.updateHistogramData();
+    this.updateView();
+  }
+
+  public async updateView() {
+    if (this._visualizationType === "histogram") {
+      this.updateHistogramData();
+    } else {
+      this.updateHotspotsData();
+    }
+  }
+
+  public async indicateFileLocation(startLine: number, endLine: number) {
+    if (!this._view) {
+      return;
+    }
+
+    this._view.webview.postMessage({
+      command: "indicateRange",
+      startLine: startLine,
+      endLine: endLine,
+    });
   }
 
   public async updateHistogramData() {
@@ -50,6 +71,11 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       command: "reloadHistogramData",
       histogramNodes: histogramNodes,
     });
+
+    this.indicateFileLocation(
+      activeTextEditor.visibleRanges[0].start.line,
+      activeTextEditor.visibleRanges.at(-1)?.end.line!
+    );
   }
 
   public async updateHotspotsData() {
@@ -185,8 +211,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 			<body>
         <p id="errorMessage"></p>
         <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
-        <svg id="histogram-container" style="width:100%;height:800px;">
-        <div id="hotspots-container" style="width:100%;">
+        <div id="visualization-container">
+          <svg id="histogram-container" style="width:100%;height:800px;">
+          <div id="hotspots-container" style="width:100%; display: flex; align-items: center; justify-content: center; flex-direction:column;">
+        </div>
         ${
           this._visualizationType === "histogram"
             ? `<script>insertHistogram();</script>`

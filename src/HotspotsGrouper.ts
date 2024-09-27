@@ -52,7 +52,7 @@ export async function enrichHotspotsByType(
         enrichedHotspotsFilename
       ).fsPath;
       writeFileSync(filePath, JSON.stringify(enrichedHotspots, null, 2));
-      console.log(`Enriched Hotspots have been written to ${filePath}`);
+      //console.log(`Enriched Hotspots have been written to ${filePath}`);
     } else {
       vscode.window.showErrorMessage("Unable to access storage location.");
     }
@@ -108,7 +108,7 @@ export async function enrichHotspotsByType(
         importanceFilePath,
         JSON.stringify(importanceArray, null, 2)
       );
-      console.log(`Importance Array has been written to ${importanceFilePath}`);
+      //console.log(`Importance Array has been written to ${importanceFilePath}`);
     } else {
       vscode.window.showErrorMessage("Unable to access storage location.");
     }

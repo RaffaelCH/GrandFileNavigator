@@ -5,8 +5,7 @@ import * as vscode from "vscode";
 import {
   loadPositionHistory,
   savePositionHistory,
-  updateLocationTracking,
-  categorizePositionsByFileName,
+  addLastLocationToHistory,
   getPositionHistory,
 } from "./location-tracking";
 import { HotspotsProvider, revealNodeLocation } from "./HotspotsProvider";
@@ -14,6 +13,7 @@ import { registerWebviewVisualization } from "./WebviewVisualization";
 import { registerWebviewPanelHistogram } from "./WebviewPanelHistogram.js";
 import { HistogramViewProvider } from "./HistogramViewProvider.js";
 import { enrichHotspotsByType } from "./HotspotsGrouper";
+import { LocationTracker } from "./LocationTracker";
 
 var storageLocation: vscode.Uri | undefined;
 
@@ -23,6 +23,8 @@ export function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "grandfilenavigator" is now active!'
   );
+
+  LocationTracker.initialize();
 
   storageLocation = context.storageUri;
 
@@ -56,11 +58,11 @@ export function activate(context: vscode.ExtensionContext) {
   registerWebviewVisualization(context);
   registerWebviewPanelHistogram(context);
 
-  const provider = new HistogramViewProvider(context.extensionUri);
+  const histogramViewProvider = new HistogramViewProvider(context.extensionUri);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       HistogramViewProvider.viewType,
-      provider
+      histogramViewProvider
     )
   );
 
@@ -74,28 +76,10 @@ export function activate(context: vscode.ExtensionContext) {
     await enrichHotspotsByType(hotspots, context);
   }
 
-  vscode.window.onDidChangeActiveTextEditor(async () => {
-    updateLocationTracking();
-    provider.updateHistogramData();
-    await updateEnrichedHotspots();
-  });
-
-  vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
-    updateLocationTracking();
-    await updateEnrichedHotspots();
-  });
-
   const analyzeHotspotsCommand = vscode.commands.registerCommand(
     "extension.analyzeHotspots",
     async () => {
-      const hotspots = getPositionHistory();
-
-      if (!hotspots) {
-        vscode.window.showErrorMessage("No hotspots found.");
-        return;
-      }
-
-      const groupedHotspots = await enrichHotspotsByType(hotspots, context);
+      const groupedHotspots = updateEnrichedHotspots();
 
       vscode.window.showInformationMessage(
         `Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`
@@ -104,6 +88,31 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(analyzeHotspotsCommand);
+
+  vscode.window.onDidChangeActiveTextEditor(async () => {
+    if (LocationTracker.shouldUpdateTracking()) {
+      addLastLocationToHistory();
+    }
+    histogramViewProvider.updateHistogramData();
+    LocationTracker.updateLocationTracking();
+    //await updateEnrichedHotspots();
+  });
+
+  vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
+    if (LocationTracker.shouldUpdateTracking()) {
+      addLastLocationToHistory();
+    }
+    LocationTracker.updateLocationTracking();
+
+    var visibleRanges = LocationTracker.lastVisibleRanges;
+    if (visibleRanges !== undefined) {
+      histogramViewProvider.indicateFileLocation(
+        visibleRanges[0].start.line,
+        visibleRanges.at(-1)?.end.line!
+      );
+    }
+    await updateEnrichedHotspots(); // TODO: Only update when stopped scrolling.
+  });
 }
 
 export function deactivate(context: vscode.ExtensionContext) {
