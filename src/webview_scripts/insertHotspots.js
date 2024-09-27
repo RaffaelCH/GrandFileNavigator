@@ -15,7 +15,7 @@ function insertHotspotNodes() {
   } else {
     errorMessageContainer.textContent = "";
     visualizationContainer.style.display = "initial";
-    hotspotContainer.style.display = "block";
+    hotspotContainer.style.display = "flex";
     document.getElementById("histogram-container").style.display = "none";
   }
 
