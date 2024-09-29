@@ -1,11 +1,12 @@
 //import Chart from "chart.js/auto";
 import * as vscode from "vscode";
 import { getFileRangeData } from "./location-tracking";
-import { HistogramNode } from "./sidebar_types/histogramNode";
+import SidebarNode from "./sidebar_types/SidebarNode";
+import { NodeType } from "./sidebar_types/NodeType";
 
 export async function getFileHistogramData(
   fileUri: vscode.Uri
-): Promise<HistogramNode[]> {
+): Promise<SidebarNode[]> {
   var rangeData = getFileRangeData(fileUri);
 
   if (rangeData.length === 0) {
@@ -76,9 +77,10 @@ export async function getFileHistogramData(
       endLine = startLines[i + 1] - 1;
     }
     var label = `${startLine}-${endLine}`;
-    histogramNodes[i] = new HistogramNode(
+    histogramNodes[i] = new SidebarNode(
       label,
       buckets[i],
+      NodeType.Other, // TODO: Add actual node type.
       fileUri.fsPath.replaceAll("\\", "/"),
       startLine,
       endLine

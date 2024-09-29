@@ -16,6 +16,15 @@
           JSON.stringify(message.hotspotNodes)
         );
         insertHotspotNodes();
+      case "indicateRange":
+        localStorage.setItem(
+          "indicatedRange",
+          JSON.stringify({
+            startLine: message.startLine,
+            endLine: message.endLine,
+          })
+        );
+        insertVisibleRangeIndicator();
         break;
     }
   });
