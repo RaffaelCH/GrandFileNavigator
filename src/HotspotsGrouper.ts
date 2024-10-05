@@ -10,12 +10,42 @@ interface EnrichedHotspot {
     symbolType: number; // Corresponds to vscode.SymbolKind
     symbolName: string;
   }>;
-  timeSpent: number; // Time spent in the hotspot (from RangeData.totalDuration)
-  importance: number; // Calculated importance
+  timeSpent: number; 
+  importance: number;
 }
 
-const enrichedHotspotsFilename = "enrichedHotspots.json"; // File name
-let importanceArray: [number, string, string][] = []; // Global 2D array to store importance, file name, and line range
+const enrichedHotspotsFilename = "enrichedHotspots.json"; 
+const importanceArrayFilename = "importanceArray.json"; 
+let importanceArray: [number, string, string, number, number, number, string, string][] = []; // Global 2D array
+
+function getSymbolKindName(symbolKind: number): string {
+    switch (symbolKind) {
+        case vscode.SymbolKind.Class:
+            return "Class";
+        case vscode.SymbolKind.Method:
+            return "Method";
+        case vscode.SymbolKind.Interface:
+            return "Interface";
+        case vscode.SymbolKind.Enum:
+            return "Enum";
+        case vscode.SymbolKind.Constructor:
+            return "Constructor";
+        case vscode.SymbolKind.Field:
+            return "Field";
+        case vscode.SymbolKind.Property:
+            return "Property";
+        case vscode.SymbolKind.Variable:
+            return "Variable";
+        case vscode.SymbolKind.EnumMember:
+            return "EnumMember";
+        case vscode.SymbolKind.Package:
+            return "Package";
+        case vscode.SymbolKind.Namespace:
+            return "Namespace";
+        default:
+            return "Unknown";
+    }
+}
 
 export async function enrichHotspotsByType(
   hotspots: PositionHistory,
@@ -38,95 +68,65 @@ export async function enrichHotspotsByType(
     symbolTypeCounts
   );
 
-  // Sort enrichedHotspots by startLine before creating the 2D array
+  // Sort by startLine before creating the array
   enrichedHotspots.sort(
     (a, b) => a.rangeData.startLine - b.rangeData.startLine
   );
 
-  // Save the enriched hotspots to JSON
-  try {
-    const storageUri = context.storageUri || context.globalStorageUri;
-    if (storageUri) {
-      const filePath = vscode.Uri.joinPath(
-        storageUri,
-        enrichedHotspotsFilename
-      ).fsPath;
-      writeFileSync(filePath, JSON.stringify(enrichedHotspots, null, 2));
-      //console.log(`Enriched Hotspots have been written to ${filePath}`);
-    } else {
-      vscode.window.showErrorMessage("Unable to access storage location.");
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      vscode.window.showErrorMessage(
-        `Error saving enriched hotspots: ${error.message}`
-      );
-    } else {
-      vscode.window.showErrorMessage(
-        `Error saving enriched hotspots: ${error}`
-      );
-    }
-  }
-
-  // Group and sort the importance array by file and line range
-  const groupedAndSortedArray = enrichedHotspots.reduce((acc, hotspot) => {
-    const fileName = path.basename(hotspot.filePath);
-    if (!acc[fileName]) {
-      acc[fileName] = [];
-    }
-    acc[fileName].push([
-      hotspot.importance, // Importance value
-      fileName, // File name
-      `${hotspot.rangeData.startLine}-${hotspot.rangeData.endLine}`, // Line range as label
+  importanceArray = enrichedHotspots.flatMap((hotspot) => {
+    return hotspot.symbols.map((symbolDetail): [number, string, string, number, number, number, string, string] => [
+        hotspot.importance,   
+        path.basename(hotspot.filePath),  
+        `${hotspot.rangeData.startLine}-${hotspot.rangeData.endLine}`,  
+        hotspot.rangeData.startLine,  
+        hotspot.rangeData.endLine,    
+        hotspot.timeSpent,            
+        symbolDetail.symbolName,      
+        getSymbolKindName(symbolDetail.symbolType)
     ]);
-    return acc;
-  }, {} as { [key: string]: Array<[number, string, string]> });
+  });
 
-  // Sort each group by the start line of the range
-  for (const file in groupedAndSortedArray) {
-    groupedAndSortedArray[file].sort((a, b) => {
-      const startLineA = parseInt(a[2].split("-")[0], 10);
-      const startLineB = parseInt(b[2].split("-")[0], 10);
-      return startLineA - startLineB;
-    });
-  }
-
-  // Flatten the sorted groups into a single array
-  importanceArray = Object.values(groupedAndSortedArray).flat();
-
-  const importanceArrayFilename = "importanceArray.json";
-
-  // Save the sorted importance array to a JSON file
-  try {
-    const storageUri = context.storageUri || context.globalStorageUri;
-    if (storageUri) {
-      const importanceFilePath = vscode.Uri.joinPath(
-        storageUri,
-        importanceArrayFilename
-      ).fsPath;
-      writeFileSync(
-        importanceFilePath,
-        JSON.stringify(importanceArray, null, 2)
-      );
-      //console.log(`Importance Array has been written to ${importanceFilePath}`);
-    } else {
-      vscode.window.showErrorMessage("Unable to access storage location.");
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      vscode.window.showErrorMessage(
-        `Error saving importance array: ${error.message}`
-      );
-    } else {
-      vscode.window.showErrorMessage(`Error saving importance array: ${error}`);
-    }
-  }
+  // Save the enriched hotspots and importance array to JSON
+  await saveHotspotData(context, enrichedHotspots, importanceArray);
 
   return enrichedHotspots;
 }
 
+// Helper function to save enrichedHotspots and importanceArray
+async function saveHotspotData(
+  context: vscode.ExtensionContext,
+  enrichedHotspots: EnrichedHotspot[],
+  importanceArray: [number, string, string, number, number, number, string, string][]
+) {
+  try {
+    const storageUri = context.storageUri || context.globalStorageUri;
+
+    if (storageUri) {
+      // Save enrichedHotspots
+      const enrichedHotspotsFilePath = vscode.Uri.joinPath(
+        storageUri,
+        enrichedHotspotsFilename
+      ).fsPath;
+      writeFileSync(enrichedHotspotsFilePath, JSON.stringify(enrichedHotspots, null, 2));
+
+      // Save importanceArray
+      const importanceFilePath = vscode.Uri.joinPath(
+        storageUri,
+        importanceArrayFilename
+      ).fsPath;
+      writeFileSync(importanceFilePath, JSON.stringify(importanceArray, null, 2));
+
+      vscode.window.showInformationMessage("Enriched Hotspots and Importance Array have been written to storage.");
+    } else {
+      vscode.window.showErrorMessage("Unable to access storage location.");
+    }
+  } catch (error) {
+    vscode.window.showErrorMessage(`Error saving data: ${(error as Error).message}`);
+  }
+}
+
 // Retrieve the 2D array of importance and line range
-export function getImportanceArray(): [number, string, string][] {
+export function getImportanceArray(): [number, string, string, number, number, number, string, string][] {
   return importanceArray;
 }
 
@@ -144,7 +144,6 @@ const symbolWeights: { [key: number]: number } = {
   [vscode.SymbolKind.Namespace]: 6,
 };
 
-// Function to calculate the importance of a hotspot
 function calculateImportance(
   symbols: Array<{ symbolType: number; symbolName: string }>,
   timeSpent: number
@@ -191,7 +190,6 @@ async function traverseHotspots(
           resolvedFilePath
         );
 
-        // Get symbols for the document
         const symbols = await vscode.commands.executeCommand<
           vscode.DocumentSymbol[]
         >("vscode.executeDocumentSymbolProvider", document.uri);
@@ -234,26 +232,25 @@ async function traverseHotspots(
   }
 }
 
-function findAllMatchingSymbols(
-  symbols: vscode.DocumentSymbol[],
-  rangeData: RangeData
-): vscode.DocumentSymbol[] {
+function findAllMatchingSymbols(symbols: vscode.DocumentSymbol[], rangeData: RangeData): vscode.DocumentSymbol[] {
   const matchingSymbols: vscode.DocumentSymbol[] = [];
 
   function findSymbols(symbols: vscode.DocumentSymbol[]) {
-    for (const symbol of symbols) {
-      // Symbols must fall within the range of the hotspot
-      if (
-        symbol.range.start.line <= rangeData.endLine &&
-        symbol.range.end.line >= rangeData.startLine
-      ) {
-        matchingSymbols.push(symbol);
-      }
+      for (const symbol of symbols) {
+          console.log(`Checking Symbol: ${symbol.name}, Symbol Kind: ${vscode.SymbolKind[symbol.kind]}, Symbol Range: ${symbol.range.start.line}-${symbol.range.end.line}`);
 
-      if (symbol.children) {
-        findSymbols(symbol.children);
+          if (
+              symbol.range.start.line <= rangeData.endLine && 
+              symbol.range.end.line >= rangeData.startLine
+          ) {
+              matchingSymbols.push(symbol);
+          }
+
+          // Recursively search through child symbols
+          if (symbol.children) {
+              findSymbols(symbol.children);
+          }
       }
-    }
   }
 
   findSymbols(symbols);
