@@ -1,5 +1,4 @@
 // The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import { existsSync, mkdirSync } from "fs";
 import * as vscode from "vscode";
 import {
@@ -16,11 +15,8 @@ import { HistogramViewProvider } from "./HistogramViewProvider.js";
 import { enrichHotspotsByType } from "./HotspotsGrouper";
 import { LocationTracker } from "./LocationTracker";
 
-
 var storageLocation: vscode.Uri | undefined;
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "grandfilenavigator" is now active!'
@@ -31,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
   storageLocation = context.storageUri;
 
   if (storageLocation === undefined) {
-    vscode.window.showInformationMessage("storage location not defined");
+    vscode.window.showInformationMessage("Storage location not defined");
   } else {
     if (!existsSync(storageLocation.fsPath)) {
       mkdirSync(storageLocation.fsPath);
@@ -63,20 +59,20 @@ export function activate(context: vscode.ExtensionContext) {
   const showHistogramCommand = vscode.commands.registerCommand('grandFileNavigator.showFileHistogram', () => {
     vscode.window.showInformationMessage('Showing File Access Histogram');
 
+    const fileCounts = categorizePositionsByFileName();  // Fetch file counts first
+
     const panel = vscode.window.createWebviewPanel(
-        'fileAccessHistogram',
-        'File Access Histogram',
-        vscode.ViewColumn.One,
-        {}
+      'fileAccessHistogram',
+      'File Access Histogram',
+      vscode.ViewColumn.One,
+      {}
     );
 
-    const fileCounts = categorizePositionsByFileName();
     panel.webview.html = getWebviewContent(fileCounts);
   });
 
   context.subscriptions.push(showHistogramCommand);
 
-  const provider = new HistogramViewProvider(context.extensionUri);
   const histogramViewProvider = new HistogramViewProvider(context.extensionUri);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -85,7 +81,6 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // Function to enrich and save hotspots whenever location tracking is updated
   async function updateEnrichedHotspots() {
     const hotspots = getPositionHistory();
     if (!hotspots) {
@@ -96,37 +91,12 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   vscode.window.onDidChangeActiveTextEditor(async () => {
-    LocationTracker.updateLocationTracking();
-    const fileCounts = categorizePositionsByFileName();
-    provider.updateHistogramData();
-    await updateEnrichedHotspots();
-  });
-
-  vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
-    const fileCounts = categorizePositionsByFileName();
-    LocationTracker.updateLocationTracking();
-    await updateEnrichedHotspots();
-  });
-
-  const analyzeHotspotsCommand = vscode.commands.registerCommand(
-    "extension.analyzeHotspots",
-    async () => {
-      const groupedHotspots = updateEnrichedHotspots();
-
-      vscode.window.showInformationMessage(`Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`
-      );
-    }
-  );
-
-  context.subscriptions.push(analyzeHotspotsCommand);
-
-  vscode.window.onDidChangeActiveTextEditor(async () => {
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory();
     }
     histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
-    //await updateEnrichedHotspots();
+    await updateEnrichedHotspots();
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
@@ -135,26 +105,19 @@ export function activate(context: vscode.ExtensionContext) {
     }
     LocationTracker.updateLocationTracking();
 
-    var visibleRanges = LocationTracker.lastVisibleRanges;
+    const visibleRanges = LocationTracker.lastVisibleRanges;
     if (visibleRanges !== undefined) {
       histogramViewProvider.indicateFileLocation(
         visibleRanges[0].start.line,
         visibleRanges.at(-1)?.end.line!
       );
     }
-    await updateEnrichedHotspots(); // TODO: Only update when stopped scrolling.
+    await updateEnrichedHotspots();
   });
 }
 
 export function deactivate(context: vscode.ExtensionContext) {
-  var location: vscode.Uri | undefined;
-
-  if (context === undefined || context.storageUri === undefined) {
-    location = storageLocation;
-  } else {
-    location = context.storageUri;
-  }
-
+  const location = context?.storageUri || storageLocation;
   if (location !== undefined) {
     savePositionHistory(location);
   }
@@ -168,19 +131,16 @@ function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
   const svgHeight = 400;
   const svgWidth = 800;
   const barWidth = svgWidth / data.length;
-  const textAreaHeight = 100; // Extra space for the file names
+  const textAreaHeight = 100;
 
-  // Generate random colors for each bar using a correct template string
   const colors = labels.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`);
 
-  let barsHtml = data.map((count, index) => {
+  const barsHtml = data.map((count, index) => {
     const barHeight = (count / maxCount) * svgHeight;
     const color = colors[index];
     const xPosition = index * barWidth + barWidth / 2;
 
-    // Determine whether to place the count inside or above the bar
     const yTextPosition = barHeight > 20 ? svgHeight - barHeight + 15 : svgHeight - barHeight - 20;
-    const textAnchor = barHeight > 20 ? "middle" : "start";
 
     return `
       <rect x="${index * barWidth}" y="${svgHeight - barHeight}" width="${barWidth - 2}" height="${barHeight}" fill="${color}"></rect>
@@ -196,11 +156,7 @@ function getWebviewContent(fileCounts: { [fileName: string]: number }): string {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>File Access Histogram</title>
-      <style>
-        text {
-          word-wrap: break-word;
-        }
-      </style>
+      <style> text { word-wrap: break-word; } </style>
     </head>
     <body>
       <h1>File Access Histogram</h1>
