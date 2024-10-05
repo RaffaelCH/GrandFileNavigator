@@ -64,7 +64,7 @@ function insertHistogram() {
   histogramContainer.innerHTML = barsHtml;
 
   histogramContainer.addEventListener("click", function (event) {
-    var index = event.target.attributes.index.value;
+    var index = Math.floor(event.offsetY / barHeight); // event.target.attributes.index.value;
     var histogramNode = histogramNodes[index];
     vscodeApi.postMessage({
       command: "showRange",
