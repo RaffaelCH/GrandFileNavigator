@@ -19,6 +19,9 @@ export class PositionHistory {
   [key: string]: PositionHistory | RangeData[] | undefined;
 }
 
+// Tracks user position.
+var positionHistory = new PositionHistory();
+
 export function getPositionHistory(): PositionHistory {
   return positionHistory;
 }
@@ -42,9 +45,6 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
     vscode.window.showInformationMessage("no backup found");
   }
 }
-
-// Tracks user position.
-var positionHistory = new PositionHistory();
 
 //vscode.window.onDidChangeWindowState
 //vscode.workspace.onDidChangeTextDocument

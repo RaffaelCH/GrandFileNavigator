@@ -6,7 +6,7 @@ import {
   savePositionHistory,
   addLastLocationToHistory,
   getPositionHistory,
-  categorizePositionsByFileName
+  categorizePositionsByFileName,
 } from "./location-tracking";
 import { HotspotsProvider, revealNodeLocation } from "./HotspotsProvider";
 import { registerWebviewVisualization } from "./WebviewVisualization";
@@ -59,15 +59,14 @@ export function activate(context: vscode.ExtensionContext) {
   const showHistogramCommand = vscode.commands.registerCommand('grandFileNavigator.showFileHistogram', () => {
     vscode.window.showInformationMessage('Showing File Access Histogram');
 
-    const fileCounts = categorizePositionsByFileName();  // Fetch file counts first
-
     const panel = vscode.window.createWebviewPanel(
-      'fileAccessHistogram',
-      'File Access Histogram',
-      vscode.ViewColumn.One,
-      {}
+        'fileAccessHistogram',
+        'File Access Histogram',
+        vscode.ViewColumn.One,
+        {}
     );
 
+    const fileCounts = categorizePositionsByFileName();
     panel.webview.html = getWebviewContent(fileCounts);
   });
 
@@ -96,6 +95,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
     histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
+    provider.updateHistogramData();
     await updateEnrichedHotspots();
   });
 
@@ -112,8 +112,21 @@ export function activate(context: vscode.ExtensionContext) {
         visibleRanges.at(-1)?.end.line!
       );
     }
-    await updateEnrichedHotspots();
+    await updateEnrichedHotspots(); // TODO: Only update when stopped scrolling.
   });
+
+  const analyzeHotspotsCommand = vscode.commands.registerCommand(
+    "extension.analyzeHotspots",
+    async () => {
+      const groupedHotspots = updateEnrichedHotspots();
+
+      vscode.window.showInformationMessage(
+        `Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`
+      );
+    }
+  );
+
+  context.subscriptions.push(analyzeHotspotsCommand);
 }
 
 export function deactivate(context: vscode.ExtensionContext) {
