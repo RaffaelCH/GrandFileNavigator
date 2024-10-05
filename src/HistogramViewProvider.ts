@@ -209,10 +209,12 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
 			</head>
 			<body>
-        <p id="errorMessage"></p>
-        <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
+        <div style="display: flex; justify-content: center; flex-direction: column;">
+          <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
+          <p id="errorMessage"></p>
+        </div>
         <div id="visualization-container">
-          <svg id="histogram-container" style="width:100%;height:800px;">
+          <svg id="histogram-container" style="width:100%;height:700px;">
           <div id="hotspots-container" style="width:100%; display: flex; align-items: center; justify-content: center; flex-direction:column;">
         </div>
         ${

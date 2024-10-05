@@ -1,5 +1,5 @@
 // var containerRect = histogramContainer.getBoundingClientRect();
-const svgHeight = 800; // containerRect.height;
+const svgHeight = 700; // containerRect.height;
 const svgWidth = 260; // containerRect.width;
 
 function insertHistogram() {
@@ -27,7 +27,7 @@ function insertHistogram() {
 
   // TODO: Don't hardcode dimensions.
   const metricMax = Math.max(...metricValues);
-  const barHeight = (0.9 * svgHeight) / histogramNodes.length;
+  const barHeight = svgHeight / histogramNodes.length;
 
   // Generate colors ranging from green to red, based on metric value.
   const colors = metricValues.map(
