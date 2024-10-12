@@ -76,15 +76,16 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.window.onDidChangeActiveTextEditor(async () => {
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory();
+      await updateEnrichedHotspots();
     }
     histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
-    await updateEnrichedHotspots();
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory();
+      await updateEnrichedHotspots();
     }
     LocationTracker.updateLocationTracking();
 
@@ -95,7 +96,6 @@ export function activate(context: vscode.ExtensionContext) {
         visibleRanges.at(-1)?.end.line!
       );
     }
-    //await updateEnrichedHotspots(); // TODO: Only update when stopped scrolling.
   });
 
   const analyzeHotspotsCommand = vscode.commands.registerCommand(
