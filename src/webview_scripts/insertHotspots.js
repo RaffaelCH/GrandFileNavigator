@@ -2,16 +2,19 @@ function insertHotspotNodes() {
   var hotspotNodesJson = localStorage.getItem("hotspotNodes");
   var hotspotNodes = JSON.parse(hotspotNodesJson);
 
+  console.log("Top hotspots:");
+  console.log(hotspotNodes);
+
   // Example data with the following assumptions:
   // - For all nodes, their containing nodes are also included (method -> class, etc.)
   // - For all nodes, the total importance is the sum of the importances of the contained nodes.
-  hotspotNodes = [
-    { metricValue: 200, displayName: "Launcher", startLine: 30, endLine: 215 },
-    { metricValue: 60, displayName: "getGame", startLine: 44, endLine: 46 },
-    { metricValue: 140, displayName: "launch", startLine: 183, endLine: 189 },
-    { metricValue: 80, displayName: "section1", startLine: 184, endLine: 185 },
-    { metricValue: 60, displayName: "section2", startLine: 186, endLine: 188 },
-  ];
+  // hotspotNodes = [
+  //   { metricValue: 200, displayName: "Launcher", startLine: 30, endLine: 215 },
+  //   { metricValue: 60, displayName: "getGame", startLine: 44, endLine: 46 },
+  //   { metricValue: 140, displayName: "launch", startLine: 183, endLine: 189 },
+  //   { metricValue: 80, displayName: "section1", startLine: 184, endLine: 185 },
+  //   { metricValue: 60, displayName: "section2", startLine: 186, endLine: 188 },
+  // ];
 
   var hotspotContainer = document.getElementById("hotspots-container");
   var visualizationContainer = document.getElementById(

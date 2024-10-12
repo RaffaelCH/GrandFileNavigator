@@ -4,6 +4,7 @@ import { getImportanceArray } from "./HotspotsGrouper.js";
 import SidebarNode from "./sidebar_types/SidebarNode.js";
 import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
+import { adaptImportanceArray } from "./adapters/hotspotsGrouper.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -95,20 +96,13 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     //   (data) => data[1] === activeTextEditor?.document.fileName
     // );
 
-    // TODO: Adjust hotspots type to be more structured.
-    var hotspotNodes = hotspotsData.map(
-      (data) =>
-        new SidebarNode(
-          data[2],
-          data[0],
-          NodeType.Other, // TODO: Replace with actual node type.
-          data[1],
-          parseInt(data[2].split("-")[0]),
-          parseInt(data[2].split("-")[1])
-        )
+    console.log(hotspotsData);
+
+    var hotspotNodes = adaptImportanceArray(hotspotsData);
+    hotspotNodes = hotspotNodes.sort(
+      (nodeA, nodeB) => nodeB.metricValue - nodeA.metricValue
     );
-    hotspotNodes.sort((node) => node.metricValue);
-    hotspotNodes = hotspotNodes.slice(-6); // take 6 elements with highest metrics
+    hotspotNodes = hotspotNodes.slice(0, 6); // take 6 elements with highest metrics
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
@@ -163,7 +157,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         )
       )
     );
-    
+
     const insertHotspotsUri = webview.asWebviewUri(
       vscode.Uri.file(
         path.join(
@@ -174,7 +168,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         )
       )
     );
-    
+
     const messageHandlerUri = webview.asWebviewUri(
       vscode.Uri.file(
         path.join(
@@ -185,7 +179,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         )
       )
     );
-    
 
     var activeTextEditor = vscode.window.activeTextEditor;
     if (!activeTextEditor) {
