@@ -1,7 +1,9 @@
 import * as vscode from "vscode";
-import FileLocation from "../sidebar_types/fileLocation"; // Adjust path as needed
+import FileLocation from "../sidebar_types/FileLocation"; // Adjust path as needed
 
-export async function getFileLocation(fileUri: vscode.Uri): Promise<FileLocation | undefined> {
+export async function getFileLocation(
+  fileUri: vscode.Uri
+): Promise<FileLocation | undefined> {
   try {
     const document = await vscode.workspace.openTextDocument(fileUri);
     const totalLines = document.lineCount;
@@ -9,7 +11,9 @@ export async function getFileLocation(fileUri: vscode.Uri): Promise<FileLocation
     const endLine = totalLines - 1;
     return new FileLocation(fileUri.fsPath, startLine, endLine);
   } catch (error) {
-    vscode.window.showErrorMessage(`Error getting file location for ${fileUri.fsPath}: ${error}`);
+    vscode.window.showErrorMessage(
+      `Error getting file location for ${fileUri.fsPath}: ${error}`
+    );
     return undefined;
   }
 }
