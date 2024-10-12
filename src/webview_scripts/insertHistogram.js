@@ -106,13 +106,10 @@ function insertVisibleRangeIndicator() {
   if (firstVisibleNodeIndex === -1) {
     console.log("Encountered visible range outside histogramnode range.");
   } else {
-    const barHeight = (0.9 * svgHeight) / histogramNodes.length;
+    const barHeight = svgHeight / histogramNodes.length;
 
     var firstVisibleNode = histogramNodes[firstVisibleNodeIndex];
     var lastVisibleNode = histogramNodes[lastVisibleNodeIndex];
-
-    console.log(firstVisibleNode);
-    console.log(lastVisibleNode);
 
     var portionOfFirstRangeVisible =
       (firstVisibleNode.endLine - visibleRange.startLine + 1) /
@@ -124,9 +121,6 @@ function insertVisibleRangeIndicator() {
     var portionOfLastRangeVisible =
       (visibleRange.endLine - lastVisibleNode.startLine + 1) /
       (lastVisibleNode.endLine - lastVisibleNode.startLine + 1);
-
-    console.log(portionOfFirstRangeVisible);
-    console.log(portionOfLastRangeVisible);
 
     var visibleRangeIndicatorHeight = portionOfFirstRangeVisible * barHeight;
     if (firstVisibleNodeIndex < lastVisibleNodeIndex) {
