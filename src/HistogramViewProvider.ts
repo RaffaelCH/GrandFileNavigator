@@ -3,6 +3,7 @@ import { getFileHistogramData } from "./loadHistogramData.js";
 import { getImportanceArray } from "./HotspotsGrouper.js";
 import SidebarNode from "./sidebar_types/SidebarNode.js";
 import { NodeType } from "./sidebar_types/NodeType.js";
+import * as path from "path";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -153,29 +154,38 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
   private async _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
     const insertHistogramUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        "src",
-        "webview_scripts",
-        "insertHistogram.js"
+      vscode.Uri.file(
+        path.join(
+          this._extensionUri.fsPath,
+          "src",
+          "webview_scripts",
+          "insertHistogram.js"
+        )
       )
     );
+    
     const insertHotspotsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        "src",
-        "webview_scripts",
-        "insertHotspots.js"
+      vscode.Uri.file(
+        path.join(
+          this._extensionUri.fsPath,
+          "src",
+          "webview_scripts",
+          "insertHotspots.js"
+        )
       )
     );
+    
     const messageHandlerUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        "src",
-        "webview_scripts",
-        "visualizationMessageHandler.js"
+      vscode.Uri.file(
+        path.join(
+          this._extensionUri.fsPath,
+          "src",
+          "webview_scripts",
+          "visualizationMessageHandler.js"
+        )
       )
     );
+    
 
     var activeTextEditor = vscode.window.activeTextEditor;
     if (!activeTextEditor) {

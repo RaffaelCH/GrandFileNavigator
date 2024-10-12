@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 
 class GrandFileNavigatorSerializer implements vscode.WebviewPanelSerializer {
   async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
@@ -36,7 +37,7 @@ export function registerWebviewVisualization(context: vscode.ExtensionContext) {
           {
             enableScripts: true,
             localResourceRoots: [
-              vscode.Uri.joinPath(context.extensionUri, "history"), // TODO: Use backup.json
+              vscode.Uri.file(path.join(context.extensionUri.fsPath, "history")), // TODO: Use backup.json
             ],
           }
         );

@@ -95,7 +95,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
     histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
-    provider.updateHistogramData();
     await updateEnrichedHotspots();
   });
 
