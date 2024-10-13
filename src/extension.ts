@@ -14,6 +14,7 @@ import { registerWebviewPanelHistogram } from "./WebviewPanelHistogram.js";
 import { HistogramViewProvider } from "./HistogramViewProvider.js";
 import { enrichHotspotsByType } from "./HotspotsGrouper";
 import { LocationTracker } from "./LocationTracker";
+//import { HotspotLLMAnalyzer } from './HotspotsLLMAnalyzer';
 
 var storageLocation: vscode.Uri | undefined;
 
@@ -102,12 +103,13 @@ export function activate(context: vscode.ExtensionContext) {
     "extension.analyzeHotspots",
     async () => {
       const groupedHotspots = updateEnrichedHotspots();
-
-      vscode.window.showInformationMessage(
-        `Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`
-      );
+      //vscode.window.showInformationMessage(`Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`);
     }
   );
+
+
+
+  //HotspotLLMAnalyzer.registerAnalyzeHotspotCommand(context, hotspotsProvider);
 
   context.subscriptions.push(analyzeHotspotsCommand);
 }
