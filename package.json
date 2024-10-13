@@ -12,7 +12,8 @@
   ],
   "activationEvents": [
     "onWebviewPanel:grandFileNavigator",
-    "onLanguage:java"
+    "onLanguage:java",
+    "onCommand:grandfileNavigator.showFileHistogram"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -26,6 +27,10 @@
         "command": "grandfilenavigator.setVisualizationLocation",
         "title": "Send Main View Location To Visualization",
         "when": "editorLangId == java"
+      },
+      {
+        "command": "extension.analyzeHotspotWithLLM",
+        "title": "Analyze Hotspots with LLM"
       },
       {
         "command": "hotspots.refreshEntry",

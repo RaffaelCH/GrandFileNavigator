@@ -3,7 +3,7 @@ import { RangeData, PositionHistory } from "./location-tracking";
 import * as path from "path";  // Using Node.js path module
 import { existsSync, writeFileSync } from "fs";
 
-interface EnrichedHotspot {
+export interface EnrichedHotspot {
   filePath: string;
   rangeData: RangeData;
   symbols: Array<{

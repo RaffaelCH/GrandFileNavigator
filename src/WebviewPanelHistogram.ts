@@ -9,7 +9,7 @@ export function registerWebviewPanelHistogram(
   console.log("Initial file counts:", fileCounts);
 
   const showFileHistogramCommand = vscode.commands.registerCommand(
-    "grandfileNavigator.showFileHistogram",
+    "grandFileNavigator.showFileHistogram",
     () => {
       const panel = vscode.window.createWebviewPanel(
         "fileAccessHistogram",

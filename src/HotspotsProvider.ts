@@ -124,17 +124,19 @@ export class HotspotsProvider
 
   // React to a tree node being changed.
   private _onDidChangeTreeData: vscode.EventEmitter<
-    FilesystemNode | RangeNode | undefined | null | void
+    FilesystemNode | RangeNode | undefined | null
   > = new vscode.EventEmitter<
-    FilesystemNode | RangeNode | undefined | null | void
+    FilesystemNode | RangeNode | undefined | null
   >();
+
   readonly onDidChangeTreeData: vscode.Event<
-    FilesystemNode | RangeNode | undefined | null | void
+    FilesystemNode | RangeNode | undefined | null
   > = this._onDidChangeTreeData.event;
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
   }
+
 }
 
 class FilesystemNode extends vscode.TreeItem {
@@ -173,7 +175,7 @@ class FilesystemNode extends vscode.TreeItem {
   };
 }
 
-class RangeNode extends vscode.TreeItem {
+export class RangeNode extends vscode.TreeItem {
   constructor(
     public readonly label: string,
     public readonly filePath: string,
