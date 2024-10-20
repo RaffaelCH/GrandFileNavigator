@@ -29,10 +29,6 @@
         "when": "editorLangId == java"
       },
       {
-        "command": "extension.analyzeHotspotWithLLM",
-        "title": "Analyze Hotspots with LLM"
-      },
-      {
         "command": "hotspots.refreshEntry",
         "title": "Refresh",
         "icon": {
@@ -55,10 +51,6 @@
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
         }
-      },
-      {
-        "command": "extension.analyzeHotspots",
-        "title": "Analyze Hotspots"
       }
     ],
     "viewsContainers": {
@@ -133,6 +125,8 @@
     "typescript": "^5.6.2"
   },
   "dependencies": {
-    "vscode": "^1.1.37"
+    "axios": "^1.7.7",
+    "node-fetch": "^2.7.0",
+    "vscode": "^1.1.34"
   }
 }

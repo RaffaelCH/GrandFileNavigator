@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import { EnrichedHotspot } from "./HotspotsGrouper"; // Ensure EnrichedHotspot is exported
-import { existsSync, writeFileSync } from "fs";
+import { existsSync, writeFileSync, mkdirSync } from "fs";
 import * as path from "path";
-import { RangeNode } from "./HotspotsProvider";
+import axios from 'axios';
 
-const llmHotspotsFilename = "llmHotspots.json";
+
 let llmHotspotData: Array<{
   filePath: string;
   startLine: number;
@@ -23,57 +23,78 @@ interface LLMResponse {
   }>;
 }
 
+const hotspotQueue: EnrichedHotspot[] = [];  // Queue for hotspots
+let isProcessingQueue = false;  // To track if we're currently processing the queue
+
 export class HotspotLLMAnalyzer {
-  // Query the LLM with the given prompt and return a summary and relevance
+  private static readonly llmHotspotsFilename = "llmHotspots.json";  // Ensure it's a static property
+
   private static async queryLLM(prompt: string): Promise<{ summary: string, relevance: string }> {
     console.log("LLM Query Prompt: ", prompt);  // Log the query prompt
-    
-    const response = await fetch("http://llm.hasel.dev:20769/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer sk-WhRaeJSugqrKrdTmY5STAw"
-      },
-      body: JSON.stringify({
+  
+    try {
+      const response = await axios.post("http://llm.hasel.dev:20769/v1/chat/completions", {
         model: "openai-gpt-4o",
         messages: [{ role: "user", content: prompt }]
-      })
-    });
-
-    const result = await response.json() as LLMResponse;
-
-    if (result.choices && result.choices.length > 0) {
-      const jsonResponse = JSON.parse(result.choices[0].message.content);
-      console.log("LLM Response: ", jsonResponse);  // Log the LLM response
-      return { summary: jsonResponse.summary, relevance: jsonResponse.relevance };
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sk-WhRaeJSugqrKrdTmY5STAw"  // Replace with your API key
+        }
+      });
+  
+      const result = response.data as LLMResponse;
+  
+      if (result.choices && result.choices.length > 0) {
+        const jsonResponse = JSON.parse(result.choices[0].message.content);
+        console.log("LLM Response: ", jsonResponse);  // Log the LLM response
+        return { summary: jsonResponse.summary, relevance: jsonResponse.relevance };
+      }
+  
+      return { summary: "", relevance: "" };
+    } catch (error) {
+      console.error('Error during LLM query:', error);
+      return { summary: "", relevance: "" };
     }
-
-    return { summary: "", relevance: "" };
   }
-
-  // Extract the surrounding code section (e.g., method) from a document
+  
   private static async extractSurroundingSection(document: vscode.TextDocument, startLine: number, endLine: number): Promise<{ start: number, end: number }> {
-    let sectionStart = startLine;
-    let sectionEnd = endLine;
-
-    while (sectionStart > 0) {
-      const lineText = document.lineAt(sectionStart).text.trim();
-      if (lineText.endsWith("{")) {
-        break;
-      }
-      sectionStart--;
+    const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+      'vscode.executeDocumentSymbolProvider', document.uri
+    );
+  
+    if (!symbols) {
+      console.warn(`No symbols found for document: ${document.uri.fsPath}`);
+      return { start: startLine, end: endLine };
     }
-
-    while (sectionEnd < document.lineCount - 1) {
-      const lineText = document.lineAt(sectionEnd).text.trim();
-      if (lineText === "}") {
-        break;
+  
+    // Function to recursively find the smallest symbol containing the hotspot range
+    function findEnclosingSymbol(symbols: vscode.DocumentSymbol[], range: vscode.Range): vscode.DocumentSymbol | null {
+      for (const symbol of symbols) {
+        if (symbol.range.contains(range)) {
+          const childResult = findEnclosingSymbol(symbol.children, range);
+          return childResult || symbol;
+        }
       }
-      sectionEnd++;
+      return null;
     }
-
-    return { start: sectionStart, end: sectionEnd };
+  
+    const hotspotRange = new vscode.Range(startLine, 0, endLine, 0);
+    const enclosingSymbol = findEnclosingSymbol(symbols, hotspotRange);
+  
+    if (enclosingSymbol) {
+      console.log(`Enclosing symbol found: ${enclosingSymbol.name} (${enclosingSymbol.kind})`);
+      return {
+        start: enclosingSymbol.range.start.line,
+        end: enclosingSymbol.range.end.line
+      };
+    } else {
+      console.warn(`No enclosing symbol found for hotspot at lines ${startLine}-${endLine}`);
+      return { start: startLine, end: endLine };
+    }
   }
+  
+    
 
   // Analyze a single hotspot with the LLM
   public static async analyzeHotspotWithLLM(hotspot: EnrichedHotspot, document: vscode.TextDocument, context: vscode.ExtensionContext): Promise<void> {
@@ -103,30 +124,30 @@ export class HotspotLLMAnalyzer {
     );
 
     // LLM prompt
-    const prompt = `Analyze the following code section and generate a JSON response with two key-value pairs: 
-    "summary" (a concise summary of what the code does) and "relevance" (with values: high, medium, or low based on the code's importance).
-    Return the result as a valid JSON object.
+    const prompt = `Analyze the following code section and generate a concise summary and its relevance (high, medium, low). Expected format: { "summary": "...", "relevance": "..." }\n\n${surroundingSection}`;
+
+    try {
   
-    Code section:
-    \n\n${surroundingSection}`;
-    
-    const llmResult = await this.queryLLM(prompt);
-
-    llmHotspotData.push({
-      filePath,
-      startLine,
-      endLine,
-      surroundingStartLine,
-      surroundingEndLine,
-      summary: llmResult.summary,
-      relevance: llmResult.relevance
-    });
-
-    // Add a 2-second delay before querying the next hotspot
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    // Save the LLM result for this hotspot
-    await this.saveLLMHotspotData(context);
+      const llmResult = await this.queryLLM(prompt);
+  
+      if (llmResult.summary && llmResult.relevance) {
+        llmHotspotData.push({
+          filePath,
+          startLine,
+          endLine,
+          surroundingStartLine,
+          surroundingEndLine,
+          summary: llmResult.summary,
+          relevance: llmResult.relevance
+        });
+  
+        await this.saveLLMHotspotData(context);
+      } else {
+        console.warn(`Received invalid LLM result for hotspot at ${filePath}:${startLine}-${endLine}`);
+      }
+    } catch (error) {
+      console.error(`Error analyzing hotspot at ${filePath}:${startLine}-${endLine}:`, error);
+    }
 
     console.log(`Finished analysis for hotspot: ${filePath} (${startLine}-${endLine})`);  // Log the end of analysis
   }
@@ -134,17 +155,31 @@ export class HotspotLLMAnalyzer {
   // Save the LLM Hotspot data to JSON
   private static async saveLLMHotspotData(context: vscode.ExtensionContext) {
     try {
+      // Ensure storageUri is defined
       const storageUri = context.storageUri || context.globalStorageUri;
       if (storageUri) {
-        const llmHotspotFilePath = path.join(storageUri.fsPath, llmHotspotsFilename);
+        const storagePath = storageUri.fsPath;
+        
+        // Ensure the directory exists
+        if (!existsSync(storagePath)) {
+          mkdirSync(storagePath, { recursive: true });  // <-- mkdirSync now available
+        }
+
+        // Path to the llmHotspots.json file
+        const llmHotspotFilePath = path.join(storagePath, HotspotLLMAnalyzer.llmHotspotsFilename);  // Use the correct reference
+
+        // Write data to llmHotspots.json
         writeFileSync(llmHotspotFilePath, JSON.stringify(llmHotspotData, null, 2));
-        vscode.window.showInformationMessage("LLM Hotspots Data has been saved.");
+        //vscode.window.showInformationMessage(`LLM Hotspots Data saved at ${llmHotspotFilePath}.`);
+      } else {
+        vscode.window.showErrorMessage("Error: Unable to find storage location for llmHotspots.json.");
       }
     } catch (error) {
       vscode.window.showErrorMessage(`Error saving LLM Hotspots data: ${(error as Error).message}`);
     }
   }
 
+  // Get LLM Hotspot data
   public static getLLMHotspotData(): Array<{
     filePath: string;
     startLine: number;
@@ -157,42 +192,29 @@ export class HotspotLLMAnalyzer {
     return llmHotspotData;
   }
 
-  public static registerAnalyzeHotspotCommand(context: vscode.ExtensionContext, hotspotsProvider: any) {
-    const disposable = vscode.commands.registerCommand('extension.analyzeHotspotWithLLM', async () => {
-      const editor = vscode.window.activeTextEditor;
-      if (editor) {
-        const document = editor.document;
+  // Add a new hotspot to the queue
+  public static async addToQueue(hotspot: EnrichedHotspot, document: vscode.TextDocument, context: vscode.ExtensionContext) {
+    hotspotQueue.push(hotspot);
+    await HotspotLLMAnalyzer.processQueue(document, context);
+  }
 
-        const hotspots = await hotspotsProvider.getTrackedNodes();
+  // Process the queue of hotspots
+  private static async processQueue(document: vscode.TextDocument, context: vscode.ExtensionContext) {
+    if (isProcessingQueue) return;  // If already processing, exit early
+    isProcessingQueue = true;
 
-        const rangeNodes = hotspots.filter((node: any) => node instanceof RangeNode) as RangeNode[];
-
-        if (rangeNodes.length > 0) {
-          const rangeNode = rangeNodes[0];  // Take only the first hotspot
-
-          const enrichedHotspot: EnrichedHotspot = {
-            filePath: rangeNode.filePath,
-            rangeData: {
-              startLine: rangeNode.startLine,
-              endLine: rangeNode.endLine,
-              totalDuration: rangeNode.importance,
-            },
-            symbols: [],
-            timeSpent: rangeNode.importance,
-            importance: rangeNode.importance,
-          };
-
-          await HotspotLLMAnalyzer.analyzeHotspotWithLLM(enrichedHotspot, document, context);
-
-          vscode.window.showInformationMessage(`First hotspot has been analyzed with the LLM: ${rangeNode.filePath}:${rangeNode.startLine}-${rangeNode.endLine}`);
-        } else {
-          vscode.window.showInformationMessage("No hotspots found for analysis.");
+    while (hotspotQueue.length > 0) {
+      const hotspot = hotspotQueue.shift();
+      if (hotspot) {
+        try {
+          await HotspotLLMAnalyzer.analyzeHotspotWithLLM(hotspot, document, context);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        } catch (error) {
+          console.error(`Error processing hotspot: ${error}`);
         }
-      } else {
-        vscode.window.showErrorMessage("No active editor found. Please open a file to analyze.");
       }
-    });
+    }
 
-    context.subscriptions.push(disposable);
+    isProcessingQueue = false;
   }
 }

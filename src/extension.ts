@@ -14,7 +14,7 @@ import { registerWebviewPanelHistogram } from "./WebviewPanelHistogram.js";
 import { HistogramViewProvider } from "./HistogramViewProvider.js";
 import { enrichHotspotsByType } from "./HotspotsGrouper";
 import { LocationTracker } from "./LocationTracker";
-//import { HotspotLLMAnalyzer } from './HotspotsLLMAnalyzer';
+import { HotspotLLMAnalyzer } from './HotspotsLLMAnalyzer';
 
 var storageLocation: vscode.Uri | undefined;
 
@@ -76,7 +76,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.window.onDidChangeActiveTextEditor(async () => {
     if (LocationTracker.shouldUpdateTracking()) {
-      addLastLocationToHistory();
+      addLastLocationToHistory(context);
       await updateEnrichedHotspots();
     }
     histogramViewProvider.updateHistogramData();
@@ -85,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
     if (LocationTracker.shouldUpdateTracking()) {
-      addLastLocationToHistory();
+      addLastLocationToHistory(context);
       await updateEnrichedHotspots();
     }
     LocationTracker.updateLocationTracking();

@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import * as vscode from "vscode";
 import { LocationTracker } from "./LocationTracker";
+import { HotspotLLMAnalyzer } from "./HotspotsLLMAnalyzer";
+import * as path from "path";
 
 // Encapsulates the information about one node (hotspot).
 export class RangeData {
@@ -29,15 +31,15 @@ export function getPositionHistory(): PositionHistory {
 var backupFilename = "backup.json"; // TODO: Allow multiple files.
 
 export function savePositionHistory(storageLocation: vscode.Uri) {
-  var filePath = vscode.Uri.joinPath(storageLocation, backupFilename);
-  writeFileSync(filePath.fsPath, JSON.stringify(getPositionHistory()));
+  var filePath = path.join(storageLocation.fsPath, backupFilename);
+  writeFileSync(filePath, JSON.stringify(getPositionHistory()));
 }
 
 // Load history from file.
 export function loadPositionHistory(storageLocation: vscode.Uri) {
-  var filePath = vscode.Uri.joinPath(storageLocation, backupFilename);
-  if (existsSync(filePath.fsPath)) {
-    var backupContent = readFileSync(filePath.fsPath).toString();
+  var filePath = path.join(storageLocation.fsPath, backupFilename);
+  if (existsSync(filePath)) {
+    var backupContent = readFileSync(filePath).toString();
     var backupData = JSON.parse(backupContent);
     positionHistory = convertPositionHistoryValue(backupData);
     vscode.window.showInformationMessage("Found existing backup with data");
@@ -49,61 +51,68 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
 //vscode.window.onDidChangeWindowState
 //vscode.workspace.onDidChangeTextDocument
 
-export function addLastLocationToHistory() {
+export function addLastLocationToHistory(context: vscode.ExtensionContext) {
   if (LocationTracker.lastDocument === undefined) {
     return;
   }
 
-  var viewDuration = Date.now() - LocationTracker.lastVisibleRangeUpdate;
-  let fileIdentifier = vscode.workspace.asRelativePath(
-    LocationTracker.lastDocument.uri
-  );
-  var identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
+  const viewDuration = Date.now() - LocationTracker.lastVisibleRangeUpdate;
+  const fileIdentifier = vscode.workspace.asRelativePath(LocationTracker.lastDocument.uri);
+  const identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
 
-  var currentLocationDataNode = positionHistory;
-  for (var i = 0; i < identifierKeys.length; ++i) {
-    let nextKey = identifierKeys[i];
+  let currentLocationDataNode = positionHistory;
+  for (let i = 0; i < identifierKeys.length; ++i) {
+    const nextKey = identifierKeys[i];
     let positionNode = currentLocationDataNode[nextKey];
 
-    // no file node yet -> add PositionHistory
     if (i < identifierKeys.length - 1) {
       if (positionNode === undefined) {
         currentLocationDataNode[nextKey] = new PositionHistory();
         currentLocationDataNode = currentLocationDataNode[nextKey];
-      }
-      if (currentLocationDataNode[nextKey] instanceof PositionHistory) {
+      } else if (currentLocationDataNode[nextKey] instanceof PositionHistory) {
         currentLocationDataNode = currentLocationDataNode[nextKey];
       }
-    }
-    // reached file node -> add RangeData[]
-    else {
+    } else {
       if (positionNode === undefined) {
         currentLocationDataNode[nextKey] = [];
       }
-      let positionDataArray = currentLocationDataNode[nextKey];
+      const positionDataArray = currentLocationDataNode[nextKey];
+
       if (Array.isArray(positionDataArray)) {
         LocationTracker.lastVisibleRanges?.forEach((visibleRange) => {
-          var existingRange = positionDataArray.find(
-            (range) =>
-              range.startLine === visibleRange.start.line &&
-              range.endLine === visibleRange.end.line
+          let existingRange = positionDataArray.find(
+            (range) => range.startLine === visibleRange.start.line && range.endLine === visibleRange.end.line
           );
+
           if (existingRange) {
+            // Only update the viewDuration for existing hotspots
             existingRange.totalDuration += viewDuration;
           } else {
-            positionDataArray.push(
-              new RangeData(
-                visibleRange.start.line,
-                visibleRange.end.line,
-                viewDuration
-              )
-            );
+            // Add a new hotspot and trigger LLM analysis
+            const newRange = new RangeData(visibleRange.start.line, visibleRange.end.line, viewDuration);
+            positionDataArray.push(newRange);
+
+            // Create the enriched hotspot object
+            const enrichedHotspot = {
+              filePath: LocationTracker.lastDocument?.uri.fsPath || "", // Ensure it's safe
+              rangeData: newRange,
+              symbols: [],  // Populate as needed
+              timeSpent: viewDuration,
+              importance: viewDuration // You can change how you calculate importance
+            };
+
+            // Add the new hotspot to the LLM analysis queue
+            if (LocationTracker.lastDocument) {
+              console.log('Adding hotspot to LLM analysis queue.');
+              HotspotLLMAnalyzer.addToQueue(enrichedHotspot, LocationTracker.lastDocument, context);
+            }
           }
         });
       }
     }
   }
 }
+
 
 function convertPositionHistoryValue(
   value: any
