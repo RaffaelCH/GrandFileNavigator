@@ -232,7 +232,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
 			</head>
 			<body>
-        <div style="display: flex; justify-content: space-around; flex-direction: row;">
+        <div style="padding: 10px; display: flex; justify-content: space-around; flex-direction: row;">
           <button onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
           <button onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
         </div>

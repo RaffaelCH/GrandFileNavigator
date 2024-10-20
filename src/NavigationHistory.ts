@@ -13,7 +13,7 @@ export class NavigationHistory {
   private static navigationHistory: FileLocation[];
   private static intermediateLocation: FileLocation | undefined;
   private static lastLocationUpdate: number;
-  private static navigationHistoryIndex = 0;
+  private static navigationHistoryIndex = -1;
 
   private static msBeforeHistoryUpdate: number = 5000;
 
@@ -43,6 +43,13 @@ export class NavigationHistory {
       )
     );
 
+    if (!this.intermediateLocation && this.navigationHistory.length === 0) {
+      this.navigationHistory[0] = currentLocation;
+      this.navigationHistoryIndex = 0;
+      this.lastLocationUpdate = Date.now();
+      return;
+    }
+
     let lastLocationToMergeWith =
       this.intermediateLocation ??
       this.navigationHistory[this.navigationHistoryIndex];
@@ -58,13 +65,15 @@ export class NavigationHistory {
         this.intermediateLocation = mergedLocation;
       }
     } else if (LocationTracker.shouldTrackWindow()) {
-      if (this.lastLocationUpdate - Date.now() > this.msBeforeHistoryUpdate) {
-        if (this.intermediateLocation) {
-          this.navigationHistory.push(this.intermediateLocation);
-        }
-
-        this.intermediateLocation = currentLocation;
-        this.navigationHistoryIndex = this.navigationHistory.length - 1;
+      if (Date.now() - this.lastLocationUpdate > this.msBeforeHistoryUpdate) {
+        this.navigationHistoryIndex += 1;
+        this.navigationHistory = this.navigationHistory.slice(
+          0,
+          this.navigationHistoryIndex
+        );
+        this.navigationHistory.push(
+          this.intermediateLocation ?? currentLocation
+        );
       }
     } else {
       this.intermediateLocation = undefined;
@@ -75,7 +84,8 @@ export class NavigationHistory {
 
   public static hasPreviousPosition(): boolean {
     return (
-      this.navigationHistoryIndex > 0 || this.intermediateLocation !== undefined
+      this.navigationHistoryIndex >= 0 ||
+      this.intermediateLocation !== undefined
     );
   }
 
