@@ -26,6 +26,37 @@
         );
         insertVisibleRangeIndicator();
         break;
+      case "updateNavigationButtons":
+        updateNavigationButtonsActivations(
+          message.hasPrevious,
+          message.hasNext
+        );
+        break;
     }
   });
 })();
+
+function updateNavigationButtonsActivations(hasPrevious, hasNext) {
+  let forwardButton = document.getElementById("nav-button-forward");
+  let backwardsButton = document.getElementById("nav-button-backward");
+
+  if (backwardsButton) {
+    if (hasPrevious) {
+      backwardsButton.style.opacity = 1;
+      backwardsButton.style.cursor = "initial";
+    } else {
+      backwardsButton.style.opacity = 0.5;
+      backwardsButton.style.cursor = "not-allowed";
+    }
+  }
+
+  if (forwardButton) {
+    if (hasNext) {
+      forwardButton.style.opacity = 1;
+      forwardButton.style.cursor = "initial";
+    } else {
+      forwardButton.style.opacity = 0.5;
+      forwardButton.style.cursor = "not-allowed";
+    }
+  }
+}

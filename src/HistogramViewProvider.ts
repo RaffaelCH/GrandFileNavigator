@@ -5,13 +5,14 @@ import SidebarNode from "./sidebar_types/SidebarNode.js";
 import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
 import { adaptImportanceArray } from "./adapters/hotspotsGrouper.js";
+import { NavigationHistory } from "./NavigationHistory.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
 
   private _view?: vscode.WebviewView;
   private _visualizationType: string = "histogram";
-  private histogramUpdateTimer = setInterval(() => this.updateView(), 5000);
+  private viewUpdateTimer = setInterval(() => this.updateView(), 1000);
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -52,6 +53,18 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       command: "indicateRange",
       startLine: startLine,
       endLine: endLine,
+    });
+  }
+
+  public async updateNavigation(hasPrevious: boolean, hasNext: boolean) {
+    if (!this._view) {
+      return;
+    }
+
+    this._view.webview.postMessage({
+      command: "updateNavigationButtons",
+      hasPrevious: hasPrevious,
+      hasNext: hasNext,
     });
   }
 
@@ -141,6 +154,13 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
               new vscode.Position(message.endLine, 1)
             )
           );
+          return;
+        case "navigateBackwards":
+          NavigationHistory.moveToPreviousPosition();
+          return;
+        case "navigateForwards":
+          NavigationHistory.moveToNextPosition();
+          return;
       }
     }, undefined);
   }
@@ -212,6 +232,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
 			</head>
 			<body>
+        <div style="padding: 10px; display: flex; justify-content: space-around; flex-direction: row;">
+          <button id="nav-button-backward" onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
+          <button id="nav-button-forward" onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
+        </div>
         <div style="display: flex; justify-content: center; flex-direction: column;">
           <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
           <p id="errorMessage"></p>
