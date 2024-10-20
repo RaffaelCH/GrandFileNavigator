@@ -10,35 +10,21 @@ class FileLocation {
 }
 
 export class NavigationHistory {
-  private navigationHistory: FileLocation[];
-  private intermediateLocations: FileLocation[];
-  private lastLocationUpdate: number;
-  private navigationHistoryIndex = 0;
+  private static navigationHistory: FileLocation[];
+  private static intermediateLocation: FileLocation | undefined;
+  private static lastLocationUpdate: number;
+  private static navigationHistoryIndex = 0;
 
-  private msBeforeHistoryUpdate: number = 5000;
+  private static msBeforeHistoryUpdate: number = 5000;
 
-  public constructor() {
+  public static initialize() {
     this.lastLocationUpdate = Date.now();
     this.navigationHistory = [];
-    this.intermediateLocations = [];
+    this.intermediateLocation = undefined;
   }
 
-  public updateLocation() {
+  public static updateLocation() {
     if (Date.now() - this.lastLocationUpdate < 1000) {
-      return;
-    }
-
-    // TODO: If moved back in navigation history, prune off previous history!
-
-    if (!LocationTracker.shouldTrackWindow()) {
-      if (Date.now() - this.lastLocationUpdate > this.msBeforeHistoryUpdate) {
-        if (this.intermediateLocations.length > 0) {
-          let lastLocation =
-            this.intermediateLocations[this.intermediateLocations.length - 1];
-          this.navigationHistory.push(lastLocation);
-        }
-      }
-      this.intermediateLocations = [];
       return;
     }
 
@@ -57,54 +43,62 @@ export class NavigationHistory {
       )
     );
 
-    let intermediateIsEmpty = this.intermediateLocations.length === 0;
-    let lastLocationToMergeWith = intermediateIsEmpty
-      ? this.intermediateLocations[this.intermediateLocations.length - 1]
-      : this.navigationHistory[this.navigationHistory.length - 1];
+    let lastLocationToMergeWith =
+      this.intermediateLocation ??
+      this.navigationHistory[this.navigationHistoryIndex];
     let mergedLocation = this.tryMergeLocations(
       lastLocationToMergeWith,
       currentLocation
     );
 
     if (mergedLocation) {
-      if (intermediateIsEmpty) {
-        this.navigationHistory.pop();
-        this.navigationHistory.push(mergedLocation);
+      if (!this.intermediateLocation) {
+        this.navigationHistory[this.navigationHistoryIndex] = mergedLocation;
       } else {
-        this.intermediateLocations.pop();
-        this.intermediateLocations.push(mergedLocation);
+        this.intermediateLocation = mergedLocation;
       }
-    } else {
+    } else if (LocationTracker.shouldTrackWindow()) {
       if (this.lastLocationUpdate - Date.now() > this.msBeforeHistoryUpdate) {
-        if (!intermediateIsEmpty) {
-          this.navigationHistory.push(
-            this.intermediateLocations[this.intermediateLocations.length - 1]
-          );
-          this.intermediateLocations = [];
+        if (this.intermediateLocation) {
+          this.navigationHistory.push(this.intermediateLocation);
         }
 
-        this.intermediateLocations.push(currentLocation);
+        this.intermediateLocation = currentLocation;
+        this.navigationHistoryIndex = this.navigationHistory.length - 1;
       }
+    } else {
+      this.intermediateLocation = undefined;
     }
 
     this.lastLocationUpdate = Date.now();
   }
 
-  public hasPreviousPosition() {
-    return this.navigationHistoryIndex > 0;
+  public static hasPreviousPosition(): boolean {
+    return (
+      this.navigationHistoryIndex > 0 || this.intermediateLocation !== undefined
+    );
   }
 
-  public hasNextPosition() {
-    return this.navigationHistoryIndex < this.navigationHistory.length - 1;
+  public static hasNextPosition(): boolean {
+    return (
+      this.navigationHistoryIndex < this.navigationHistory.length - 1 ||
+      this.intermediateLocation !== undefined
+    );
   }
 
-  public moveToPreviousPosition() {
+  public static moveToPreviousPosition() {
     if (!this.hasPreviousPosition()) {
       return;
     }
 
-    this.navigationHistoryIndex -= 1;
-    let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    var locationToReveal: FileLocation;
+    if (!this.intermediateLocation) {
+      this.navigationHistoryIndex -= 1;
+      locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    } else {
+      locationToReveal = this.intermediateLocation;
+    }
+
     revealLocation(
       locationToReveal.relativePath,
       locationToReveal.range.start.line,
@@ -112,13 +106,19 @@ export class NavigationHistory {
     );
   }
 
-  public moveToNextPosition() {
+  public static moveToNextPosition() {
     if (!this.hasNextPosition()) {
       return;
     }
 
-    this.navigationHistoryIndex += 1;
-    let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    var locationToReveal: FileLocation;
+    if (!this.intermediateLocation) {
+      this.navigationHistoryIndex += 1;
+      locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    } else {
+      locationToReveal = this.intermediateLocation;
+    }
+
     revealLocation(
       locationToReveal.relativePath,
       locationToReveal.range.start.line,
@@ -126,7 +126,7 @@ export class NavigationHistory {
     );
   }
 
-  private tryMergeLocations(
+  private static tryMergeLocations(
     previousLocation: FileLocation,
     currentLocation: FileLocation
   ): FileLocation | undefined {

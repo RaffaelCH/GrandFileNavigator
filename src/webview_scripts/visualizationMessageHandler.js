@@ -26,6 +26,15 @@
         );
         insertVisibleRangeIndicator();
         break;
+      case "updateNavigationButtons":
+        localStorage.setItem(
+          "navigationButtonsActive",
+          JSON.stringify({
+            hasPrevious: message.hasPrevious,
+            hasNext: message.hasNext,
+          })
+        );
+        break;
     }
   });
 })();
