@@ -29,7 +29,7 @@ export class LocationTracker {
       return false;
     }
 
-    if (Date.now() - this.lastVisibleRangeUpdate < 500) {
+    if (Date.now() - this.lastVisibleRangeUpdate < 400) {
       return false;
     }
 
