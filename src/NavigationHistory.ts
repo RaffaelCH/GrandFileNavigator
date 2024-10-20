@@ -28,8 +28,8 @@ export class NavigationHistory {
       return;
     }
 
-    let lastDocument = LocationTracker.lastDocument;
-    let previousRanges = LocationTracker.lastVisibleRanges;
+    let lastDocument = vscode.window.activeTextEditor!.document;
+    let previousRanges = vscode.window.activeTextEditor!.visibleRanges;
     if (lastDocument === undefined || previousRanges === undefined) {
       return;
     }
