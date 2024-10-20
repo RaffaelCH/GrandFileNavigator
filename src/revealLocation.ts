@@ -24,6 +24,10 @@ export function revealLocation(
     return;
   }
 
+  if (!relativeFilePath.startsWith("/")) {
+    relativeFilePath = "/" + relativeFilePath;
+  }
+
   var file = rootUri + relativeFilePath;
   vscode.workspace.openTextDocument(file).then(
     (document: vscode.TextDocument) => {

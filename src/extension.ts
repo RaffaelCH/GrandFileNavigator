@@ -14,6 +14,7 @@ import { registerWebviewPanelHistogram } from "./WebviewPanelHistogram.js";
 import { HistogramViewProvider } from "./HistogramViewProvider.js";
 import { enrichHotspotsByType } from "./HotspotsGrouper";
 import { LocationTracker } from "./LocationTracker";
+import { NavigationHistory } from "./NavigationHistory";
 import { HotspotLLMAnalyzer } from './HotspotsLLMAnalyzer';
 
 var storageLocation: vscode.Uri | undefined;
@@ -24,6 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   LocationTracker.initialize();
+  NavigationHistory.initialize();
 
   storageLocation = context.storageUri;
 
@@ -75,6 +77,12 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   vscode.window.onDidChangeActiveTextEditor(async () => {
+    NavigationHistory.updateLocation();
+    histogramViewProvider.updateNavigation(
+      NavigationHistory.hasPreviousPosition(),
+      NavigationHistory.hasNextPosition()
+    );
+
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory(context);
       await updateEnrichedHotspots();
@@ -84,6 +92,12 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
+    NavigationHistory.updateLocation();
+    histogramViewProvider.updateNavigation(
+      NavigationHistory.hasPreviousPosition(),
+      NavigationHistory.hasNextPosition()
+    );
+
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory(context);
       await updateEnrichedHotspots();
@@ -106,8 +120,6 @@ export function activate(context: vscode.ExtensionContext) {
       //vscode.window.showInformationMessage(`Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`);
     }
   );
-
-
 
   //HotspotLLMAnalyzer.registerAnalyzeHotspotCommand(context, hotspotsProvider);
 
