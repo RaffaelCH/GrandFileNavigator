@@ -12,7 +12,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
   private _visualizationType: string = "histogram";
-  private viewUpdateTimer = setInterval(() => this.updateView(), 5000);
+  private viewUpdateTimer = setInterval(() => this.updateView(), 1000);
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -233,8 +233,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 			</head>
 			<body>
         <div style="padding: 10px; display: flex; justify-content: space-around; flex-direction: row;">
-          <button onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
-          <button onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
+          <button id="nav-button-backward" onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
+          <button id="nav-button-forward" onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
         </div>
         <div style="display: flex; justify-content: center; flex-direction: column;">
           <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>

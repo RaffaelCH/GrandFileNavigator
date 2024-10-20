@@ -78,6 +78,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.window.onDidChangeActiveTextEditor(async () => {
     NavigationHistory.updateLocation();
+    histogramViewProvider.updateNavigation(
+      NavigationHistory.hasPreviousPosition(),
+      NavigationHistory.hasNextPosition()
+    );
+
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory();
       await updateEnrichedHotspots();

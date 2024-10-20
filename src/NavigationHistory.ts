@@ -13,7 +13,7 @@ export class NavigationHistory {
   private static navigationHistory: FileLocation[];
   private static intermediateLocation: FileLocation | undefined;
   private static lastLocationUpdate: number;
-  private static navigationHistoryIndex = -1;
+  private static navigationHistoryIndex = 0;
 
   private static msBeforeHistoryUpdate: number = 5000;
 
@@ -28,8 +28,8 @@ export class NavigationHistory {
       return;
     }
 
-    let lastDocument = vscode.window.activeTextEditor!.document;
-    let previousRanges = vscode.window.activeTextEditor!.visibleRanges;
+    let lastDocument = vscode.window.activeTextEditor?.document;
+    let previousRanges = vscode.window.activeTextEditor?.visibleRanges;
     if (lastDocument === undefined || previousRanges === undefined) {
       return;
     }
@@ -45,7 +45,6 @@ export class NavigationHistory {
 
     if (!this.intermediateLocation && this.navigationHistory.length === 0) {
       this.navigationHistory[0] = currentLocation;
-      this.navigationHistoryIndex = 0;
       this.lastLocationUpdate = Date.now();
       return;
     }
@@ -84,7 +83,7 @@ export class NavigationHistory {
 
   public static hasPreviousPosition(): boolean {
     return (
-      this.navigationHistoryIndex >= 0 ||
+      (this.navigationHistory.length > 0 && this.navigationHistoryIndex > 0) ||
       this.intermediateLocation !== undefined
     );
   }
