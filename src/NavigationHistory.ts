@@ -13,7 +13,7 @@ export class NavigationHistory {
   private static navigationHistory: FileLocation[];
   private static intermediateLocation: FileLocation | undefined;
   private static lastLocationUpdate: number;
-  private static navigationHistoryIndex = 0;
+  private static navigationHistoryIndex = -1;
 
   private static msBeforeHistoryUpdate: number = 5000;
 
@@ -25,26 +25,18 @@ export class NavigationHistory {
 
   public static updateLocation() {
     if (Date.now() - this.lastLocationUpdate < 1000) {
+      this.lastLocationUpdate = Date.now();
       return;
     }
 
-    let lastDocument = vscode.window.activeTextEditor?.document;
-    let previousRanges = vscode.window.activeTextEditor?.visibleRanges;
-    if (lastDocument === undefined || previousRanges === undefined) {
+    let currentLocation = this.getCurrentLocation();
+    if (!currentLocation) {
       return;
     }
-
-    let previousFilePath = vscode.workspace.asRelativePath(lastDocument.uri);
-    let currentLocation = new FileLocation(
-      previousFilePath,
-      new vscode.Range(
-        previousRanges[0].start,
-        previousRanges[previousRanges.length - 1].end
-      )
-    );
 
     if (!this.intermediateLocation && this.navigationHistory.length === 0) {
       this.navigationHistory[0] = currentLocation;
+      this.navigationHistoryIndex = 0;
       this.lastLocationUpdate = Date.now();
       return;
     }
@@ -73,6 +65,11 @@ export class NavigationHistory {
         this.navigationHistory.push(
           this.intermediateLocation ?? currentLocation
         );
+        this.intermediateLocation = undefined;
+        console.log("Adding new location to history");
+        console.log(this.navigationHistory[this.navigationHistoryIndex].range);
+      } else {
+        this.intermediateLocation = currentLocation;
       }
     } else {
       this.intermediateLocation = undefined;
@@ -82,17 +79,32 @@ export class NavigationHistory {
   }
 
   public static hasPreviousPosition(): boolean {
-    return (
-      (this.navigationHistory.length > 0 && this.navigationHistoryIndex > 0) ||
-      this.intermediateLocation !== undefined
-    );
+    if (this.navigationHistory.length > 0 && this.navigationHistoryIndex >= 0) {
+      return true;
+    }
+
+    if (this.intermediateLocation) {
+      let currentLocation = this.getCurrentLocation();
+      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   public static hasNextPosition(): boolean {
-    return (
-      this.navigationHistoryIndex < this.navigationHistory.length - 1 ||
-      this.intermediateLocation !== undefined
-    );
+    if (this.navigationHistoryIndex < this.navigationHistory.length - 1) {
+      return true;
+    }
+    if (this.intermediateLocation) {
+      let currentLocation = this.getCurrentLocation();
+      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   public static moveToPreviousPosition() {
@@ -100,12 +112,22 @@ export class NavigationHistory {
       return;
     }
 
-    var locationToReveal: FileLocation;
-    if (!this.intermediateLocation) {
-      this.navigationHistoryIndex -= 1;
-      locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    var useNavigationHistory = true;
+    if (this.intermediateLocation) {
+      let currentLocation = this.getCurrentLocation();
+      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
+        useNavigationHistory = false;
+      }
     } else {
-      locationToReveal = this.intermediateLocation;
+      useNavigationHistory = true;
+    }
+
+    let locationToReveal: FileLocation;
+    if (useNavigationHistory) {
+      locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+      this.navigationHistoryIndex -= 1;
+    } else {
+      locationToReveal = this.intermediateLocation!;
     }
 
     revealLocation(
@@ -126,6 +148,7 @@ export class NavigationHistory {
       locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
     } else {
       locationToReveal = this.intermediateLocation;
+      this.intermediateLocation = undefined;
     }
 
     revealLocation(
@@ -136,9 +159,13 @@ export class NavigationHistory {
   }
 
   private static tryMergeLocations(
-    previousLocation: FileLocation,
-    currentLocation: FileLocation
+    previousLocation: FileLocation | undefined,
+    currentLocation: FileLocation | undefined
   ): FileLocation | undefined {
+    if (!previousLocation || !currentLocation) {
+      return undefined;
+    }
+
     // Different files.
     if (previousLocation.relativePath !== currentLocation.relativePath) {
       return undefined;
@@ -163,5 +190,24 @@ export class NavigationHistory {
     }
 
     return new FileLocation(currentLocation.relativePath, rangeOverlap);
+  }
+
+  private static getCurrentLocation(): FileLocation | undefined {
+    let currentDocument = vscode.window.activeTextEditor?.document;
+    let currentRanges = vscode.window.activeTextEditor?.visibleRanges;
+    if (currentDocument === undefined || currentRanges === undefined) {
+      return undefined;
+    }
+
+    let currentFilePath = vscode.workspace.asRelativePath(currentDocument.uri);
+    let currentLocation = new FileLocation(
+      currentFilePath,
+      new vscode.Range(
+        currentRanges[0].start,
+        currentRanges[currentRanges.length - 1].end
+      )
+    );
+
+    return currentLocation;
   }
 }
