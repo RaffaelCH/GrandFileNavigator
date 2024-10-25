@@ -109,6 +109,7 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
               importance: viewDuration, // You can change how you calculate importance
             };
 
+            // TODO: Move somewhere else (this file is focused on location tracking).
             // Add the new hotspot to the LLM analysis queue
             if (LocationTracker.lastDocument) {
               console.log("Adding hotspot to LLM analysis queue.");
