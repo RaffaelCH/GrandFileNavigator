@@ -1,22 +1,12 @@
+// var containerRect = histogramContainer.getBoundingClientRect();
+// const svgHeight = 700; // containerRect.height;
+// const svgWidth = 260; // containerRect.width;
+
 function insertHotspotNodes() {
   var hotspotNodesJson = localStorage.getItem("hotspotNodes");
   var hotspotNodes = JSON.parse(hotspotNodesJson);
 
-  console.log("Top hotspots:");
-  console.log(hotspotNodes);
-
-  // Example data with the following assumptions:
-  // - For all nodes, their containing nodes are also included (method -> class, etc.)
-  // - For all nodes, the total importance is the sum of the importances of the contained nodes.
-  // hotspotNodes = [
-  //   { metricValue: 200, displayName: "Launcher", startLine: 30, endLine: 215 },
-  //   { metricValue: 60, displayName: "getGame", startLine: 44, endLine: 46 },
-  //   { metricValue: 140, displayName: "launch", startLine: 183, endLine: 189 },
-  //   { metricValue: 80, displayName: "section1", startLine: 184, endLine: 185 },
-  //   { metricValue: 60, displayName: "section2", startLine: 186, endLine: 188 },
-  // ];
-
-  var hotspotContainer = document.getElementById("hotspots-container");
+  var hotspotsContainer = document.getElementById("hotspots-container");
   var visualizationContainer = document.getElementById(
     "visualization-container"
   );
@@ -29,85 +19,69 @@ function insertHotspotNodes() {
   } else {
     errorMessageContainer.textContent = "";
     visualizationContainer.style.display = "initial";
-    hotspotContainer.style.display = "flex";
+    hotspotsContainer.style.display = "flex";
     document.getElementById("histogram-container").style.display = "none";
   }
 
-  var nestedNodes = createNodeNesting(hotspotNodes);
-  var metricMax = 80; // TODO: Compute based on children.
-  hotspotContainer.innerHTML = createNestedHtml(nestedNodes, metricMax);
+  addHotspotsHtmlToContainer(hotspotNodes, hotspotsContainer);
 }
 
-function createNodeNesting(hotspotNodes) {
-  return {
-    metricValue: 200,
-    displayName: "Launcher",
-    startLine: 30,
-    endLine: 215,
-    children: [
-      { metricValue: 60, displayName: "getGame", startLine: 44, endLine: 46 },
-      {
-        metricValue: 140,
-        displayName: "launch",
-        startLine: 183,
-        endLine: 189,
-        children: [
-          {
-            metricValue: 80,
-            displayName: "section1",
-            startLine: 184,
-            endLine: 185,
-          },
-          {
-            metricValue: 60,
-            displayName: "section2",
-            startLine: 186,
-            endLine: 188,
-          },
-        ],
-      },
-    ],
-  };
+function addHotspotsHtmlToContainer(hotspots, viewContainer) {
+  // TODO: Add visible range indicator.
 
-  /* var nestedHotspots = [];
-  for (var hotspotNode in hotspotNodes) {
-    var nodeHierarchy = hotspotNodes.filter(
-      (node) =>
-        node.startLine <= hotspotNode.startLine &&
-        hotspotNode.endLine <= node.endLine
-    );
-
-    var parentNode = undefined;
-    while (!nodeHierarchy.isEmpty()) {
-      var parentStartLine = Math.min(nodeHierarchy.map(node => node.startLine));
-      var parentEndLine = Math.max(nodeHierarchy.map(node => node.endLine));
-      parentNode = nodeHierarchy.first(node => node.startLine === parentStartLine && node.endLine === parentEndLine);
-      nodeHierarchy.remove(parentNode);
-      parentNode["child"] = childNode;
-      parentNode = childNode;
-    }
-
-    nestedHotspots
-  } */
-}
-
-function createNestedHtml(hotspotNode, metricMax) {
-  var html = `<div style="width: 100%">\n`;
-
-  if (hotspotNode.children) {
-    html += `<div style="border-style: solid; border-width: 2px; border-color: red; padding: 2px;">${hotspotNode.displayName}\n`;
-    html += hotspotNode.children
-      .map((child) => createNestedHtml(child, metricMax))
-      .join("");
-    html += "</div>\n";
-  } else {
-    var color = `rgb(${Math.floor(
-      (255 * hotspotNode.metricValue) / metricMax
-    )}, ${Math.floor(255 * (1 - hotspotNode.metricValue / metricMax))}, 0)`;
-    console.log(color);
-    html += `<button style="width=90%; border: none; background-color: ${color}; margin: 4px; padding: 15px 32px; " onclick="vscodeApi.postMessage({command: 'showRange', startLine: ${hotspotNode.startLine}, endLine: ${hotspotNode.endLine}});">${hotspotNode.displayName}</button>\n`;
+  if (hotspots.length === 0) {
+    return;
   }
 
-  html += "</div>";
-  return html;
+  const metricMax = Math.max(...hotspots.map((hotspot) => hotspot.importance));
+  const totalLineCount = hotspots.reduce((accumulator, hotspot) => {
+    return accumulator + hotspot.importance;
+  }, 0);
+  const hotspotsSeparatorCount = hotspots.length;
+  var pixelPerLine = (svgHeight - hotspotsSeparatorCount) / totalLineCount;
+
+  // Generate colors ranging from green to red, based on importance.
+  const colors = hotspots.map(
+    (hotspot) =>
+      `rgb(${Math.floor((255 * hotspot.importance) / metricMax)}, ${Math.floor(
+        255 * (1 - hotspot.importance / metricMax)
+      )}, 0)`
+  );
+
+  let barsHtml = "";
+  const maxBarWidth = svgWidth * 0.9;
+
+  let yPosition = 0;
+  for (let i = 0; i < hotspots.length; ++i) {
+    let hotspot = hotspots[i];
+
+    const barWidth = (hotspot.importance / metricMax) * maxBarWidth;
+    const hotspotLinesCount = hotspot.symbolEndLine - hotspot.symbolLine; // TODO: Adjust on a per-line basis.
+    const barHeight = Math.max(pixelPerLine * hotspotLinesCount, 1);
+    const color = colors[i];
+
+    barsHtml += `
+        <rect index=${i}
+          x="20" y="${yPosition}"
+          width="${barWidth + 1}"
+          height="${barHeight}"
+          fill="${color}">
+        </rect>
+      `;
+
+    yPosition += barHeight;
+    yPosition += 1; // Space for node separator.
+  }
+
+  viewContainer.innerHtml = barsHtml;
+
+  viewContainer.addEventListener("click", function (event) {
+    var index = event.target.attributes.index.value;
+    var hotspot = hotspots[index];
+    vscodeApi.postMessage({
+      command: "showRange",
+      startLine: hotspot.symbolLine,
+      endLine: hotspot.symbolEndLine,
+    });
+  });
 }

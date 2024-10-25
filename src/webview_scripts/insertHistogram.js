@@ -1,6 +1,6 @@
 // var containerRect = histogramContainer.getBoundingClientRect();
-const svgHeight = 700; // containerRect.height;
-const svgWidth = 260; // containerRect.width;
+//const svgHeight = 700; // containerRect.height;
+//const svgWidth = 260; // containerRect.width;
 
 function insertHistogram() {
   var histogramNodesJson = localStorage.getItem("histogramNodes");
@@ -103,38 +103,39 @@ function insertVisibleRangeIndicator() {
 
   if (firstVisibleNodeIndex === -1) {
     console.log("Encountered visible range outside histogramnode range.");
-  } else {
-    const barHeight = svgHeight / histogramNodes.length;
+    return;
+  }
 
-    var firstVisibleNode = histogramNodes[firstVisibleNodeIndex];
-    var lastVisibleNode = histogramNodes[lastVisibleNodeIndex];
+  const barHeight = svgHeight / histogramNodes.length;
 
-    var portionOfFirstRangeVisible =
-      (firstVisibleNode.endLine - visibleRange.startLine + 1) /
-      (firstVisibleNode.endLine - firstVisibleNode.startLine + 1);
-    var portionOfFirstRangeNotVisible = 1 - portionOfFirstRangeVisible;
-    var visibleRangeIndicatorY =
-      (firstVisibleNodeIndex + portionOfFirstRangeNotVisible) * barHeight;
+  var firstVisibleNode = histogramNodes[firstVisibleNodeIndex];
+  var lastVisibleNode = histogramNodes[lastVisibleNodeIndex];
 
-    var portionOfLastRangeVisible =
-      (visibleRange.endLine - lastVisibleNode.startLine + 1) /
-      (lastVisibleNode.endLine - lastVisibleNode.startLine + 1);
+  var portionOfFirstRangeVisible =
+    (firstVisibleNode.endLine - visibleRange.startLine + 1) /
+    (firstVisibleNode.endLine - firstVisibleNode.startLine + 1);
+  var portionOfFirstRangeNotVisible = 1 - portionOfFirstRangeVisible;
+  var visibleRangeIndicatorY =
+    (firstVisibleNodeIndex + portionOfFirstRangeNotVisible) * barHeight;
 
-    var visibleRangeIndicatorHeight = portionOfFirstRangeVisible * barHeight;
-    if (firstVisibleNodeIndex < lastVisibleNodeIndex) {
-      visibleRangeIndicatorHeight += portionOfLastRangeVisible * barHeight;
-      visibleRangeIndicatorHeight +=
-        (lastVisibleNodeIndex - firstVisibleNodeIndex - 1) * barHeight;
-    }
+  var portionOfLastRangeVisible =
+    (visibleRange.endLine - lastVisibleNode.startLine + 1) /
+    (lastVisibleNode.endLine - lastVisibleNode.startLine + 1);
 
-    var visibleRangeIndicatorHtml = `<rect id="visible-range-indicator"
+  var visibleRangeIndicatorHeight = portionOfFirstRangeVisible * barHeight;
+  if (firstVisibleNodeIndex < lastVisibleNodeIndex) {
+    visibleRangeIndicatorHeight += portionOfLastRangeVisible * barHeight;
+    visibleRangeIndicatorHeight +=
+      (lastVisibleNodeIndex - firstVisibleNodeIndex - 1) * barHeight;
+  }
+
+  var visibleRangeIndicatorHtml = `<rect id="visible-range-indicator"
           x="20" y="${visibleRangeIndicatorY}"
           width="${svgWidth}"
           height="${visibleRangeIndicatorHeight}"
           fill="rgb(100, 100, 100, 0.5)">
         </rect>`;
 
-    var histogramContainer = document.getElementById("histogram-container");
-    histogramContainer.innerHTML += visibleRangeIndicatorHtml;
-  }
+  var histogramContainer = document.getElementById("histogram-container");
+  histogramContainer.innerHTML += visibleRangeIndicatorHtml;
 }

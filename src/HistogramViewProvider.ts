@@ -104,20 +104,20 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     }
 
     var hotspotsData = getImportanceArray();
-    // TODO: Filter based on current file.
-    // hotspotsData = hotspotsData.filter(
-    //   (data) => data[1] === activeTextEditor?.document.fileName
-    // );
-
-    var hotspotNodes = adaptImportanceArray(hotspotsData);
-    hotspotNodes = hotspotNodes.sort(
-      (nodeA, nodeB) => nodeB.metricValue - nodeA.metricValue
+    hotspotsData = hotspotsData.filter((hotspot) =>
+      activeTextEditor?.document.fileName.endsWith(hotspot.fileName)
     );
-    hotspotNodes = hotspotNodes.slice(0, 6); // take 6 elements with highest metrics
+
+    // TODO: Change based on number of methods, fields, etc.
+    // TODO: Add enclosing (hierarchical) information?
+    var relevantSymbolTypes = ["Method"];
+    hotspotsData = hotspotsData.filter((hotspot) =>
+      relevantSymbolTypes.includes(hotspot.symbolKindName)
+    );
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
-      hotspotNodes: hotspotNodes,
+      hotspotNodes: hotspotsData,
     });
   }
 
@@ -224,6 +224,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 				<meta name="viewport" content="width=device-width, height=device-height initial-scale=1.0">
         <script>
           const vscodeApi = acquireVsCodeApi(); // Set global const with reference to keep track of it.
+          const svgHeight = 700; // containerRect.height;
+          const svgWidth = 260; // containerRect.width;
         </script>
         <script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
         <script id="hotspots-inserter" nonce="${nonce}" src="${insertHotspotsUri}"></script>
