@@ -79,11 +79,12 @@ export class NavigationHistory {
   }
 
   public static hasPreviousPosition(): boolean {
-    if (this.navigationHistory.length > 0 && this.navigationHistoryIndex >= 0) {
+    if (this.navigationHistory.length > 0 && this.navigationHistoryIndex > 0) {
       return true;
     }
 
     if (this.intermediateLocation) {
+      return true;
       let currentLocation = this.getCurrentLocation();
       if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
         return true;
@@ -108,27 +109,29 @@ export class NavigationHistory {
   }
 
   public static moveToPreviousPosition() {
+    console.log("Move to previous position");
+    console.log(JSON.stringify(this.navigationHistory));
+    console.log(this.navigationHistoryIndex);
+    if (this.intermediateLocation) {
+      console.log(JSON.stringify(this.intermediateLocation));
+    }
     if (!this.hasPreviousPosition()) {
+      console.log("no previous position");
       return;
     }
 
-    var useNavigationHistory = true;
-    if (this.intermediateLocation) {
-      let currentLocation = this.getCurrentLocation();
-      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
-        useNavigationHistory = false;
-      }
-    } else {
-      useNavigationHistory = true;
-    }
-
-    let locationToReveal: FileLocation;
-    if (useNavigationHistory) {
-      locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    if (!this.intermediateLocation) {
       this.navigationHistoryIndex -= 1;
     } else {
-      locationToReveal = this.intermediateLocation!;
+      this.navigationHistory.push(this.intermediateLocation!);
+      let currentLocation = this.getCurrentLocation();
+      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
+        this.navigationHistoryIndex += 1;
+      }
+      this.intermediateLocation = undefined;
     }
+
+    let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
 
     revealLocation(
       locationToReveal.relativePath,
@@ -138,7 +141,14 @@ export class NavigationHistory {
   }
 
   public static moveToNextPosition() {
+    console.log("Move to next position");
+    console.log(JSON.stringify(this.navigationHistory));
+    console.log(this.navigationHistoryIndex);
+    if (this.intermediateLocation) {
+      console.log(JSON.stringify(this.intermediateLocation));
+    }
     if (!this.hasNextPosition()) {
+      console.log("no next position");
       return;
     }
 
