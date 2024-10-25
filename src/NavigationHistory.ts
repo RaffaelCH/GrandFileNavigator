@@ -53,7 +53,15 @@ export class NavigationHistory {
       if (!this.intermediateLocation) {
         this.navigationHistory[this.navigationHistoryIndex] = mergedLocation;
       } else {
-        this.intermediateLocation = mergedLocation;
+        if (Date.now() - this.lastLocationUpdate > this.msBeforeHistoryUpdate) {
+          this.navigationHistoryIndex += 1;
+          this.navigationHistory = this.navigationHistory.slice(
+            0,
+            this.navigationHistoryIndex
+          );
+          this.navigationHistory.push(mergedLocation);
+          this.intermediateLocation = undefined;
+        }
       }
     } else if (LocationTracker.shouldTrackWindow()) {
       if (Date.now() - this.lastLocationUpdate > this.msBeforeHistoryUpdate) {
@@ -66,8 +74,6 @@ export class NavigationHistory {
           this.intermediateLocation ?? currentLocation
         );
         this.intermediateLocation = undefined;
-        console.log("Adding new location to history");
-        console.log(this.navigationHistory[this.navigationHistoryIndex].range);
       } else {
         this.intermediateLocation = currentLocation;
       }
@@ -85,10 +91,6 @@ export class NavigationHistory {
 
     if (this.intermediateLocation) {
       return true;
-      let currentLocation = this.getCurrentLocation();
-      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
-        return true;
-      }
     }
 
     return false;
@@ -109,14 +111,7 @@ export class NavigationHistory {
   }
 
   public static moveToPreviousPosition() {
-    console.log("Move to previous position");
-    console.log(JSON.stringify(this.navigationHistory));
-    console.log(this.navigationHistoryIndex);
-    if (this.intermediateLocation) {
-      console.log(JSON.stringify(this.intermediateLocation));
-    }
     if (!this.hasPreviousPosition()) {
-      console.log("no previous position");
       return;
     }
 
@@ -141,14 +136,7 @@ export class NavigationHistory {
   }
 
   public static moveToNextPosition() {
-    console.log("Move to next position");
-    console.log(JSON.stringify(this.navigationHistory));
-    console.log(this.navigationHistoryIndex);
-    if (this.intermediateLocation) {
-      console.log(JSON.stringify(this.intermediateLocation));
-    }
     if (!this.hasNextPosition()) {
-      console.log("no next position");
       return;
     }
 
