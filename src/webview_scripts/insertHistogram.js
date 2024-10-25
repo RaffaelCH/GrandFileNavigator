@@ -97,8 +97,6 @@ function insertVisibleRangeIndicator() {
     (node) => node.endLine >= visibleRange.endLine
   );
 
-  console.log(visibleRange);
-
   if (lastVisibleNodeIndex === -1) {
     lastVisibleNodeIndex = histogramNodes.length - 1;
   }

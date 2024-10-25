@@ -57,7 +57,9 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
   }
 
   const viewDuration = Date.now() - LocationTracker.lastVisibleRangeUpdate;
-  const fileIdentifier = vscode.workspace.asRelativePath(LocationTracker.lastDocument.uri);
+  const fileIdentifier = vscode.workspace.asRelativePath(
+    LocationTracker.lastDocument.uri
+  );
   const identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
 
   let currentLocationDataNode = positionHistory;
@@ -81,7 +83,9 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
       if (Array.isArray(positionDataArray)) {
         LocationTracker.lastVisibleRanges?.forEach((visibleRange) => {
           let existingRange = positionDataArray.find(
-            (range) => range.startLine === visibleRange.start.line && range.endLine === visibleRange.end.line
+            (range) =>
+              range.startLine === visibleRange.start.line &&
+              range.endLine === visibleRange.end.line
           );
 
           if (existingRange) {
@@ -89,22 +93,31 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
             existingRange.totalDuration += viewDuration;
           } else {
             // Add a new hotspot and trigger LLM analysis
-            const newRange = new RangeData(visibleRange.start.line, visibleRange.end.line, viewDuration);
+            const newRange = new RangeData(
+              visibleRange.start.line,
+              visibleRange.end.line,
+              viewDuration
+            );
             positionDataArray.push(newRange);
 
             // Create the enriched hotspot object
             const enrichedHotspot = {
               filePath: LocationTracker.lastDocument?.uri.fsPath || "", // Ensure it's safe
               rangeData: newRange,
-              symbols: [],  // Populate as needed
+              symbols: [], // Populate as needed
               timeSpent: viewDuration,
-              importance: viewDuration // You can change how you calculate importance
+              importance: viewDuration, // You can change how you calculate importance
             };
 
+            // TODO: Move somewhere else (this file is focused on location tracking).
             // Add the new hotspot to the LLM analysis queue
             if (LocationTracker.lastDocument) {
-              console.log('Adding hotspot to LLM analysis queue.');
-              HotspotLLMAnalyzer.addToQueue(enrichedHotspot, LocationTracker.lastDocument, context);
+              console.log("Adding hotspot to LLM analysis queue.");
+              HotspotLLMAnalyzer.addToQueue(
+                enrichedHotspot,
+                LocationTracker.lastDocument,
+                context
+              );
             }
           }
         });
@@ -112,7 +125,6 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
     }
   }
 }
-
 
 function convertPositionHistoryValue(
   value: any

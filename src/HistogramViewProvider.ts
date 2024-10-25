@@ -109,8 +109,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     //   (data) => data[1] === activeTextEditor?.document.fileName
     // );
 
-    console.log(hotspotsData);
-
     var hotspotNodes = adaptImportanceArray(hotspotsData);
     hotspotNodes = hotspotNodes.sort(
       (nodeA, nodeB) => nodeB.metricValue - nodeA.metricValue

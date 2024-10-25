@@ -15,9 +15,10 @@ import { HistogramViewProvider } from "./HistogramViewProvider.js";
 import { enrichHotspotsByType } from "./HotspotsGrouper";
 import { LocationTracker } from "./LocationTracker";
 import { NavigationHistory } from "./NavigationHistory";
-import { HotspotLLMAnalyzer } from './HotspotsLLMAnalyzer';
+import { HotspotLLMAnalyzer } from "./HotspotsLLMAnalyzer";
 
 var storageLocation: vscode.Uri | undefined;
+var locationUpdater: NodeJS.Timeout; // update location history in regular intervals
 
 export function activate(context: vscode.ExtensionContext) {
   console.log(
@@ -113,6 +114,12 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
+  locationUpdater = setInterval(() => {
+    if (LocationTracker.shouldUpdateTracking()) {
+      addLastLocationToHistory(context);
+    }
+  }, 1000);
+
   const analyzeHotspotsCommand = vscode.commands.registerCommand(
     "extension.analyzeHotspots",
     async () => {
@@ -127,6 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate(context: vscode.ExtensionContext) {
+  clearInterval(locationUpdater);
   const location = context?.storageUri || storageLocation;
   if (location !== undefined) {
     savePositionHistory(location);

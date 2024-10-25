@@ -51,9 +51,9 @@ export async function getFileHistogramData(
 
     var currentLine = range.startLine;
     var currentBucketIndex = startBucketIndex;
-    while (currentLine < range.endLine) {
+    while (currentLine <= range.endLine) {
       var bucketEndLine: number;
-      if (range.endLine >= totalLineCount) {
+      if (currentBucketIndex >= buckets.length - 1) {
         bucketEndLine = totalLineCount;
       } else {
         bucketEndLine = startLines[currentBucketIndex + 1] - 1;

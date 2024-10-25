@@ -8,16 +8,31 @@ export class LocationTracker {
   public static lastVisibleRanges: readonly vscode.Range[] | undefined;
 
   public static initialize() {
-    LocationTracker._isTracking = false; // is the current window being tracked
-    LocationTracker.lastVisibleRangeUpdate = Date.now();
+    this._isTracking = false; // is the current window being tracked
+    this.lastVisibleRangeUpdate = Date.now();
   }
 
   public static updateLocationTracking() {
     if (this.shouldTrackWindow()) {
-      LocationTracker._isTracking = true;
-      LocationTracker.lastDocument = vscode.window.activeTextEditor!.document;
-      LocationTracker.lastVisibleRanges =
-        vscode.window.activeTextEditor!.visibleRanges;
+      this._isTracking = true;
+      this.lastDocument = vscode.window.activeTextEditor!.document;
+      var visibleRanges = vscode.window.activeTextEditor!.visibleRanges.slice();
+
+      // By default last document line is omitted in visible ranges -> add back
+      var lastVisibleRange = visibleRanges[visibleRanges.length - 1];
+      if (lastVisibleRange.end.line === this.lastDocument.lineCount - 1) {
+        let newEndPosition = new vscode.Position(
+          lastVisibleRange.end.line + 1,
+          lastVisibleRange.end.character
+        );
+        let updatedLastVisibleRange = new vscode.Range(
+          lastVisibleRange.start,
+          newEndPosition
+        );
+        visibleRanges[visibleRanges.length - 1] = updatedLastVisibleRange;
+      }
+
+      this.lastVisibleRanges = visibleRanges;
     }
 
     this.lastVisibleRangeUpdate = Date.now();
