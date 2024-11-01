@@ -4,55 +4,21 @@
 
 function insertHotspots() {
   let hotspotNodesJson = localStorage.getItem("hotspotNodes");
-  let hotspotNodes = JSON.parse(hotspotNodesJson);
+  let hotspots = JSON.parse(hotspotNodesJson);
 
-  hotspotNodes = [
-    {
-      fileName: "Launcher.java",
-      hotspotRangeStartLine: 0,
-      hotspotsRangeEndLine: 50,
-      importance: 308.05022059246437,
-      symbolEndLine: 45,
-      symbolKindName: "Method",
-      symbolLine: 43,
-      symbolName: "getGame()",
-      timeSpent: 1913,
-    },
-  ];
-
-  let hotspotsContainer = document.getElementById("hotspots-container");
+  let errorMessageContainer = document.getElementById("errorMessage");
   let visualizationContainer = document.getElementById(
     "visualization-container"
   );
-  let errorMessageContainer = document.getElementById("errorMessage");
 
-  if (hotspotNodes.length === 0) {
+  if (hotspots.length === 0) {
     errorMessageContainer.textContent = "No hotspot data found";
     visualizationContainer.style.display = "none";
     return;
   } else {
-    document.getElementById("histogram-container").style.display = "none";
     errorMessageContainer.textContent = "";
-    //visualizationContainer.style.display = "initial";
-    hotspotsContainer.style.display = "initial";
-    hotspotsContainer.style.visibility = "visible";
-    document.getElementById("insert-script").innerHTML = "insertHotspots();";
+    visualizationContainer.style.display = "initial";
   }
-
-  //addHotspotsHtmlToContainer(hotspotNodes, hotspotsContainer);
-
-  document.getElementById("hotspots-container").innerHtml =
-    '<rect x="20" y="0" width="200" height="200" fill="blue" />';
-}
-
-function addHotspotsHtmlToContainer(hotspots) {
-  // TODO: Add visible range indicator.
-
-  if (hotspots.length === 0) {
-    return;
-  }
-
-  var container = document.getElementById("hotspots-container");
 
   const metricMax = Math.max(...hotspots.map((hotspot) => hotspot.importance));
   const totalLineCount = hotspots.reduce((accumulator, hotspot) => {
@@ -92,7 +58,7 @@ function addHotspotsHtmlToContainer(hotspots) {
     })
     .join("");
 
-  container.innerHtml = hotspotsHtml;
+  visualizationContainer.innerHTML = hotspotsHtml;
 
   // viewContainer.addEventListener("click", function (event) {
   //   var index = event.target.attributes.index.value;

@@ -1,16 +1,15 @@
 // var containerRect = histogramContainer.getBoundingClientRect();
-//const svgHeight = 700; // containerRect.height;
-//const svgWidth = 260; // containerRect.width;
+// const svgHeight = 700; // containerRect.height;
+// const svgWidth = 260; // containerRect.width;
 
 function insertHistogram() {
-  var histogramNodesJson = localStorage.getItem("histogramNodes");
-  var histogramNodes = JSON.parse(histogramNodesJson);
+  let histogramNodesJson = localStorage.getItem("histogramNodes");
+  let histogramNodes = JSON.parse(histogramNodesJson);
 
   let errorMessageContainer = document.getElementById("errorMessage");
-  var visualizationContainer = document.getElementById(
+  let visualizationContainer = document.getElementById(
     "visualization-container"
   );
-  var histogramContainer = document.getElementById("histogram-container");
 
   if (histogramNodes.length === 0) {
     errorMessageContainer.textContent = "No histogram data found";
@@ -19,11 +18,9 @@ function insertHistogram() {
   } else {
     errorMessageContainer.textContent = "";
     visualizationContainer.style.display = "initial";
-    histogramContainer.style.display = "initial";
-    document.getElementById("hotspots-container").style.display = "none";
   }
 
-  var metricValues = histogramNodes.map((node) => node.metricValue);
+  let metricValues = histogramNodes.map((node) => node.metricValue);
 
   // TODO: Don't hardcode dimensions.
   const metricMax = Math.max(...metricValues);
@@ -61,9 +58,9 @@ function insertHistogram() {
     })
     .join("");
 
-  histogramContainer.innerHTML = barsHtml;
+  visualizationContainer.innerHTML = barsHtml;
 
-  histogramContainer.addEventListener("click", function (event) {
+  visualizationContainer.addEventListener("click", function (event) {
     var index = Math.floor(event.offsetY / barHeight); // event.target.attributes.index.value;
     var histogramNode = histogramNodes[index];
     vscodeApi.postMessage({
@@ -136,6 +133,8 @@ function insertVisibleRangeIndicator() {
           fill="rgb(100, 100, 100, 0.5)">
         </rect>`;
 
-  var histogramContainer = document.getElementById("histogram-container");
-  histogramContainer.innerHTML += visibleRangeIndicatorHtml;
+  var visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
+  visualizationContainer.innerHTML += visibleRangeIndicatorHtml;
 }

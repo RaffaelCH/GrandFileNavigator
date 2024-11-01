@@ -12,7 +12,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
   private _visualizationType: string = "histogram";
-  private viewUpdateTimer = setInterval(() => this.updateView(), 1000);
+  private viewUpdateTimer = setInterval(() => this.updateView(), 5000);
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -103,10 +103,24 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    var hotspotsData = getImportanceArray();
-    hotspotsData = hotspotsData.filter((hotspot) =>
-      activeTextEditor?.document.fileName.endsWith(hotspot.fileName)
-    );
+    var hotspotsData = [
+      {
+        importance: 308.05022059246437,
+        fileName: "Launcher.java",
+        hotspotRangeStartLine: 0,
+        hotspotsRangeEndLine: 50,
+        timeSpent: 1913,
+        symbolEndLine: 45,
+        symbolKindName: "Method",
+        symbolLine: 43,
+        symbolName: "getGame()",
+      },
+    ];
+
+    // var hotspotsData = getImportanceArray();
+    // hotspotsData = hotspotsData.filter((hotspot) =>
+    //   activeTextEditor?.document.fileName.endsWith(hotspot.fileName)
+    // );
 
     // TODO: Change based on number of methods, fields, etc.
     // TODO: Add enclosing (hierarchical) information?
@@ -115,9 +129,11 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       relevantSymbolTypes.includes(hotspot.symbolKindName)
     );
 
+    console.log(hotspotsData);
+
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
-      hotspotNodes: hotspotsData,
+      hotspotNodes: hotspotsData.slice(0, 1),
     });
   }
 
@@ -216,9 +232,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 					and only allow scripts that have a specific nonce.
 					(See the 'webview-sample' extension sample for img-src content security policy examples)
 				
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${
-          webview.cspSource
-        }; script-src 'nonce-${nonce}';">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
         -->
 
 				<meta name="viewport" content="width=device-width, height=device-height initial-scale=1.0">
@@ -240,15 +254,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
           <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
           <p id="errorMessage"></p>
         </div>
-        <div id="visualization-container">
-          <svg id="histogram-container" style="width:100%;height:700px;">
-          <div id="hotspots-container" style="width:100%; display: flex; align-items: center; justify-content: center; flex-direction:column;">
-        </div>
-        ${
-          this._visualizationType === "histogram"
-            ? `<script>insertHistogram();</script>`
-            : `<script>insertHotspots();</script>`
-        }
+        <svg id="visualization-container" style="width:100%; height:700px;" />
 			</body>
 			</html>`;
   }
