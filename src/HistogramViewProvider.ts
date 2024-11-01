@@ -103,24 +103,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    var hotspotsData = [
-      {
-        importance: 308.05022059246437,
-        fileName: "Launcher.java",
-        hotspotRangeStartLine: 0,
-        hotspotsRangeEndLine: 50,
-        timeSpent: 1913,
-        symbolEndLine: 45,
-        symbolKindName: "Method",
-        symbolLine: 43,
-        symbolName: "getGame()",
-      },
-    ];
-
-    // var hotspotsData = getImportanceArray();
-    // hotspotsData = hotspotsData.filter((hotspot) =>
-    //   activeTextEditor?.document.fileName.endsWith(hotspot.fileName)
-    // );
+    var hotspotsData = getImportanceArray();
+    hotspotsData = hotspotsData.filter((hotspot) =>
+      activeTextEditor?.document.fileName.endsWith(hotspot.fileName)
+    );
 
     // TODO: Change based on number of methods, fields, etc.
     // TODO: Add enclosing (hierarchical) information?
