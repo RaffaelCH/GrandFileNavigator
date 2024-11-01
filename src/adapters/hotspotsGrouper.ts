@@ -1,22 +1,20 @@
+import { ImportanceElement } from "../HotspotsGrouper";
 import { NodeType } from "../sidebar_types/NodeType";
 import SymbolNode from "../sidebar_types/SymbolNode";
 
 export function adaptImportanceArray(
-  importanceArray: [
-    number,
-    string,
-    string,
-    number,
-    number,
-    number,
-    string,
-    string,
-    number
-  ][]
+  importanceArray: ImportanceElement[]
 ): SymbolNode[] {
   return importanceArray.map(
     (el) =>
-      new SymbolNode(el[6], el[0], mapNodeType(el[7]), el[1], el[8], el[5])
+      new SymbolNode(
+        el.symbolName,
+        el.importance,
+        mapNodeType(el.symbolKindName),
+        el.fileName,
+        el.symbolLine,
+        el.timeSpent
+      )
   );
 }
 

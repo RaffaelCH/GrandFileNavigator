@@ -15,7 +15,7 @@
           "hotspotNodes",
           JSON.stringify(message.hotspotNodes)
         );
-        insertHotspotNodes();
+        insertHotspots();
       case "indicateRange":
         localStorage.setItem(
           "indicatedRange",
