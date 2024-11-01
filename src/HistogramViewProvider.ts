@@ -115,8 +115,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       relevantSymbolTypes.includes(hotspot.symbolKindName)
     );
 
-    console.log(hotspotsData);
-
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
       hotspotNodes: hotspotsData.slice(0, 1),
