@@ -212,6 +212,8 @@ async function traverseHotspots(
         const document = await vscode.workspace.openTextDocument(
           resolvedFilePath
         );
+
+        // TODO: Add caching.
         const symbols = await vscode.commands.executeCommand<
           vscode.DocumentSymbol[]
         >("vscode.executeDocumentSymbolProvider", document.uri);
