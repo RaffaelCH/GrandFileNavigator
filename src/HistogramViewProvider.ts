@@ -117,7 +117,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
-      hotspotNodes: hotspotsData.slice(0, 1),
+      hotspotNodes: hotspotsData.slice(0, 10),
     });
   }
 

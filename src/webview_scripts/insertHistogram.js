@@ -40,7 +40,7 @@ function insertHistogram() {
       const barWidth = (histogramNode.metricValue / metricMax) * maxBarWidth;
       const color = colors[index];
 
-      // Determine whether to place the count inside or above the bar
+      // Place identifier in middle of bar.
       const yTextPosition = index * barHeight + barHeight / 2;
 
       // TODO: Add icon based on NodeType.
