@@ -20,9 +20,11 @@ function insertHistogram() {
     visualizationContainer.style.display = "initial";
   }
 
-  let metricValues = histogramNodes.map((node) => node.metricValue);
+  var containerRect = visualizationContainer.getBoundingClientRect();
+  svgHeight = containerRect.height * 0.9; // leave some space
+  svgWidth = containerRect.width * 0.9; // leave some space
 
-  // TODO: Don't hardcode dimensions.
+  let metricValues = histogramNodes.map((node) => node.metricValue);
   const metricMax = Math.max(...metricValues);
   const barHeight = svgHeight / histogramNodes.length;
 

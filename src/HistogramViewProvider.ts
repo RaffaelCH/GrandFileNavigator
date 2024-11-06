@@ -209,7 +209,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
-			<html lang="en">
+			<html lang="en"  style="width:100%; height:100%;" >
 			<head>
 				<meta charset="UTF-8">
 
@@ -224,14 +224,12 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 				<meta name="viewport" content="width=device-width, height=device-height initial-scale=1.0">
         <script>
           const vscodeApi = acquireVsCodeApi(); // Set global const with reference to keep track of it.
-          const svgHeight = 700; // containerRect.height;
-          const svgWidth = 260; // containerRect.width;
         </script>
         <script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
         <script id="hotspots-inserter" nonce="${nonce}" src="${insertHotspotsUri}"></script>
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
 			</head>
-			<body>
+			<body style="width:100%; height:100%;" >
         <div style="padding: 10px; display: flex; justify-content: space-around; flex-direction: row;">
           <button id="nav-button-backward" onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
           <button id="nav-button-forward" onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
@@ -240,7 +238,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
           <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
           <p id="errorMessage"></p>
         </div>
-        <svg id="visualization-container" style="width:100%; height:700px;" />
+        <svg id="visualization-container" style="width:100%; height:100%;" />
 			</body>
 			</html>`;
   }

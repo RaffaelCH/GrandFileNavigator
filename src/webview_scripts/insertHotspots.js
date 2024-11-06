@@ -20,9 +20,12 @@ function insertHotspots() {
     visualizationContainer.style.display = "initial";
   }
 
+  var containerRect = visualizationContainer.getBoundingClientRect();
+  svgHeight = containerRect.height * 0.9; // leave some space
+  svgWidth = containerRect.width * 0.9; // leave some space
+
   // Order hotspots by (starting) position in file.
   symbolNodes = symbolNodes.sort((a, b) => a.startLine - b.startLine);
-  console.log(symbolNodes);
 
   const metricMax = Math.max(
     ...symbolNodes.map((symbolNode) => symbolNode.metricValue)
