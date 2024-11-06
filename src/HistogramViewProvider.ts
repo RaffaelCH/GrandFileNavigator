@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { getFileHistogramData } from "./loadHistogramData.js";
-import { getImportanceArray } from "./HotspotsGrouper.js";
+import { getCondensedImportanceArray } from "./HotspotsGrouper.js";
 import SidebarNode from "./sidebar_types/SidebarNode.js";
 import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
@@ -103,21 +103,23 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    var hotspotsData = getImportanceArray();
-    hotspotsData = hotspotsData.filter((hotspot) =>
-      activeTextEditor?.document.fileName.endsWith(hotspot.fileName)
+    var importanceData = getCondensedImportanceArray();
+    importanceData = importanceData.filter((importanceElement) =>
+      activeTextEditor?.document.fileName.endsWith(importanceElement.fileName)
     );
+
+    var hotspotsData = adaptImportanceArray(importanceData);
 
     // TODO: Change based on number of methods, fields, etc.
     // TODO: Add enclosing (hierarchical) information?
-    var relevantSymbolTypes = ["Method"];
+    var relevantSymbolTypes = [NodeType.Method];
     hotspotsData = hotspotsData.filter((hotspot) =>
-      relevantSymbolTypes.includes(hotspot.symbolKindName)
+      relevantSymbolTypes.includes(hotspot.symbolType)
     );
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
-      hotspotNodes: hotspotsData.slice(0, 10),
+      hotspotNodes: hotspotsData,
     });
   }
 

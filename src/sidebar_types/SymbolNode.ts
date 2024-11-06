@@ -7,7 +7,8 @@ export default class SymbolNode {
     public readonly metricValue: number,
     public readonly symbolType: NodeType,
     public readonly filePath: string,
-    public readonly symbolLine: number,
+    public readonly startLine: number,
+    public readonly endLine: number,
     public readonly timeVisible: number
   ) {}
 }

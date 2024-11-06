@@ -3,15 +3,15 @@
 // const svgWidth = 260; // containerRect.width;
 
 function insertHotspots() {
-  let hotspotNodesJson = localStorage.getItem("hotspotNodes");
-  let hotspots = JSON.parse(hotspotNodesJson);
+  let symbolNodesJson = localStorage.getItem("hotspotNodes");
+  let symbolNodes = JSON.parse(symbolNodesJson);
 
   let errorMessageContainer = document.getElementById("errorMessage");
   let visualizationContainer = document.getElementById(
     "visualization-container"
   );
 
-  if (hotspots.length === 0) {
+  if (symbolNodes.length === 0) {
     errorMessageContainer.textContent = "No hotspot data found";
     visualizationContainer.style.display = "none";
     return;
@@ -20,30 +20,34 @@ function insertHotspots() {
     visualizationContainer.style.display = "initial";
   }
 
-  const metricMax = Math.max(...hotspots.map((hotspot) => hotspot.importance));
-  const totalLineCount = hotspots.reduce((accumulator, hotspot) => {
-    return accumulator + (hotspot.symbolEndLine - hotspot.symbolLine);
-  }, 0);
-  const hotspotsSeparatorCount = hotspots.length;
-  var pixelPerLine = (svgHeight - hotspotsSeparatorCount) / totalLineCount;
+  // Order hotspots by (starting) position in file.
+  symbolNodes = symbolNodes.sort((a, b) => a.startLine - b.startLine);
+  console.log(symbolNodes);
 
-  // TODO: Order hotspots by position in file.
+  const metricMax = Math.max(
+    ...symbolNodes.map((symbolNode) => symbolNode.metricValue)
+  );
+  const totalLineCount = symbolNodes.reduce((accumulator, symbolNode) => {
+    return accumulator + (symbolNode.endLine - symbolNode.startLine);
+  }, 0);
+  const separatorCount = symbolNodes.length; // TODO: Maybe do additional filtering, based on number of elements/sidebar size.
+  var pixelPerLine = (svgHeight - separatorCount) / totalLineCount;
 
   // Generate colors ranging from green to red, based on importance.
-  const colors = hotspots.map(
-    (hotspot) =>
-      `rgb(${Math.floor((255 * hotspot.importance) / metricMax)}, ${Math.floor(
-        255 * (1 - hotspot.importance / metricMax)
-      )}, 0)`
+  const colors = symbolNodes.map(
+    (symbolNode) =>
+      `rgb(${Math.floor(
+        (255 * symbolNode.metricValue) / metricMax
+      )}, ${Math.floor(255 * (1 - symbolNode.metricValue / metricMax))}, 0)`
   );
 
   const maxBarWidth = svgWidth * 0.9;
   let yPosition = 0;
 
-  let hotspotsHtml = hotspots
-    .map((hotspot, index) => {
-      const barWidth = (hotspot.importance / metricMax) * maxBarWidth;
-      const hotspotLinesCount = hotspot.symbolEndLine - hotspot.symbolLine; // TODO: Adjust on a per-line basis.
+  let symbolNodesHtml = symbolNodes
+    .map((symbolNode, index) => {
+      const barWidth = (symbolNode.metricValue / metricMax) * maxBarWidth;
+      const hotspotLinesCount = symbolNode.endLine - symbolNode.startLine; // TODO: Adjust on a per-line basis.
       const barHeight = Math.max(pixelPerLine * hotspotLinesCount, 2);
       const color = colors[index];
 
@@ -52,7 +56,7 @@ function insertHotspots() {
       yPosition += 1; // Space for node separator.
       // TODO: Add scaled-down spacing for separation (i.e., if large distance in file, add more space in visualization)? At least to a certain degree?
 
-      const yTextPosition = nodeYPosition + barHeight / 2;
+      const yTextPosition = nodeYPosition + barHeight / 2 + 2;
 
       // TODO: Ensure name is not too long (e.g., hide parameters or replace with ... in method signatures if too long).
 
@@ -63,12 +67,12 @@ function insertHotspots() {
           height="${barHeight}"
           fill="${color}" />
           <text x="0" y="${yTextPosition}" fill="white" text-anchor="start" font-size="12">${
-        hotspot.symbolName
+        symbolNode.symbolName
       }</text>`;
     })
     .join("");
 
-  visualizationContainer.innerHTML = hotspotsHtml;
+  visualizationContainer.innerHTML = symbolNodesHtml;
 
   // viewContainer.addEventListener("click", function (event) {
   //   var index = event.target.attributes.index.value;
