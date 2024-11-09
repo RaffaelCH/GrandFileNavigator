@@ -246,7 +246,6 @@ export class HotspotLLMAnalyzer {
     document: vscode.TextDocument,
     context: vscode.ExtensionContext
   ) {
-    return; // TODO: Reenable
     hotspotQueue.push(hotspot);
     await HotspotLLMAnalyzer.processQueue(document, context);
   }
