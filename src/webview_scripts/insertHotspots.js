@@ -83,12 +83,24 @@ function insertHotspots() {
 
   // TODO: Jump to location within node based on where exactly the click was.
   visualizationContainer.addEventListener("click", function (event) {
-    var index = event.target.attributes.index.value;
-    var hotspot = hotspotNodes[index];
+    let visualizationContainer = document.getElementById(
+      "visualization-container"
+    );
+
+    var nodeBarElements = Array.from(visualizationContainer.children);
+    var clickedNodeBarElement = nodeBarElements.find(
+      (el) =>
+        Number(el.attributes.y?.value) <= Number(event.offsetY) &&
+        Number(event.offsetY) <=
+          Number(el.attributes.y?.value) + Number(el.attributes.height?.value)
+    );
+
+    var index = clickedNodeBarElement.attributes.index.value;
+    var symbolNode = symbolNodes[index];
     vscodeApi.postMessage({
       command: "showRange",
-      startLine: hotspot.symbolLine,
-      endLine: hotspot.symbolEndLine,
+      startLine: symbolNode.startLine,
+      endLine: symbolNode.endLine,
     });
   });
 
