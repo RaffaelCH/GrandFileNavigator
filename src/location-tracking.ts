@@ -23,21 +23,33 @@ export class PositionHistory {
 
 // Tracks user position.
 var positionHistory = new PositionHistory();
+var backupFilename = "backup"; // TODO: Allow multiple files.
 
 export function getPositionHistory(): PositionHistory {
   return positionHistory;
 }
 
-var backupFilename = "backup.json"; // TODO: Allow multiple files.
+export function resetPositionHistory(storageLocation: vscode.Uri | undefined) {
+  if (storageLocation) {
+    savePositionHistory(
+      storageLocation,
+      `${backupFilename}-${Date.now()}.json`
+    ); // retain backups
+  }
+  positionHistory = new PositionHistory();
+}
 
-export function savePositionHistory(storageLocation: vscode.Uri) {
-  var filePath = path.join(storageLocation.fsPath, backupFilename);
+export function savePositionHistory(
+  storageLocation: vscode.Uri,
+  filename = backupFilename
+) {
+  var filePath = path.join(storageLocation.fsPath, filename + ".json");
   writeFileSync(filePath, JSON.stringify(getPositionHistory()));
 }
 
 // Load history from file.
 export function loadPositionHistory(storageLocation: vscode.Uri) {
-  var filePath = path.join(storageLocation.fsPath, backupFilename);
+  var filePath = path.join(storageLocation.fsPath, backupFilename + ".json");
   if (existsSync(filePath)) {
     var backupContent = readFileSync(filePath).toString();
     var backupData = JSON.parse(backupContent);
@@ -109,16 +121,16 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
               importance: viewDuration, // You can change how you calculate importance
             };
 
+            // TODO: Reenable
             // Add the new hotspot to the LLM analysis queue
-            if (LocationTracker.lastDocument) {
-              return; // TODO: Reenable
-              console.log("Adding hotspot to LLM analysis queue.");
-              HotspotLLMAnalyzer.addToQueue(
-                enrichedHotspot,
-                LocationTracker.lastDocument,
-                context
-              );
-            }
+            // if (LocationTracker.lastDocument) {
+            //   console.log("Adding hotspot to LLM analysis queue.");
+            //   HotspotLLMAnalyzer.addToQueue(
+            //     enrichedHotspot,
+            //     LocationTracker.lastDocument,
+            //     context
+            //   );
+            // }
           }
         });
       }

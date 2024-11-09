@@ -7,6 +7,7 @@ import {
   addLastLocationToHistory,
   getPositionHistory,
   categorizePositionsByFileName,
+  resetPositionHistory,
 } from "./location-tracking";
 import { HotspotsProvider, revealNodeLocation } from "./HotspotsProvider";
 import { registerWebviewVisualization } from "./WebviewVisualization";
@@ -56,6 +57,11 @@ export function activate(context: vscode.ExtensionContext) {
     "hotspots.openNodeLocation",
     revealNodeLocation
   );
+
+  vscode.commands.registerCommand("grandFileNavigator.resetData", () => {
+    resetPositionHistory(storageLocation);
+    //vscode.window.showInformationMessage(`Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`);
+  });
 
   registerWebviewVisualization(context);
   registerWebviewPanelHistogram(context);

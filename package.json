@@ -51,6 +51,14 @@
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
         }
+      },
+      {
+        "command": "grandFileNavigator.resetData",
+        "title": "Reset",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       }
     ],
     "viewsContainers": {
@@ -83,6 +91,11 @@
         {
           "command": "hotspots.refreshEntry",
           "when": "view == hotspots",
+          "group": "navigation"
+        },
+        {
+          "command": "grandFileNavigator.resetData",
+          "when": "view == grandfilenavigator-histogram",
           "group": "navigation"
         }
       ],
