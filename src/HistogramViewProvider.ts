@@ -54,8 +54,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         ? "indicateHistogramRange"
         : "indicateHotspotRange";
 
-    console.log("Indicate file location: " + command);
-
     this._view.webview.postMessage({
       command: command,
       startLine: startLine,

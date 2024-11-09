@@ -106,8 +106,6 @@ function insertHotspotVisibleRangeIndicator() {
     return;
   }
 
-  console.log(visibleRange);
-
   // Remove old visible range indicator (if present).
   document.getElementById("visible-range-indicator")?.remove();
 
@@ -115,11 +113,13 @@ function insertHotspotVisibleRangeIndicator() {
     (node) => node.endLine >= visibleRange.startLine
   );
   var lastVisibleNodeIndex = hotspotNodes.findIndex(
-    (node) => node.endLine >= visibleRange.endLine
+    (node) => node.startLine > visibleRange.endLine
   );
 
   if (lastVisibleNodeIndex === -1) {
     lastVisibleNodeIndex = hotspotNodes.length - 1;
+  } else {
+    lastVisibleNodeIndex -= 1;
   }
 
   if (firstVisibleNodeIndex === -1) {
@@ -141,8 +141,18 @@ function insertHotspotVisibleRangeIndicator() {
   var firstVisibleNode = hotspotNodes[firstVisibleNodeIndex];
   var lastVisibleNode = hotspotNodes[lastVisibleNodeIndex];
 
+  // Ignore space outside of nodes for now.
+  var visibleRangeStartLine = Math.max(
+    visibleRange.startLine,
+    firstVisibleNode.startLine
+  );
+  var visibleRangeEndLine = Math.min(
+    visibleRange.endLine,
+    lastVisibleNode.endLine
+  );
+
   var portionOfFirstNodeAboveVisible =
-    (visibleRange.startLine - firstVisibleNode.startLine) /
+    (visibleRangeStartLine - firstVisibleNode.startLine) /
     (firstVisibleNode.endLine - firstVisibleNode.startLine);
   var visibleRangeIndicatorY =
     Number(firstNodeBarElement.attributes.y.value) +
@@ -150,7 +160,7 @@ function insertHotspotVisibleRangeIndicator() {
       firstNodeBarElement.attributes.height.value;
 
   var portionOfLastNodeBelowVisible =
-    (lastVisibleNode.endLine - visibleRange.endLine) /
+    (lastVisibleNode.endLine - visibleRangeEndLine) /
     (lastVisibleNode.endLine - lastVisibleNode.startLine);
   var visibleRangeIndicatorEndY =
     Number(lastNodeBarElement.attributes.y.value) +

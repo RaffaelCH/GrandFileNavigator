@@ -79,7 +79,6 @@ function insertHistogram() {
     });
   });
 
-  console.log("insert histogram");
   insertHistogramVisibleRangeIndicator();
 }
 
