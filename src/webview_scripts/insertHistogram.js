@@ -20,9 +20,20 @@ function insertHistogram() {
     visualizationContainer.style.display = "initial";
   }
 
-  let metricValues = histogramNodes.map((node) => node.metricValue);
+  var bodyRect = document.body.getBoundingClientRect();
 
-  // TODO: Don't hardcode dimensions.
+  svgWidth = bodyRect.width - 20; // leave some space
+  svgHeight = bodyRect.height - 20; // leave some space
+
+  Array.from(document.body.children).forEach((child) => {
+    if (child.id !== "visualization-container") {
+      svgHeight -= child.getBoundingClientRect().height;
+    }
+  });
+
+  visualizationContainer.style.height = svgHeight;
+
+  let metricValues = histogramNodes.map((node) => node.metricValue);
   const metricMax = Math.max(...metricValues);
   const barHeight = svgHeight / histogramNodes.length;
 
@@ -40,7 +51,7 @@ function insertHistogram() {
       const barWidth = (histogramNode.metricValue / metricMax) * maxBarWidth;
       const color = colors[index];
 
-      // Determine whether to place the count inside or above the bar
+      // Place identifier in middle of bar.
       const yTextPosition = index * barHeight + barHeight / 2;
 
       // TODO: Add icon based on NodeType.
@@ -70,10 +81,10 @@ function insertHistogram() {
     });
   });
 
-  insertVisibleRangeIndicator();
+  insertHistogramVisibleRangeIndicator();
 }
 
-function insertVisibleRangeIndicator() {
+function insertHistogramVisibleRangeIndicator() {
   var histogramNodesJson = localStorage.getItem("histogramNodes");
   var histogramNodes = JSON.parse(histogramNodesJson);
 

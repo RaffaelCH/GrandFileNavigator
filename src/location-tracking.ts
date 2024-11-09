@@ -111,6 +111,7 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
 
             // Add the new hotspot to the LLM analysis queue
             if (LocationTracker.lastDocument) {
+              return; // TODO: Reenable
               console.log("Adding hotspot to LLM analysis queue.");
               HotspotLLMAnalyzer.addToQueue(
                 enrichedHotspot,

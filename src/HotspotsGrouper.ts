@@ -155,6 +155,23 @@ export function getImportanceArray(): ImportanceElement[] {
   return importanceArray;
 }
 
+// TODO: Think about better ways to combine the entries, esp. at earlier stages.
+export function getCondensedImportanceArray(): ImportanceElement[] {
+  let condensed = new Map<string, ImportanceElement>();
+  importanceArray.forEach((element) => {
+    let key = element.symbolName + element.symbolLine;
+    let existingElement = condensed.get(key);
+    if (existingElement) {
+      existingElement.importance += element.importance;
+      existingElement.timeSpent += element.timeSpent;
+    } else {
+      condensed.set(key, { ...element });
+    }
+  });
+
+  return Array.from(condensed.values());
+}
+
 const symbolWeights: { [key: number]: number } = {
   [vscode.SymbolKind.Class]: 10,
   [vscode.SymbolKind.Interface]: 9,

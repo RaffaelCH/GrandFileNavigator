@@ -1,4 +1,3 @@
-//import Chart from "chart.js/auto";
 import * as vscode from "vscode";
 import { getFileRangeData } from "./location-tracking";
 import SidebarNode from "./sidebar_types/SidebarNode";

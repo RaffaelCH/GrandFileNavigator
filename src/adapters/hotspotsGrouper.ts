@@ -13,6 +13,7 @@ export function adaptImportanceArray(
         mapNodeType(el.symbolKindName),
         el.fileName,
         el.symbolLine,
+        el.symbolEndLine,
         el.timeSpent
       )
   );

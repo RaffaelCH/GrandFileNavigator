@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { getFileHistogramData } from "./loadHistogramData.js";
-import { getImportanceArray } from "./HotspotsGrouper.js";
+import { getCondensedImportanceArray } from "./HotspotsGrouper.js";
 import SidebarNode from "./sidebar_types/SidebarNode.js";
 import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
@@ -49,8 +49,13 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
+    let command =
+      this._visualizationType === "histogram"
+        ? "indicateHistogramRange"
+        : "indicateHotspotRange";
+
     this._view.webview.postMessage({
-      command: "indicateRange",
+      command: command,
       startLine: startLine,
       endLine: endLine,
     });
@@ -103,22 +108,29 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    var hotspotsData = getImportanceArray();
-    hotspotsData = hotspotsData.filter((hotspot) =>
-      activeTextEditor?.document.fileName.endsWith(hotspot.fileName)
+    var importanceData = getCondensedImportanceArray();
+    importanceData = importanceData.filter((importanceElement) =>
+      activeTextEditor?.document.fileName.endsWith(importanceElement.fileName)
     );
+
+    var hotspotsData = adaptImportanceArray(importanceData);
 
     // TODO: Change based on number of methods, fields, etc.
     // TODO: Add enclosing (hierarchical) information?
-    var relevantSymbolTypes = ["Method"];
+    var relevantSymbolTypes = [NodeType.Method];
     hotspotsData = hotspotsData.filter((hotspot) =>
-      relevantSymbolTypes.includes(hotspot.symbolKindName)
+      relevantSymbolTypes.includes(hotspot.nodeType)
     );
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
-      hotspotNodes: hotspotsData.slice(0, 1),
+      hotspotNodes: hotspotsData,
     });
+
+    this.indicateFileLocation(
+      activeTextEditor.visibleRanges[0].start.line,
+      activeTextEditor.visibleRanges.at(-1)?.end.line!
+    );
   }
 
   private setupMessageHandlers() {
@@ -207,7 +219,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
-			<html lang="en">
+			<html lang="en" style="width: 100%; height: 100%;" >
 			<head>
 				<meta charset="UTF-8">
 
@@ -222,23 +234,21 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 				<meta name="viewport" content="width=device-width, height=device-height initial-scale=1.0">
         <script>
           const vscodeApi = acquireVsCodeApi(); // Set global const with reference to keep track of it.
-          const svgHeight = 700; // containerRect.height;
-          const svgWidth = 260; // containerRect.width;
         </script>
         <script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
         <script id="hotspots-inserter" nonce="${nonce}" src="${insertHotspotsUri}"></script>
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
 			</head>
-			<body>
-        <div style="padding: 10px; display: flex; justify-content: space-around; flex-direction: row;">
+			<body style="width:90%; height:95%; overflow-x: hidden; overflow-y: auto; padding: 10px;" >
+        <div style="margin: 10px; display: flex; justify-content: space-around; flex-direction: row;">
           <button id="nav-button-backward" onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
           <button id="nav-button-forward" onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
         </div>
-        <div style="display: flex; justify-content: center; flex-direction: column;">
+        <div style="display: flex; justify-content: space-around; flex-direction: column;">
           <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
           <p id="errorMessage"></p>
         </div>
-        <svg id="visualization-container" style="width:100%; height:700px;" />
+        <svg id="visualization-container" style="width:100%; height:100%;" />
 			</body>
 			</html>`;
   }
