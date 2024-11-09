@@ -20,12 +20,16 @@ function insertHotspots() {
     visualizationContainer.style.display = "initial";
   }
 
-  var containerRect = visualizationContainer.getBoundingClientRect();
-  svgHeight = containerRect.height * 0.9; // leave some space
-  svgWidth = containerRect.width * 0.9; // leave some space
+  var bodyRect = document.body.getBoundingClientRect();
 
-  // Order hotspots by (starting) position in file.
-  symbolNodes = symbolNodes.sort((a, b) => a.startLine - b.startLine);
+  svgWidth = bodyRect.width - 20; // leave some space
+  svgHeight = bodyRect.height - 50; // leave some space
+
+  Array.from(document.body.children).forEach((child) => {
+    if (child.id !== "visualization-container") {
+      svgHeight -= child.getBoundingClientRect().height;
+    }
+  });
 
   const metricMax = Math.max(
     ...symbolNodes.map((symbolNode) => symbolNode.metricValue)

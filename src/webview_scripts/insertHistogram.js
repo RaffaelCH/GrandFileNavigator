@@ -20,9 +20,16 @@ function insertHistogram() {
     visualizationContainer.style.display = "initial";
   }
 
-  var containerRect = visualizationContainer.getBoundingClientRect();
-  svgHeight = containerRect.height * 0.9; // leave some space
-  svgWidth = containerRect.width * 0.9; // leave some space
+  var bodyRect = document.body.getBoundingClientRect();
+
+  svgWidth = bodyRect.width - 20; // leave some space
+  svgHeight = bodyRect.height - 50; // leave some space
+
+  Array.from(document.body.children).forEach((child) => {
+    if (child.id !== "visualization-container") {
+      svgHeight -= child.getBoundingClientRect().height;
+    }
+  });
 
   let metricValues = histogramNodes.map((node) => node.metricValue);
   const metricMax = Math.max(...metricValues);
