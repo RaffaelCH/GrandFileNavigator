@@ -239,7 +239,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         <script id="hotspots-inserter" nonce="${nonce}" src="${insertHotspotsUri}"></script>
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
 			</head>
-			<body style="width:90%; height:100%; overflow-x: hidden; overflow-y: hidden; padding: 10px" >
+			<body style="width:90%; height:95%; overflow-x: hidden; overflow-y: auto; padding: 10px;" >
         <div style="margin: 10px; display: flex; justify-content: space-around; flex-direction: row;">
           <button id="nav-button-backward" onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
           <button id="nav-button-forward" onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>

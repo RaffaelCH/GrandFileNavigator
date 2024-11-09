@@ -23,13 +23,15 @@ function insertHistogram() {
   var bodyRect = document.body.getBoundingClientRect();
 
   svgWidth = bodyRect.width - 20; // leave some space
-  svgHeight = bodyRect.height - 50; // leave some space
+  svgHeight = bodyRect.height - 20; // leave some space
 
   Array.from(document.body.children).forEach((child) => {
     if (child.id !== "visualization-container") {
       svgHeight -= child.getBoundingClientRect().height;
     }
   });
+
+  visualizationContainer.style.height = svgHeight;
 
   let metricValues = histogramNodes.map((node) => node.metricValue);
   const metricMax = Math.max(...metricValues);
