@@ -49,8 +49,15 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
+    let command =
+      this._visualizationType === "histogram"
+        ? "indicateHistogramRange"
+        : "indicateHotspotRange";
+
+    console.log("Indicate file location: " + command);
+
     this._view.webview.postMessage({
-      command: "indicateRange",
+      command: command,
       startLine: startLine,
       endLine: endLine,
     });
@@ -114,13 +121,18 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     // TODO: Add enclosing (hierarchical) information?
     var relevantSymbolTypes = [NodeType.Method];
     hotspotsData = hotspotsData.filter((hotspot) =>
-      relevantSymbolTypes.includes(hotspot.symbolType)
+      relevantSymbolTypes.includes(hotspot.nodeType)
     );
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
       hotspotNodes: hotspotsData,
     });
+
+    this.indicateFileLocation(
+      activeTextEditor.visibleRanges[0].start.line,
+      activeTextEditor.visibleRanges.at(-1)?.end.line!
+    );
   }
 
   private setupMessageHandlers() {

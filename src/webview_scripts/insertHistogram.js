@@ -79,10 +79,11 @@ function insertHistogram() {
     });
   });
 
-  insertVisibleRangeIndicator();
+  console.log("insert histogram");
+  insertHistogramVisibleRangeIndicator();
 }
 
-function insertVisibleRangeIndicator() {
+function insertHistogramVisibleRangeIndicator() {
   var histogramNodesJson = localStorage.getItem("histogramNodes");
   var histogramNodes = JSON.parse(histogramNodesJson);
 

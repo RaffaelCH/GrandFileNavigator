@@ -16,7 +16,7 @@
           JSON.stringify(message.hotspotNodes)
         );
         insertHotspots();
-      case "indicateRange":
+      case "indicateHistogramRange":
         localStorage.setItem(
           "indicatedRange",
           JSON.stringify({
@@ -24,7 +24,17 @@
             endLine: message.endLine,
           })
         );
-        insertVisibleRangeIndicator();
+        insertHistogramVisibleRangeIndicator();
+        break;
+      case "indicateHotspotRange":
+        localStorage.setItem(
+          "indicatedRange",
+          JSON.stringify({
+            startLine: message.startLine,
+            endLine: message.endLine,
+          })
+        );
+        insertHotspotVisibleRangeIndicator();
         break;
       case "updateNavigationButtons":
         updateNavigationButtonsActivations(
