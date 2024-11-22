@@ -12,7 +12,6 @@
   ],
   "activationEvents": [
     "onWebviewPanel:grandFileNavigator",
-    "onLanguage:java",
     "onCommand:grandfileNavigator.showFileHistogram"
   ],
   "main": "./out/extension.js",
@@ -20,13 +19,11 @@
     "commands": [
       {
         "command": "grandfilenavigator.openVisualization",
-        "title": "Open GrandFileNavigator Visualization",
-        "when": "editorLangId == java"
+        "title": "Open GrandFileNavigator Visualization"
       },
       {
         "command": "grandfilenavigator.setVisualizationLocation",
-        "title": "Send Main View Location To Visualization",
-        "when": "editorLangId == java"
+        "title": "Send Main View Location To Visualization"
       },
       {
         "command": "hotspots.refreshEntry",

@@ -1,6 +1,6 @@
 # grandfilenavigator README
 
-This be the README
+Activating the extension will enable a new sidebar view in which a histogram and hotspot view (for the visited locations) are available.
 
 ## Development
 

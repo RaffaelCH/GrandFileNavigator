@@ -59,9 +59,9 @@ export class LocationTracker {
     var currentDocument = vscode.window.activeTextEditor.document;
 
     // Only track .java files.
-    if (currentDocument.languageId !== "java") {
-      return false;
-    }
+    // if (currentDocument.languageId !== "java") {
+    //   return false;
+    // }
 
     if (currentDocument.uri.scheme !== "file") {
       return false;

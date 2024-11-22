@@ -4,4 +4,5 @@ export enum NodeType {
   Snippet, // Code is a block of code (no more specific type applies).
   File, // Node represents a whole file. // TODO: Decide if actually used.
   Other, // Placeholder
+  Unknown,
 }

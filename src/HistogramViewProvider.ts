@@ -108,9 +108,11 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
+    let currentFileName = activeTextEditor?.document.fileName;
+
     var importanceData = getCondensedImportanceArray();
     importanceData = importanceData.filter((importanceElement) =>
-      activeTextEditor?.document.fileName.endsWith(importanceElement.fileName)
+      currentFileName.endsWith(importanceElement.fileName)
     );
 
     var hotspotsData = adaptImportanceArray(importanceData);
@@ -118,9 +120,16 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     // TODO: Change based on number of methods, fields, etc.
     // TODO: Add enclosing (hierarchical) information?
     var relevantSymbolTypes = [NodeType.Method];
+
+    if (currentFileName.endsWith(".js") || currentFileName.endsWith(".ts")) {
+      relevantSymbolTypes.push(NodeType.Unknown);
+    }
+
     hotspotsData = hotspotsData.filter((hotspot) =>
       relevantSymbolTypes.includes(hotspot.nodeType)
     );
+
+    hotspotsData.sort((a, b) => a.startLine - b.startLine);
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",

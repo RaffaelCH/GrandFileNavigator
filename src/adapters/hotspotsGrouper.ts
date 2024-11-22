@@ -44,6 +44,6 @@ function mapNodeType(symbolKindName: string): NodeType {
     case "Namespace":
       return NodeType.Other;
     default:
-      return NodeType.Other;
+      return NodeType.Unknown;
   }
 }

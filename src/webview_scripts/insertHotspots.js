@@ -12,7 +12,8 @@ function insertHotspots() {
   );
 
   if (symbolNodes.length === 0) {
-    errorMessageContainer.textContent = "No hotspot data found";
+    errorMessageContainer.textContent =
+      "No hotspots found. This can happen for the following reasons: VS Code could not analyze the code file or you didn't look at any methods yet (no other hotspot types are shown here).";
     visualizationContainer.style.display = "none";
     return;
   } else {
