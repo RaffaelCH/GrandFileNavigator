@@ -190,7 +190,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       vscode.Uri.file(
         path.join(
           this._extensionUri.fsPath,
-          "src",
+          "resources",
           "webview_scripts",
           "insertHistogram.js"
         )
@@ -201,7 +201,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       vscode.Uri.file(
         path.join(
           this._extensionUri.fsPath,
-          "src",
+          "resources",
           "webview_scripts",
           "insertHotspots.js"
         )
@@ -212,7 +212,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       vscode.Uri.file(
         path.join(
           this._extensionUri.fsPath,
-          "src",
+          "resources",
           "webview_scripts",
           "visualizationMessageHandler.js"
         )
