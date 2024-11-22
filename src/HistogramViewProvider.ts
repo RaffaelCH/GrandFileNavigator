@@ -12,7 +12,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
   private _visualizationType: string = "histogram";
-  private viewUpdateTimer = setInterval(() => this.updateView(), 5000);
+  private viewUpdateTimer = setInterval(() => this.updateView(), 1000);
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -222,8 +222,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 				<meta name="viewport" content="width=device-width, height=device-height initial-scale=1.0">
         <script>
           const vscodeApi = acquireVsCodeApi(); // Set global const with reference to keep track of it.
-          const svgHeight = 700; // containerRect.height;
-          const svgWidth = 260; // containerRect.width;
         </script>
         <script id="histogram-inserter" nonce="${nonce}" src="${insertHistogramUri}"></script>
         <script id="hotspots-inserter" nonce="${nonce}" src="${insertHotspotsUri}"></script>
