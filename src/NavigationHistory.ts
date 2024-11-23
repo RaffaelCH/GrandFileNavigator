@@ -5,7 +5,7 @@ import { revealLocation } from "./revealLocation";
 class FileLocation {
   constructor(
     public readonly relativePath: string,
-    public readonly range: vscode.Range
+    public readonly range: vscode.Range // line numbers are 0 based
   ) {}
 }
 

@@ -114,8 +114,8 @@ export function activate(context: vscode.ExtensionContext) {
     const visibleRanges = LocationTracker.lastVisibleRanges;
     if (visibleRanges !== undefined) {
       histogramViewProvider.indicateFileLocation(
-        visibleRanges[0].start.line,
-        visibleRanges.at(-1)?.end.line!
+        visibleRanges[0].start.line + 1,
+        visibleRanges.at(-1)?.end.line! + 1
       );
     }
   });

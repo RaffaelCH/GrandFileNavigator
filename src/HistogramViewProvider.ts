@@ -93,8 +93,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     });
 
     this.indicateFileLocation(
-      activeTextEditor.visibleRanges[0].start.line,
-      activeTextEditor.visibleRanges.at(-1)?.end.line!
+      activeTextEditor.visibleRanges[0].start.line + 1,
+      activeTextEditor.visibleRanges.at(-1)?.end.line! + 1
     );
   }
 
@@ -137,8 +137,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     });
 
     this.indicateFileLocation(
-      activeTextEditor.visibleRanges[0].start.line,
-      activeTextEditor.visibleRanges.at(-1)?.end.line!
+      activeTextEditor.visibleRanges[0].start.line + 1,
+      activeTextEditor.visibleRanges.at(-1)?.end.line! + 1
     );
   }
 

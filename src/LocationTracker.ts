@@ -22,7 +22,7 @@ export class LocationTracker {
       var lastVisibleRange = visibleRanges[visibleRanges.length - 1];
       if (lastVisibleRange.end.line === this.lastDocument.lineCount - 1) {
         let newEndPosition = new vscode.Position(
-          lastVisibleRange.end.line + 1,
+          lastVisibleRange.end.line,
           lastVisibleRange.end.character
         );
         let updatedLastVisibleRange = new vscode.Range(
