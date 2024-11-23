@@ -6,6 +6,7 @@ import { NodeType } from "./sidebar_types/NodeType";
 export async function getFileHistogramData(
   fileUri: vscode.Uri
 ): Promise<SidebarNode[]> {
+  const maximumBucketCount = 30;
   var rangeData = getFileRangeData(fileUri);
 
   if (rangeData.length === 0) {
@@ -18,7 +19,7 @@ export async function getFileHistogramData(
       return textDocument.lineCount;
     });
 
-  var maxSplitCount = Math.min(totalLineCount, 20);
+  var maxSplitCount = Math.min(totalLineCount, maximumBucketCount);
   var bucketSize = Math.ceil(totalLineCount / maxSplitCount);
   var splitCount = Math.ceil(totalLineCount / bucketSize);
 
@@ -75,7 +76,7 @@ export async function getFileHistogramData(
     } else {
       endLine = startLines[i + 1] - 1;
     }
-    var label = `${startLine}-${endLine}`;
+    var label = endLine.toString();
     histogramNodes[i] = new SidebarNode(
       label,
       buckets[i],
