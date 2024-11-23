@@ -206,7 +206,7 @@ async function traverseHotspots(
   symbolTypeCounts: { [key: string]: number }
 ) {
   for (const [key, value] of Object.entries(positionHistory)) {
-    const fullPath = path.join(parentPath, key); // TODO: Fix, as range data frmo other files might be present.
+    const fullPath = existsSync(key) ? key : path.join(parentPath, key);
 
     if (value instanceof PositionHistory) {
       await traverseHotspots(
