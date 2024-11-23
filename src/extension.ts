@@ -92,7 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory(context);
-      await updateEnrichedHotspots();
+      await updateEnrichedHotspots(); // TODO: Only update current file.
     }
     histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
@@ -107,7 +107,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory(context);
-      await updateEnrichedHotspots();
+      await updateEnrichedHotspots(); // TODO: Only update current file.
     }
     LocationTracker.updateLocationTracking();
 

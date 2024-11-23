@@ -35,7 +35,7 @@ function insertHistogram() {
 
   let metricValues = histogramNodes.map((node) => node.metricValue);
   const metricMax = Math.max(...metricValues);
-  const barHeight = (svgHeight - 5) / histogramNodes.length;
+  const barHeight = (svgHeight - 5) / histogramNodes.length; // -5 to make space for text
 
   // Generate colors ranging from green to red, based on metric value.
   const colors = metricValues.map(
@@ -118,7 +118,7 @@ function insertHistogramVisibleRangeIndicator() {
     return;
   }
 
-  var totalBarsHeight = visualizationContainer.height.baseVal.value - 10;
+  var totalBarsHeight = visualizationContainer.height.baseVal.value - 5;
   const barHeight = totalBarsHeight / histogramNodes.length;
 
   var firstVisibleNode = histogramNodes[firstVisibleNodeIndex];
