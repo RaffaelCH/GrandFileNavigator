@@ -41,6 +41,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       this.updateHistogramData();
     } else {
       this.updateHotspotsData();
+      this.addHotspotsEventHandlers();
     }
   }
 
@@ -140,6 +141,14 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       activeTextEditor.visibleRanges[0].start.line + 1,
       activeTextEditor.visibleRanges.at(-1)?.end.line! + 1
     );
+  }
+
+  public async addHotspotsEventHandlers() {
+    if (this._view) {
+      this._view.webview.postMessage({
+        command: "addHotspotsEvents",
+      });
+    }
   }
 
   private setupMessageHandlers() {

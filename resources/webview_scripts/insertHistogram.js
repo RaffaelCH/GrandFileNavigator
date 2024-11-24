@@ -80,8 +80,6 @@ function insertHistogram() {
       endLine: histogramNode.endLine,
     });
   });
-
-  insertHistogramVisibleRangeIndicator();
 }
 
 function insertHistogramVisibleRangeIndicator() {

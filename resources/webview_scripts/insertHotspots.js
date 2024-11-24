@@ -83,22 +83,29 @@ function insertHotspots() {
     .join("");
 
   visualizationContainer.innerHTML = symbolNodesHtml;
+  insertHoverWindow();
+}
+
+function addEventHandlers() {
+  let symbolNodesJson = localStorage.getItem("hotspotNodes");
+  let symbolNodes = JSON.parse(symbolNodesJson);
+
+  if (symbolNodes.length === 0) {
+    return;
+  }
+
+  addClickEventHandler(symbolNodes);
+  addHoverEventHandlers(symbolNodes);
+}
+
+function addClickEventHandler(symbolNodes) {
+  let visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
 
   // TODO: Jump to location within node based on where exactly the click was.
   visualizationContainer.addEventListener("click", function (event) {
-    let visualizationContainer = document.getElementById(
-      "visualization-container"
-    );
-
-    var nodeBarElements = Array.from(visualizationContainer.children);
-    var clickedNodeBarElement = nodeBarElements.find(
-      (el) =>
-        Number(el.attributes.y?.value) <= Number(event.offsetY) &&
-        Number(event.offsetY) <=
-          Number(el.attributes.y?.value) + Number(el.attributes.height?.value)
-    );
-
-    var index = clickedNodeBarElement.attributes.index.value;
+    var index = getRelevantNodeIndex(event);
     var symbolNode = symbolNodes[index];
     vscodeApi.postMessage({
       command: "showRange",
@@ -106,8 +113,91 @@ function insertHotspots() {
       endLine: symbolNode.endLine,
     });
   });
+}
 
-  insertHotspotVisibleRangeIndicator();
+function addHoverEventHandlers(symbolNodes) {
+  let visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
+
+  visualizationContainer.addEventListener("mouseover", function (event) {
+    // console.log("entering..." + Date.now());
+
+    var symbolNodeIndex = getRelevantNodeIndex(event);
+    var symbolNode = symbolNodes[symbolNodeIndex];
+
+    const timeUntilHoverWindow = 2000;
+    let leaveData = JSON.parse(localStorage.getItem("mouseLeaveData"));
+
+    //console.log("Leave data: " + JSON.stringify(leaveData));
+
+    if (leaveData && Date.now() - leaveData.time < timeUntilHoverWindow) {
+      return; // show no hover data
+    }
+    // showImmediately = data.index === symbolNodeIndex;
+
+    // if (showImmediately) {
+    //   // show
+    //   console.log("Show index: " + symbolNodeIndex);
+    //   localStorage.setItem(
+    //     "mouseOverData",
+    //     JSON.stringify({ index: symbolNodeIndex, time: Date.now() })
+    //   );
+    //   return;
+    // }
+
+    setTimeout(timeUntilHoverWindow, () => {
+      let leaveDataJson = localStorage.getItem("mouseLeaveData");
+      let leaveData = JSON.parse(leaveDataJson);
+      if (leaveData && Date.now() - leaveData.time < timeUntilHoverWindow) {
+        return;
+      }
+
+      // show
+      console.log("Show index: " + symbolNodeIndex);
+      localStorage.setItem(
+        "mouseOverData",
+        JSON.stringify({ index: symbolNodeIndex, time: Date.now() })
+      );
+    });
+  });
+
+  for (const visualizationElement of visualizationContainer.children) {
+    visualizationElement.addEventListener("mouseleave", function (event) {
+      var symbolNodeIndexValue = event.target.attributes?.index?.value;
+
+      if (!symbolNodeIndexValue) {
+        return;
+      }
+
+      var symbolNodeIndex = Number(symbolNodeIndexValue);
+      console.log("Leaving Index: " + symbolNodeIndex);
+
+      localStorage.setItem(
+        "mouseLeaveData",
+        JSON.stringify({
+          index: symbolNodeIndex,
+          time: Date.now(),
+        })
+      );
+    });
+  }
+}
+
+function getRelevantNodeIndex(event) {
+  let visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
+
+  var nodeBarElements = Array.from(visualizationContainer.children);
+  var relevantBarElement = nodeBarElements.find(
+    (el) =>
+      Number(el.attributes.y?.value) <= Number(event.offsetY) &&
+      Number(event.offsetY) <=
+        Number(el.attributes.y?.value) + Number(el.attributes.height?.value)
+  );
+
+  return relevantBarElement?.attributes?.index?.value;
 }
 
 function insertHotspotVisibleRangeIndicator() {
@@ -193,4 +283,27 @@ function insertHotspotVisibleRangeIndicator() {
         </rect>`;
 
   visualizationContainer.innerHTML += visibleRangeIndicatorHtml;
+}
+
+function insertHoverWindow() {
+  let overDataJson = localStorage.getItem("mouseOverData");
+  let overData = JSON.parse(overDataJson);
+
+  if (!overData) {
+    return;
+  }
+
+  let leaveDataJson = localStorage.getItem("mouseLeaveData");
+  let leaveData = JSON.parse(leaveDataJson);
+
+  if (leaveData && leaveData.time > overData.time) {
+    return;
+  }
+
+  if (Date.now() - overData.time < 2000) {
+    return;
+  }
+
+  // show
+  console.log("insert hover");
 }
