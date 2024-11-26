@@ -197,7 +197,9 @@ export class NavigationHistory {
       return undefined;
     }
 
-    let currentFilePath = vscode.workspace.asRelativePath(currentDocument.uri);
+    let currentFilePath = vscode.workspace.asRelativePath(
+      currentDocument.uri.path
+    );
     let currentLocation = new FileLocation(
       currentFilePath,
       new vscode.Range(

@@ -70,7 +70,7 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
 
   const viewDuration = Date.now() - LocationTracker.lastVisibleRangeUpdate;
   const fileIdentifier = vscode.workspace.asRelativePath(
-    LocationTracker.lastDocument.uri
+    LocationTracker.lastDocument.uri.path
   );
   const identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
 
@@ -204,7 +204,7 @@ export function getFileRangeData(file: vscode.Uri): RangeData[] {
     return traverseHistory(value, subPath);
   }
 
-  var fileIdentifier = vscode.workspace.asRelativePath(file);
+  var fileIdentifier = vscode.workspace.asRelativePath(file.path);
   var identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
   return traverseHistory(getPositionHistory(), identifierKeys);
 }
