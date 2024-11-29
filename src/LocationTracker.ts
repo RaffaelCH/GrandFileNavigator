@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 
 export class LocationTracker {
-  private static _isTracking: boolean; // is the current window being tracked
+  private static _isTracking: boolean;
 
   public static lastVisibleRangeUpdate: number;
   public static lastDocument: vscode.TextDocument | undefined;
   public static lastVisibleRanges: readonly vscode.Range[] | undefined;
 
   public static initialize() {
-    this._isTracking = false; // is the current window being tracked
+    this._isTracking = false;
     this.lastVisibleRangeUpdate = Date.now();
   }
 
@@ -16,10 +16,9 @@ export class LocationTracker {
     if (this.shouldTrackWindow()) {
       this._isTracking = true;
       this.lastDocument = vscode.window.activeTextEditor!.document;
-      var visibleRanges = vscode.window.activeTextEditor!.visibleRanges.slice();
+      const visibleRanges = vscode.window.activeTextEditor!.visibleRanges.slice();
 
-      // By default last document line is omitted in visible ranges -> add back
-      var lastVisibleRange = visibleRanges[visibleRanges.length - 1];
+      const lastVisibleRange = visibleRanges[visibleRanges.length - 1];
       if (lastVisibleRange.end.line === this.lastDocument.lineCount - 1) {
         let newEndPosition = new vscode.Position(
           lastVisibleRange.end.line + 1,
@@ -38,7 +37,6 @@ export class LocationTracker {
     this.lastVisibleRangeUpdate = Date.now();
   }
 
-  // If previous position was relevant for location tracking.
   public static shouldUpdateTracking() {
     if (!this._isTracking) {
       return false;
@@ -56,12 +54,13 @@ export class LocationTracker {
       return false;
     }
 
-    var currentDocument = vscode.window.activeTextEditor.document;
+    const currentDocument = vscode.window.activeTextEditor.document;
 
-    // Only track .java files.
-    // if (currentDocument.languageId !== "java") {
-    //   return false;
-    // }
+    // Allow tracking for specified languages
+    const supportedLanguages = ["java", "python", "javascript", "typescript", "rust"];
+    if (!supportedLanguages.includes(currentDocument.languageId)) {
+      return false;
+    }
 
     if (currentDocument.uri.scheme !== "file") {
       return false;

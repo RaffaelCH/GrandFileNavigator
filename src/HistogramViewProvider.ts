@@ -6,6 +6,7 @@ import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
 import { adaptImportanceArray } from "./adapters/hotspotsGrouper.js";
 import { NavigationHistory } from "./NavigationHistory.js";
+import { ImportanceElement } from "./HotspotsGrouper.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -24,7 +25,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
 
     webviewView.webview.options = {
-      enableScripts: true, // Allow scripts in the webview.
+      enableScripts: true,
       localResourceRoots: [this._extensionUri],
     };
 
@@ -78,12 +79,12 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    var activeTextEditor = vscode.window.activeTextEditor;
+    const activeTextEditor = vscode.window.activeTextEditor;
     if (!activeTextEditor) {
       return;
     }
 
-    var histogramNodes = await getFileHistogramData(
+    const histogramNodes = await getFileHistogramData(
       activeTextEditor.document.uri
     );
 
@@ -103,37 +104,40 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    var activeTextEditor = vscode.window.activeTextEditor;
+    const activeTextEditor = vscode.window.activeTextEditor;
     if (!activeTextEditor) {
       return;
     }
 
-    let currentFileName = activeTextEditor?.document.fileName;
+    const currentFileName = path.basename(activeTextEditor.document.fileName);
+    const languageId = activeTextEditor.document.languageId;
 
-    var importanceData = getCondensedImportanceArray();
-    importanceData = importanceData.filter((importanceElement) =>
-      currentFileName.endsWith(importanceElement.fileName)
+    let importanceData = getCondensedImportanceArray(languageId);
+
+    importanceData = importanceData.filter(
+      (importanceElement: ImportanceElement) => importanceElement.fileName === currentFileName
     );
+    
 
-    var hotspotsData = adaptImportanceArray(importanceData);
+    const hotspotsData = adaptImportanceArray(importanceData);
 
-    // TODO: Change based on number of methods, fields, etc.
-    // TODO: Add enclosing (hierarchical) information?
-    var relevantSymbolTypes = [NodeType.Method];
-
-    if (currentFileName.endsWith(".js") || currentFileName.endsWith(".ts")) {
+    const relevantSymbolTypes = [NodeType.Method];
+    if (["javascript", "typescript", "python", "rust"].includes(languageId)) {
+      relevantSymbolTypes.push(NodeType.Function);
+      relevantSymbolTypes.push(NodeType.Struct);
+      relevantSymbolTypes.push(NodeType.Class);
       relevantSymbolTypes.push(NodeType.Unknown);
     }
 
-    hotspotsData = hotspotsData.filter((hotspot) =>
+    const filteredHotspotsData = hotspotsData.filter((hotspot) =>
       relevantSymbolTypes.includes(hotspot.nodeType)
     );
 
-    hotspotsData.sort((a, b) => a.startLine - b.startLine);
+    filteredHotspotsData.sort((a, b) => a.startLine - b.startLine);
 
     this._view.webview.postMessage({
       command: "reloadHotspotsData",
-      hotspotNodes: hotspotsData,
+      hotspotNodes: filteredHotspotsData,
     });
 
     this.indicateFileLocation(
@@ -147,7 +151,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    // Handle messages from the (histogram) webview.
     this._view.webview.onDidReceiveMessage((message) => {
       switch (message.command) {
         case "switchVisualization":
@@ -158,6 +161,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
             this._visualizationType = "histogram";
             this.updateHistogramData();
           }
+          break;
         case "showRange":
           vscode.window.activeTextEditor?.revealRange(
             new vscode.Range(
@@ -166,7 +170,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
             )
           );
           return;
-        case "showLocation": // TODO: Handle jumping to other files.
+        case "showLocation":
           vscode.window.activeTextEditor?.revealRange(
             new vscode.Range(
               new vscode.Position(message.startLine, 0),

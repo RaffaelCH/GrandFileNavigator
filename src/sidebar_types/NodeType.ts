@@ -5,4 +5,6 @@ export enum NodeType {
   File, // Node represents a whole file. // TODO: Decide if actually used.
   Other, // Placeholder
   Unknown,
+  Function,
+  Struct
 }
