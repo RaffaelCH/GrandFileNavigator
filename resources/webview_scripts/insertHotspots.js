@@ -120,68 +120,34 @@ function addHoverEventHandlers(symbolNodes) {
     "visualization-container"
   );
 
-  visualizationContainer.addEventListener("mouseover", function (event) {
-    // console.log("entering..." + Date.now());
-
+  visualizationContainer.addEventListener("mousemove", function (event) {
+    var lastEnteredNode = JSON.parse(localStorage.getItem("mouseHoverData"));
     var symbolNodeIndex = getRelevantNodeIndex(event);
-    var symbolNode = symbolNodes[symbolNodeIndex];
 
-    const timeUntilHoverWindow = 2000;
-    let leaveData = JSON.parse(localStorage.getItem("mouseLeaveData"));
-
-    //console.log("Leave data: " + JSON.stringify(leaveData));
-
-    if (leaveData && Date.now() - leaveData.time < timeUntilHoverWindow) {
-      return; // show no hover data
-    }
-    // showImmediately = data.index === symbolNodeIndex;
-
-    // if (showImmediately) {
-    //   // show
-    //   console.log("Show index: " + symbolNodeIndex);
-    //   localStorage.setItem(
-    //     "mouseOverData",
-    //     JSON.stringify({ index: symbolNodeIndex, time: Date.now() })
-    //   );
-    //   return;
-    // }
-
-    setTimeout(timeUntilHoverWindow, () => {
-      let leaveDataJson = localStorage.getItem("mouseLeaveData");
-      let leaveData = JSON.parse(leaveDataJson);
-      if (leaveData && Date.now() - leaveData.time < timeUntilHoverWindow) {
-        return;
-      }
-
-      // show
-      console.log("Show index: " + symbolNodeIndex);
+    if (
+      !lastEnteredNode ||
+      lastEnteredNode.symbolNodeIndex !== symbolNodeIndex
+    ) {
+      console.log("resetting hover data");
       localStorage.setItem(
-        "mouseOverData",
-        JSON.stringify({ index: symbolNodeIndex, time: Date.now() })
-      );
-    });
-  });
-
-  for (const visualizationElement of visualizationContainer.children) {
-    visualizationElement.addEventListener("mouseleave", function (event) {
-      var symbolNodeIndexValue = event.target.attributes?.index?.value;
-
-      if (!symbolNodeIndexValue) {
-        return;
-      }
-
-      var symbolNodeIndex = Number(symbolNodeIndexValue);
-      console.log("Leaving Index: " + symbolNodeIndex);
-
-      localStorage.setItem(
-        "mouseLeaveData",
+        "mouseHoverData",
         JSON.stringify({
-          index: symbolNodeIndex,
-          time: Date.now(),
+          symbolNodeIndex: symbolNodeIndex,
+          timeEntered: Date.now(),
         })
       );
-    });
-  }
+    }
+  });
+
+  visualizationContainer.addEventListener("mouseleave", function (event) {
+    console.log("Mouse left.");
+    localStorage.removeItem("mouseHoverData");
+  });
+
+  // Gets also triggered when reloading the container contents.
+  visualizationContainer.addEventListener("mouseover", function (event) {
+    //console.log("entering..." + Date.now());
+  });
 }
 
 function getRelevantNodeIndex(event) {
@@ -256,17 +222,27 @@ function insertHotspotVisibleRangeIndicator() {
     lastVisibleNode.endLine
   );
 
-  var portionOfFirstNodeAboveVisible =
-    (visibleRangeStartLine - firstVisibleNode.startLine) /
-    (firstVisibleNode.endLine - firstVisibleNode.startLine);
+  if (firstVisibleNode.startLine === firstVisibleNode.endLine) {
+    portionOfFirstNodeAboveVisible = 0;
+  } else {
+    var portionOfFirstNodeAboveVisible =
+      (visibleRangeStartLine - firstVisibleNode.startLine) /
+      (firstVisibleNode.endLine - firstVisibleNode.startLine);
+  }
+
   var visibleRangeIndicatorY =
     Number(firstNodeBarElement.attributes.y.value) +
     portionOfFirstNodeAboveVisible *
       firstNodeBarElement.attributes.height.value;
 
-  var portionOfLastNodeBelowVisible =
-    (lastVisibleNode.endLine - visibleRangeEndLine) /
-    (lastVisibleNode.endLine - lastVisibleNode.startLine);
+  if (lastVisibleNode.endLine === lastVisibleNode.startLine) {
+    portionOfLastNodeBelowVisible = 1;
+  } else {
+    var portionOfLastNodeBelowVisible =
+      (lastVisibleNode.endLine - visibleRangeEndLine) /
+      (lastVisibleNode.endLine - lastVisibleNode.startLine);
+  }
+
   var visibleRangeIndicatorEndY =
     Number(lastNodeBarElement.attributes.y.value) +
     (1 - portionOfLastNodeBelowVisible) *
