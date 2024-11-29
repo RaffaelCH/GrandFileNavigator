@@ -1,10 +1,8 @@
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import * as vscode from "vscode";
 import { LocationTracker } from "./LocationTracker";
-import { HotspotLLMAnalyzer } from "./HotspotsLLMAnalyzer";
 import * as path from "path";
 
-// Encapsulates the information about one node (hotspot).
 export class RangeData {
   constructor(startLine: number, endLine: number, totalDuration: number) {
     this.startLine = startLine;
@@ -13,17 +11,15 @@ export class RangeData {
   }
   startLine: number;
   endLine: number;
-  totalDuration: number; // in ms
-  // TODO: Add more info (e.g., class/method, viewing/editing).
+  totalDuration: number;
 }
 
 export class PositionHistory {
   [key: string]: PositionHistory | RangeData[] | undefined;
 }
 
-// Tracks user position.
 var positionHistory = new PositionHistory();
-var backupFilename = "backup"; // TODO: Allow multiple files.
+var backupFilename = "backup";
 
 export function getPositionHistory(): PositionHistory {
   return positionHistory;
@@ -34,7 +30,7 @@ export function resetPositionHistory(storageLocation: vscode.Uri | undefined) {
     savePositionHistory(
       storageLocation,
       `${backupFilename}-${Date.now()}.json`
-    ); // retain backups
+    );
   }
   positionHistory = new PositionHistory();
 }
@@ -47,7 +43,6 @@ export function savePositionHistory(
   writeFileSync(filePath, JSON.stringify(getPositionHistory()));
 }
 
-// Load history from file.
 export function loadPositionHistory(storageLocation: vscode.Uri) {
   var filePath = path.join(storageLocation.fsPath, backupFilename + ".json");
   if (existsSync(filePath)) {
@@ -56,12 +51,9 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
     positionHistory = convertPositionHistoryValue(backupData);
     vscode.window.showInformationMessage("Found existing backup with data");
   } else {
-    vscode.window.showInformationMessage("no backup found");
+    vscode.window.showInformationMessage("No backup found");
   }
 }
-
-//vscode.window.onDidChangeWindowState
-//vscode.workspace.onDidChangeTextDocument
 
 export function addLastLocationToHistory(context: vscode.ExtensionContext) {
   if (LocationTracker.lastDocument === undefined) {
@@ -70,7 +62,7 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
 
   const viewDuration = Date.now() - LocationTracker.lastVisibleRangeUpdate;
   const fileIdentifier = vscode.workspace.asRelativePath(
-    LocationTracker.lastDocument.uri.path
+    LocationTracker.lastDocument.uri
   );
   const identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
 
@@ -101,36 +93,14 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
           );
 
           if (existingRange) {
-            // Only update the viewDuration for existing hotspots
             existingRange.totalDuration += viewDuration;
           } else {
-            // Add a new hotspot and trigger LLM analysis
             const newRange = new RangeData(
               visibleRange.start.line,
               visibleRange.end.line,
               viewDuration
             );
             positionDataArray.push(newRange);
-
-            // Create the enriched hotspot object
-            const enrichedHotspot = {
-              filePath: LocationTracker.lastDocument?.uri.fsPath || "", // Ensure it's safe
-              rangeData: newRange,
-              symbols: [], // Populate as needed
-              timeSpent: viewDuration,
-              importance: viewDuration, // You can change how you calculate importance
-            };
-
-            // TODO: Reenable
-            // Add the new hotspot to the LLM analysis queue
-            // if (LocationTracker.lastDocument) {
-            //   console.log("Adding hotspot to LLM analysis queue.");
-            //   HotspotLLMAnalyzer.addToQueue(
-            //     enrichedHotspot,
-            //     LocationTracker.lastDocument,
-            //     context
-            //   );
-            // }
           }
         });
       }
@@ -204,7 +174,7 @@ export function getFileRangeData(file: vscode.Uri): RangeData[] {
     return traverseHistory(value, subPath);
   }
 
-  var fileIdentifier = vscode.workspace.asRelativePath(file.path);
+  var fileIdentifier = vscode.workspace.asRelativePath(file);
   var identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
   return traverseHistory(getPositionHistory(), identifierKeys);
 }
