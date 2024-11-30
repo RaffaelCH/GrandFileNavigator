@@ -83,7 +83,13 @@ function insertHotspots() {
     .join("");
 
   visualizationContainer.innerHTML = symbolNodesHtml;
-  insertHoverWindow();
+
+  let mouseHoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
+  if (mouseHoverData && mouseHoverData.timeEntered < Date.now() - 2000) {
+    insertHoverWindow(symbolNodes[mouseHoverData.index]);
+  }
+
+  updateHoverWindow(symbolNodes);
 }
 
 function addEventHandlers() {
@@ -121,19 +127,19 @@ function addHoverEventHandlers(symbolNodes) {
   );
 
   visualizationContainer.addEventListener("mousemove", function (event) {
-    var lastEnteredNode = JSON.parse(localStorage.getItem("mouseHoverData"));
+    var mouseHoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
     var symbolNodeIndex = getRelevantNodeIndex(event);
 
-    if (
-      !lastEnteredNode ||
-      lastEnteredNode.symbolNodeIndex !== symbolNodeIndex
-    ) {
+    if (!mouseHoverData || mouseHoverData.symbolNodeIndex !== symbolNodeIndex) {
       console.log("resetting hover data");
       localStorage.setItem(
         "mouseHoverData",
         JSON.stringify({
           symbolNodeIndex: symbolNodeIndex,
           timeEntered: Date.now(),
+          positionX: event.clientX,
+          positionY: event.clientY,
+          hoverText: symbolNodes[symbolNodeIndex].additionalInformation,
         })
       );
     }
@@ -142,11 +148,6 @@ function addHoverEventHandlers(symbolNodes) {
   visualizationContainer.addEventListener("mouseleave", function (event) {
     console.log("Mouse left.");
     localStorage.removeItem("mouseHoverData");
-  });
-
-  // Gets also triggered when reloading the container contents.
-  visualizationContainer.addEventListener("mouseover", function (event) {
-    //console.log("entering..." + Date.now());
   });
 }
 
@@ -261,25 +262,29 @@ function insertHotspotVisibleRangeIndicator() {
   visualizationContainer.innerHTML += visibleRangeIndicatorHtml;
 }
 
-function insertHoverWindow() {
-  let overDataJson = localStorage.getItem("mouseOverData");
-  let overData = JSON.parse(overDataJson);
-
-  if (!overData) {
-    return;
+function updateHoverWindow() {
+  console.log("updating hover data");
+  let mouseHoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
+  if (mouseHoverData && mouseHoverData.timeEntered < Date.now() - 2000) {
+    insertHoverWindow(mouseHoverData.hoverText);
+  } else {
+    removeHoverWindow();
   }
+}
 
-  let leaveDataJson = localStorage.getItem("mouseLeaveData");
-  let leaveData = JSON.parse(leaveDataJson);
+function insertHoverWindow(hoverText) {
+  console.log("Inserting hover window with text: " + hoverText);
+  let visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
+  var mouseHoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
 
-  if (leaveData && leaveData.time > overData.time) {
-    return;
-  }
+  console.log(mouseHoverData);
 
-  if (Date.now() - overData.time < 2000) {
-    return;
-  }
+  let hoverHtml = `<rect id="hoverData" x="${mouseHoverData.positionX}" y="${mouseHoverData.positionY}" width="50" height="50" fill="white">Text: ${hoverText}</rect>`;
+  visualizationContainer.insertAdjacentHTML("beforeend", hoverHtml);
+}
 
-  // show
-  console.log("insert hover");
+function removeHoverWindow() {
+  document.getElementById("hoverData")?.remove();
 }

@@ -10,6 +10,6 @@ export default class SymbolNode {
     public readonly startLine: number,
     public readonly endLine: number,
     public readonly timeVisible: number,
-    public readonly additionalInformation: string = "" // Shown when clicking on node.
+    public readonly additionalInformation: string = "" // Shown when hovering over node.
   ) {}
 }
