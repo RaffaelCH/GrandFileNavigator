@@ -2,6 +2,8 @@
 // const svgHeight = 700; // containerRect.height;
 // const svgWidth = 260; // containerRect.width;
 
+const { text } = require("stream/consumers");
+
 function insertHotspots() {
   let symbolNodesJson = localStorage.getItem("hotspotNodes");
   let symbolNodes = JSON.parse(symbolNodesJson);
@@ -86,7 +88,9 @@ function insertHotspots() {
 
   let mouseHoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
   if (mouseHoverData && mouseHoverData.timeEntered < Date.now() - 2000) {
-    showHoverWindow(symbolNodes[mouseHoverData.index]);
+    showHoverWindow(
+      symbolNodes[mouseHoverData.symbolNodeIndex].additionalInformation
+    );
   }
 
   updateHoverWindow(symbolNodes);
@@ -130,17 +134,25 @@ function addHoverEventHandlers(symbolNodes) {
     var mouseHoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
     var symbolNodeIndex = getRelevantNodeIndex(event);
 
+    // New node entered.
     if (!mouseHoverData || mouseHoverData.symbolNodeIndex !== symbolNodeIndex) {
       localStorage.setItem(
         "mouseHoverData",
         JSON.stringify({
           symbolNodeIndex: symbolNodeIndex,
           timeEntered: Date.now(),
-          positionX: event.clientX,
-          positionY: event.clientY,
+          positionX: event.offsetX,
+          positionY: event.offsetY,
           hoverText: symbolNodes[symbolNodeIndex].additionalInformation,
         })
       );
+    }
+    // Hover window not yet shown -> still update position.
+    else if (mouseHoverData.timeEntered >= Date.now() - 2000) {
+      let hoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
+      hoverData.positionX = event.offsetX;
+      hoverData.positionY = event.offsetY;
+      localStorage.setItem("mouseHoverData", JSON.stringify(hoverData));
     }
   });
 
@@ -262,7 +274,6 @@ function insertHotspotVisibleRangeIndicator() {
 }
 
 function updateHoverWindow() {
-  console.log("updating hover data");
   let mouseHoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
   if (mouseHoverData && mouseHoverData.timeEntered < Date.now() - 2000) {
     showHoverWindow(mouseHoverData.hoverText);
@@ -283,10 +294,45 @@ function showHoverWindow(hoverText) {
 
   var mouseHoverData = JSON.parse(localStorage.getItem("mouseHoverData"));
 
-  console.log(mouseHoverData);
+  let positionX = mouseHoverData.positionX + 20;
+  let positionY = mouseHoverData.positionY + 20;
 
-  let hoverHtml = `<rect id="hoverDataWindow" x="${mouseHoverData.positionX}" y="${mouseHoverData.positionY}" width="50" height="50" fill="white">Text: ${hoverText}</rect>`;
+  hoverText =
+    "Hover text that is too long and should be split up into multiple lines.";
+  let hoverHtml = `<text id="hoverDataWindow" x="${positionX}" y="${positionY}" dy="0" fill="white" font-size="14" paint-order="stroke" stroke="black" stroke-width="1px"><tspan x="${positionX}" dy="1.2em">${hoverText}</tspan></text>`;
   visualizationContainer.insertAdjacentHTML("beforeend", hoverHtml);
+
+  //getComputedTextLength
+  let hoverWindow = visualizationContainer.getElementById("hoverDataWindow");
+  let textLength = hoverWindow.getComputedTextLength();
+  let maxWidth = visualizationContainer.width.baseVal.value - 30;
+
+  if (textLength > maxWidth) {
+    let averageCharWidth = textLength / hoverText.length;
+    let splits = hoverText.split(/\s+/);
+
+    let textHtml = `<tspan x="${positionX}" dy="1.2em">`;
+    let lineLength = 0;
+    splits.forEach((split) => {
+      let splitLength = (split.length + 1) * averageCharWidth;
+      if (lineLength + splitLength < maxWidth) {
+        textHtml += ` ${split}`;
+        lineLength += splitLength;
+      } else {
+        textHtml += `</tspan><tspan x="${positionX}" dy="1.2em"> ${split}`;
+        lineLength = splitLength;
+      }
+    });
+    textHtml += "</tspan>";
+    hoverWindow.innerHTML = textHtml;
+  }
+
+  if (positionX + textLength > maxWidth) {
+    // TODO: Adjust starting position.
+    console.log(hoverWindow.x);
+    hoverWindow.x = maxWidth - textLength;
+    console.log(hoverWindow.x);
+  }
 }
 
 function removeHoverWindow() {
