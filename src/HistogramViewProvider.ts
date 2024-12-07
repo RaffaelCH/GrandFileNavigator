@@ -13,6 +13,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private _visualizationType: string = "histogram";
   private viewUpdateTimer = setInterval(() => this.updateView(), 5000);
+  private hoverDataUpdateTimer = setInterval(() => this.updateHoverData(), 100);
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -41,6 +42,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       this.updateHistogramData();
     } else {
       this.updateHotspotsData();
+      this.addHotspotsEventHandlers();
     }
   }
 
@@ -58,6 +60,16 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       command: command,
       startLine: startLine,
       endLine: endLine,
+    });
+  }
+
+  public async updateHoverData() {
+    if (!this._view || this._visualizationType !== "hotspots") {
+      return;
+    }
+
+    this._view.webview.postMessage({
+      command: "updateHoverData",
     });
   }
 
@@ -93,8 +105,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     });
 
     this.indicateFileLocation(
-      activeTextEditor.visibleRanges[0].start.line,
-      activeTextEditor.visibleRanges.at(-1)?.end.line!
+      activeTextEditor.visibleRanges[0].start.line + 1,
+      activeTextEditor.visibleRanges.at(-1)?.end.line! + 1
     );
   }
 
@@ -137,9 +149,17 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     });
 
     this.indicateFileLocation(
-      activeTextEditor.visibleRanges[0].start.line,
-      activeTextEditor.visibleRanges.at(-1)?.end.line!
+      activeTextEditor.visibleRanges[0].start.line + 1,
+      activeTextEditor.visibleRanges.at(-1)?.end.line! + 1
     );
+  }
+
+  public async addHotspotsEventHandlers() {
+    if (this._view) {
+      this._view.webview.postMessage({
+        command: "addHotspotsEvents",
+      });
+    }
   }
 
   private setupMessageHandlers() {

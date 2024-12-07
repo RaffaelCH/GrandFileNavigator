@@ -9,6 +9,7 @@ export default class SymbolNode {
     public readonly filePath: string,
     public readonly startLine: number,
     public readonly endLine: number,
-    public readonly timeVisible: number
+    public readonly timeVisible: number,
+    public readonly additionalInformation: string = "" // Shown when hovering over node.
   ) {}
 }

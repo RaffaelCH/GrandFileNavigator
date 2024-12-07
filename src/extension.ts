@@ -92,7 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory(context);
-      await updateEnrichedHotspots();
+      await updateEnrichedHotspots(); // TODO: Only update current file.
     }
     histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
@@ -107,15 +107,15 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory(context);
-      await updateEnrichedHotspots();
+      await updateEnrichedHotspots(); // TODO: Only update current file.
     }
     LocationTracker.updateLocationTracking();
 
     const visibleRanges = LocationTracker.lastVisibleRanges;
     if (visibleRanges !== undefined) {
       histogramViewProvider.indicateFileLocation(
-        visibleRanges[0].start.line,
-        visibleRanges.at(-1)?.end.line!
+        visibleRanges[0].start.line + 1,
+        visibleRanges.at(-1)?.end.line! + 1
       );
     }
   });

@@ -35,7 +35,7 @@ function insertHistogram() {
 
   let metricValues = histogramNodes.map((node) => node.metricValue);
   const metricMax = Math.max(...metricValues);
-  const barHeight = svgHeight / histogramNodes.length;
+  const barHeight = (svgHeight - 5) / histogramNodes.length; // -5 to make space for text
 
   // Generate colors ranging from green to red, based on metric value.
   const colors = metricValues.map(
@@ -52,7 +52,7 @@ function insertHistogram() {
       const color = colors[index];
 
       // Place identifier in middle of bar.
-      const yTextPosition = index * barHeight + barHeight / 2;
+      const yTextPosition = (index + 1) * barHeight + 2;
 
       // TODO: Add icon based on NodeType.
       return `
@@ -80,8 +80,6 @@ function insertHistogram() {
       endLine: histogramNode.endLine,
     });
   });
-
-  insertHistogramVisibleRangeIndicator();
 }
 
 function insertHistogramVisibleRangeIndicator() {
@@ -90,6 +88,10 @@ function insertHistogramVisibleRangeIndicator() {
 
   var visibleRangeJson = localStorage.getItem("indicatedRange");
   var visibleRange = JSON.parse(visibleRangeJson);
+
+  var visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
 
   if (histogramNodes.length === 0) {
     return;
@@ -114,7 +116,8 @@ function insertHistogramVisibleRangeIndicator() {
     return;
   }
 
-  const barHeight = svgHeight / histogramNodes.length;
+  var totalBarsHeight = visualizationContainer.height.baseVal.value - 5;
+  const barHeight = totalBarsHeight / histogramNodes.length;
 
   var firstVisibleNode = histogramNodes[firstVisibleNodeIndex];
   var lastVisibleNode = histogramNodes[lastVisibleNodeIndex];
@@ -144,8 +147,5 @@ function insertHistogramVisibleRangeIndicator() {
           fill="rgb(100, 100, 100, 0.5)">
         </rect>`;
 
-  var visualizationContainer = document.getElementById(
-    "visualization-container"
-  );
   visualizationContainer.innerHTML += visibleRangeIndicatorHtml;
 }

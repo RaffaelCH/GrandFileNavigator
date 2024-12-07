@@ -36,6 +36,12 @@
         );
         insertHotspotVisibleRangeIndicator();
         break;
+      case "addHotspotsEvents":
+        addEventHandlers();
+        break;
+      case "updateHoverData":
+        updateHoverWindow();
+        break;
       case "updateNavigationButtons":
         updateNavigationButtonsActivations(
           message.hasPrevious,
