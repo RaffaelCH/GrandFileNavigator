@@ -15,7 +15,7 @@ export class NavigationHistory {
   private static lastLocationUpdate: number;
   private static navigationHistoryIndex = -1;
 
-  private static msBeforeHistoryUpdate: number = 5000;
+  private static msBeforeHistoryUpdate: number = 4000;
 
   public static initialize() {
     this.lastLocationUpdate = Date.now();
@@ -24,7 +24,7 @@ export class NavigationHistory {
   }
 
   public static updateLocation() {
-    if (Date.now() - this.lastLocationUpdate < 1000) {
+    if (Date.now() - this.lastLocationUpdate < 400) {
       this.lastLocationUpdate = Date.now();
       return;
     }
@@ -51,20 +51,32 @@ export class NavigationHistory {
 
     if (mergedLocation) {
       if (!this.intermediateLocation) {
+        console.log("Merged locations");
         this.navigationHistory[this.navigationHistoryIndex] = mergedLocation;
+        this.lastLocationUpdate = Date.now();
+      } else if (
+        Date.now() - this.lastLocationUpdate >
+        this.msBeforeHistoryUpdate
+      ) {
+        console.log("Add intermediate location");
+        this.navigationHistoryIndex += 1;
+        this.navigationHistory = this.navigationHistory.slice(
+          0,
+          this.navigationHistoryIndex
+        );
+        this.navigationHistory.push(mergedLocation);
+        this.intermediateLocation = undefined;
+        this.lastLocationUpdate = Date.now();
       } else {
-        if (Date.now() - this.lastLocationUpdate > this.msBeforeHistoryUpdate) {
-          this.navigationHistoryIndex += 1;
-          this.navigationHistory = this.navigationHistory.slice(
-            0,
-            this.navigationHistoryIndex
-          );
-          this.navigationHistory.push(mergedLocation);
-          this.intermediateLocation = undefined;
-        }
+        this.intermediateLocation = mergedLocation;
       }
     } else if (LocationTracker.shouldTrackWindow()) {
       if (Date.now() - this.lastLocationUpdate > this.msBeforeHistoryUpdate) {
+        console.log(
+          `Add ${
+            this.intermediateLocation ? "intermediate" : "current"
+          } location`
+        );
         this.navigationHistoryIndex += 1;
         this.navigationHistory = this.navigationHistory.slice(
           0,
@@ -75,13 +87,19 @@ export class NavigationHistory {
         );
         this.intermediateLocation = undefined;
       } else {
+        console.log("Set intermediate location to current");
         this.intermediateLocation = currentLocation;
       }
+      this.lastLocationUpdate = Date.now();
     } else {
       this.intermediateLocation = undefined;
+      this.lastLocationUpdate = Date.now();
     }
 
-    this.lastLocationUpdate = Date.now();
+    console.log(JSON.stringify(this.navigationHistory));
+    console.log(JSON.stringify(this.intermediateLocation));
+    console.log(this.lastLocationUpdate);
+    console.log(this.navigationHistoryIndex);
   }
 
   public static hasPreviousPosition(): boolean {
