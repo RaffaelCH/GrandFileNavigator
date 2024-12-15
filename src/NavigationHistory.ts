@@ -21,16 +21,28 @@ export class NavigationHistory {
     this.lastLocationUpdate = Date.now();
     this.navigationHistory = [];
     this.intermediateLocation = undefined;
+
+    setInterval(() => {
+      //this.updateLocation(false);
+      let currentLocation = this.getCurrentLocation();
+      var canMerge = this.tryMergeLocations(
+        currentLocation,
+        this.navigationHistory[this.navigationHistoryIndex]
+      );
+      if (!canMerge) {
+        this.intermediateLocation = currentLocation;
+      }
+    }, 200);
   }
 
   public static updateLocation() {
-    if (Date.now() - this.lastLocationUpdate < 400) {
-      this.lastLocationUpdate = Date.now();
+    let currentLocation = this.getCurrentLocation();
+    if (!currentLocation) {
       return;
     }
 
-    let currentLocation = this.getCurrentLocation();
-    if (!currentLocation) {
+    if (Date.now() - this.lastLocationUpdate < 400) {
+      this.lastLocationUpdate = Date.now();
       return;
     }
 
@@ -51,14 +63,14 @@ export class NavigationHistory {
 
     if (mergedLocation) {
       if (!this.intermediateLocation) {
-        console.log("Merged locations");
+        console.log("Check 1");
         this.navigationHistory[this.navigationHistoryIndex] = mergedLocation;
         this.lastLocationUpdate = Date.now();
       } else if (
         Date.now() - this.lastLocationUpdate >
         this.msBeforeHistoryUpdate
       ) {
-        console.log("Add intermediate location");
+        console.log("Check 2");
         this.navigationHistoryIndex += 1;
         this.navigationHistory = this.navigationHistory.slice(
           0,
@@ -68,10 +80,12 @@ export class NavigationHistory {
         this.intermediateLocation = undefined;
         this.lastLocationUpdate = Date.now();
       } else {
+        console.log("Check 3");
         this.intermediateLocation = mergedLocation;
       }
     } else if (LocationTracker.shouldTrackWindow()) {
       if (Date.now() - this.lastLocationUpdate > this.msBeforeHistoryUpdate) {
+        console.log("Check 4");
         console.log(
           `Add ${
             this.intermediateLocation ? "intermediate" : "current"
@@ -92,6 +106,7 @@ export class NavigationHistory {
       }
       this.lastLocationUpdate = Date.now();
     } else {
+      console.log("Check 5");
       this.intermediateLocation = undefined;
       this.lastLocationUpdate = Date.now();
     }
@@ -103,15 +118,21 @@ export class NavigationHistory {
   }
 
   public static hasPreviousPosition(): boolean {
-    if (this.navigationHistory.length > 0 && this.navigationHistoryIndex > 0) {
+    if (this.navigationHistory.length <= 0) {
+      return false;
+    }
+
+    if (this.navigationHistoryIndex > 0) {
       return true;
     }
 
-    if (this.intermediateLocation) {
-      return true;
-    }
+    let currentLocation = this.getCurrentLocation();
+    var mergedLocation = this.tryMergeLocations(
+      currentLocation,
+      this.navigationHistory[this.navigationHistoryIndex]
+    );
 
-    return false;
+    return mergedLocation === undefined;
   }
 
   public static hasNextPosition(): boolean {
@@ -137,10 +158,6 @@ export class NavigationHistory {
       this.navigationHistoryIndex -= 1;
     } else {
       this.navigationHistory.push(this.intermediateLocation!);
-      let currentLocation = this.getCurrentLocation();
-      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
-        this.navigationHistoryIndex += 1;
-      }
       this.intermediateLocation = undefined;
     }
 
@@ -200,8 +217,8 @@ export class NavigationHistory {
     let visibleRangeLength =
       currentLocation.range.end.line - currentLocation.range.start.line;
 
-    // Overlap too small (< 25% of visible range).
-    if (overlapLength / visibleRangeLength < 0.25) {
+    // Overlap too small (< 50% of visible range).
+    if (overlapLength / visibleRangeLength < 0.5) {
       return undefined;
     }
 
