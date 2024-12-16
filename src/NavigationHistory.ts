@@ -100,6 +100,20 @@ export class NavigationHistory {
     }
   }
 
+  // Returns the most recent locations (newest is first).
+  public static getPreviousRanges(locNumber: number = 3): vscode.Range[] {
+    if (this.navigationHistoryIndex < 0) {
+      return [];
+    }
+
+    var startIndex = Math.max(0, this.navigationHistoryIndex - locNumber);
+    var recentPositions = this.navigationHistory.slice(
+      startIndex,
+      this.navigationHistoryIndex
+    );
+    return recentPositions.reverse().map((el) => el.range);
+  }
+
   public static hasPreviousPosition(): boolean {
     if (this.navigationHistory.length <= 0) {
       return false;

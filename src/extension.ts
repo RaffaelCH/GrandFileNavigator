@@ -63,6 +63,14 @@ export function activate(context: vscode.ExtensionContext) {
     //vscode.window.showInformationMessage(`Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`);
   });
 
+  vscode.commands.registerCommand("grandfilenavigator.jumpBackwards", () =>
+    NavigationHistory.moveToPreviousPosition()
+  );
+
+  vscode.commands.registerCommand("grandfilenavigator.jumpForwards", () =>
+    NavigationHistory.moveToNextPosition()
+  );
+
   registerWebviewVisualization(context);
   registerWebviewPanelHistogram(context);
 
@@ -87,7 +95,8 @@ export function activate(context: vscode.ExtensionContext) {
     NavigationHistory.updateLocation();
     histogramViewProvider.updateNavigation(
       NavigationHistory.hasPreviousPosition(),
-      NavigationHistory.hasNextPosition()
+      NavigationHistory.hasNextPosition(),
+      NavigationHistory.getPreviousRanges()
     );
 
     if (LocationTracker.shouldUpdateTracking()) {
@@ -102,7 +111,8 @@ export function activate(context: vscode.ExtensionContext) {
     NavigationHistory.updateLocation();
     histogramViewProvider.updateNavigation(
       NavigationHistory.hasPreviousPosition(),
-      NavigationHistory.hasNextPosition()
+      NavigationHistory.hasNextPosition(),
+      NavigationHistory.getPreviousRanges()
     );
 
     if (LocationTracker.shouldUpdateTracking()) {

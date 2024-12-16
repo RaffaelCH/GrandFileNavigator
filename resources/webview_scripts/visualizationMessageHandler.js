@@ -48,6 +48,9 @@
           message.hasNext
         );
         break;
+      case "updatePreviousLocations":
+        localStorage.setItem("previousRanges", message.previousRanges);
+        insertHistogram();
     }
   });
 })();

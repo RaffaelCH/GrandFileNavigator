@@ -6,6 +6,7 @@ import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
 import { adaptImportanceArray } from "./adapters/hotspotsGrouper.js";
 import { NavigationHistory } from "./NavigationHistory.js";
+import FileLocation from "./sidebar_types/FileLocation.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -73,7 +74,11 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  public async updateNavigation(hasPrevious: boolean, hasNext: boolean) {
+  public async updateNavigation(
+    hasPrevious: boolean,
+    hasNext: boolean,
+    previousRanges: vscode.Range[]
+  ) {
     if (!this._view) {
       return;
     }
@@ -82,6 +87,11 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
       command: "updateNavigationButtons",
       hasPrevious: hasPrevious,
       hasNext: hasNext,
+    });
+
+    this._view.webview.postMessage({
+      command: "updatePreviousLocations",
+      previousRanges: JSON.stringify(previousRanges),
     });
   }
 

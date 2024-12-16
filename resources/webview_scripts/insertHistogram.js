@@ -6,6 +6,9 @@ function insertHistogram() {
   let histogramNodesJson = localStorage.getItem("histogramNodes");
   let histogramNodes = JSON.parse(histogramNodesJson);
 
+  let previousRangesJson = localStorage.getItem("previousRanges");
+  let previousRanges = JSON.parse(previousRangesJson);
+
   let errorMessageContainer = document.getElementById("errorMessage");
   let visualizationContainer = document.getElementById(
     "visualization-container"
@@ -68,6 +71,22 @@ function insertHistogram() {
       `;
     })
     .join("");
+
+  console.log(previousRangesJson);
+
+  previousRanges.map((previousRange, index) => {
+    let yPosition =
+      (svgHeight - 5) *
+      (previousRange[0].line /
+        histogramNodes[histogramNodes.length - 1].endLine);
+    let positionIndicatorHtml = `<circle cx="${
+      svgWidth * 0.95
+    }" cy="${yPosition}" r="8" fill="lightblue"></circle>
+    <text x="${svgWidth * 0.9 + 7}" y="${
+      yPosition + 5
+    }" fill="black" font-size="16">${index + 1}</text>`;
+    barsHtml += positionIndicatorHtml;
+  });
 
   visualizationContainer.innerHTML = barsHtml;
 
