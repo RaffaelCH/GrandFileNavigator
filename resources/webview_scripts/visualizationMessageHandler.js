@@ -48,9 +48,9 @@
           message.hasNext
         );
         break;
-      case "updatePreviousLocations":
+      case "updateLocationIndicators":
         localStorage.setItem("previousRanges", message.previousRanges);
-        insertHistogram();
+        insertPositionHistoryIndicators();
     }
   });
 })();

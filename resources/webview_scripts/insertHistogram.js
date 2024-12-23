@@ -6,9 +6,6 @@ function insertHistogram() {
   let histogramNodesJson = localStorage.getItem("histogramNodes");
   let histogramNodes = JSON.parse(histogramNodesJson);
 
-  let previousRangesJson = localStorage.getItem("previousRanges");
-  let previousRanges = JSON.parse(previousRangesJson);
-
   let errorMessageContainer = document.getElementById("errorMessage");
   let visualizationContainer = document.getElementById(
     "visualization-container"
@@ -72,23 +69,9 @@ function insertHistogram() {
     })
     .join("");
 
-  console.log(previousRangesJson);
-
-  previousRanges.map((previousRange, index) => {
-    let yPosition =
-      (svgHeight - 5) *
-      (previousRange[0].line /
-        histogramNodes[histogramNodes.length - 1].endLine);
-    let positionIndicatorHtml = `<circle cx="${
-      svgWidth * 0.95
-    }" cy="${yPosition}" r="8" fill="lightblue"></circle>
-    <text x="${svgWidth * 0.95 - 4}" y="${
-      yPosition + 6
-    }" fill="black" font-size="16">${index + 1}</text>`;
-    barsHtml += positionIndicatorHtml;
-  });
-
   visualizationContainer.innerHTML = barsHtml;
+
+  insertPositionHistoryIndicators();
 
   visualizationContainer.addEventListener("click", function (event) {
     var index = Math.floor(event.offsetY / barHeight); // event.target.attributes.index.value;
@@ -99,6 +82,42 @@ function insertHistogram() {
       endLine: histogramNode.endLine,
     });
   });
+}
+
+function insertPositionHistoryIndicators() {
+  let histogramNodesJson = localStorage.getItem("histogramNodes");
+  let histogramNodes = JSON.parse(histogramNodesJson);
+
+  let previousRangesJson = localStorage.getItem("previousRanges");
+  let previousRanges = JSON.parse(previousRangesJson);
+
+  var positionIndicatorsHtml = "";
+
+  previousRanges.map((previousRange, index) => {
+    let yPosition =
+      (svgHeight - 5) *
+      (previousRange[0].line /
+        histogramNodes[histogramNodes.length - 1].endLine);
+    let positionIndicatorHtml = `<circle class="previous-range-indicator" cx="${
+      svgWidth * 0.95
+    }" cy="${yPosition}" r="8" fill="lightblue"></circle>
+    <text  class="previous-range-indicator" x="${svgWidth * 0.95 - 4}" y="${
+      yPosition + 6
+    }" fill="black" font-size="16">${index + 1}</text>`;
+    positionIndicatorsHtml += positionIndicatorHtml;
+  });
+
+  var visualizationContainer = document.getElementById(
+    "visualization-container"
+  );
+
+  const rangeIndicators = Array.from(
+    document.getElementsByClassName("previous-range-indicator")
+  );
+  for (let i = 0; i < rangeIndicators.length; ++i) {
+    rangeIndicators[i].remove();
+  }
+  visualizationContainer.innerHTML += positionIndicatorsHtml;
 }
 
 function insertHistogramVisibleRangeIndicator() {

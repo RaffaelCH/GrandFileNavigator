@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { LocationTracker } from "./LocationTracker";
 import { revealLocation } from "./revealLocation";
+import { start } from "repl";
 
 class FileLocation {
   constructor(
@@ -106,12 +107,54 @@ export class NavigationHistory {
       return [];
     }
 
-    var startIndex = Math.max(0, this.navigationHistoryIndex - locNumber);
-    var recentPositions = this.navigationHistory.slice(
-      startIndex,
-      this.navigationHistoryIndex
+    let relevantPositions = this.navigationHistory.slice(
+      0,
+      this.navigationHistoryIndex + 1
     );
-    return recentPositions.reverse().map((el) => el.range);
+
+    let currentLocation = this.getCurrentLocation();
+    var currentPositionInHistory = this.tryMergeLocations(
+      currentLocation,
+      this.navigationHistory[this.navigationHistoryIndex]
+    );
+
+    if (currentPositionInHistory) {
+      relevantPositions = relevantPositions.slice(
+        0,
+        relevantPositions.length - 1
+      );
+    }
+
+    var startIndex = Math.max(0, relevantPositions.length - locNumber);
+
+    return relevantPositions
+      .slice(startIndex)
+      .reverse()
+      .map((loc) => loc.range);
+
+    // let locations = this.navigationHistory.slice(
+    //   0,
+    //   this.navigationHistoryIndex + 1
+    // );
+
+    // let addIntermediateLocation = this.tryMergeLocations(
+    //   this.intermediateLocation,
+    //   this.navigationHistory[this.navigationHistoryIndex]
+    // );
+    // if (addIntermediateLocation && this.intermediateLocation) {
+    //   locations.push(this.intermediateLocation);
+    // }
+
+    // let currentLocation = this.getCurrentLocation();
+    // locations = locations.filter((location) =>
+    //   this.tryMergeLocations(location, currentLocation)
+    // );
+
+    // var startIndex = Math.max(0, locations.length - locNumber);
+    // return locations
+    //   .slice(startIndex)
+    //   .reverse()
+    //   .map((loc) => loc.range);
   }
 
   public static hasPreviousPosition(): boolean {
