@@ -18,7 +18,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     this.updateNavigation(
       NavigationHistory.hasPreviousPosition(),
       NavigationHistory.hasNextPosition(),
-      NavigationHistory.getPreviousRanges()
+      NavigationHistory.getPreviousRanges(),
+      NavigationHistory.getNextRanges()
     );
     this.updateHoverData();
   }, 100);
@@ -84,7 +85,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public async updateNavigation(
     hasPrevious: boolean,
     hasNext: boolean,
-    previousRanges: vscode.Range[]
+    previousRanges: vscode.Range[],
+    nextRanges: vscode.Range[]
   ) {
     if (!this._view) {
       return;
@@ -99,6 +101,7 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     this._view.webview.postMessage({
       command: "updateLocationIndicators",
       previousRanges: JSON.stringify(previousRanges),
+      nextRanges: JSON.stringify(nextRanges),
     });
   }
 

@@ -91,17 +91,36 @@ function insertPositionHistoryIndicators() {
   let previousRangesJson = localStorage.getItem("previousRanges");
   let previousRanges = JSON.parse(previousRangesJson);
 
+  let nextRangesJson = localStorage.getItem("nextRanges");
+  let nextRanges = JSON.parse(nextRangesJson);
+
   var positionIndicatorsHtml = "";
 
   previousRanges.map((previousRange, index) => {
     let yPosition =
-      (svgHeight - 5) *
-      (previousRange[0].line /
-        histogramNodes[histogramNodes.length - 1].endLine);
-    let positionIndicatorHtml = `<circle class="previous-range-indicator" cx="${
-      svgWidth * 0.95
-    }" cy="${yPosition}" r="8" fill="lightblue"></circle>
-    <text  class="previous-range-indicator" x="${svgWidth * 0.95 - 4}" y="${
+      svgHeight *
+        (previousRange[0].line /
+          histogramNodes[histogramNodes.length - 1].endLine) +
+      7;
+    let positionIndicatorHtml = `<circle class="navigation-range-indicator" cx="${
+      svgWidth - 25
+    }" cy="${yPosition}" r="7" fill="lightblue"></circle>
+    <text  class="navigation-range-indicator" x="${svgWidth - 29}" y="${
+      yPosition + 6
+    }" fill="black" font-size="16">${index + 1}</text>`;
+    positionIndicatorsHtml += positionIndicatorHtml;
+  });
+
+  nextRanges.map((nextRange, index) => {
+    let yPosition =
+      svgHeight *
+        (nextRange[0].line /
+          histogramNodes[histogramNodes.length - 1].endLine) +
+      7;
+    let positionIndicatorHtml = `<circle class="navigation-range-indicator" cx="${
+      svgWidth - 8
+    }" cy="${yPosition}" r="7" fill="lightgreen"></circle>
+    <text  class="navigation-range-indicator" x="${svgWidth - 12}" y="${
       yPosition + 6
     }" fill="black" font-size="16">${index + 1}</text>`;
     positionIndicatorsHtml += positionIndicatorHtml;
@@ -112,7 +131,7 @@ function insertPositionHistoryIndicators() {
   );
 
   const rangeIndicators = Array.from(
-    document.getElementsByClassName("previous-range-indicator")
+    document.getElementsByClassName("navigation-range-indicator")
   );
   for (let i = 0; i < rangeIndicators.length; ++i) {
     rangeIndicators[i].remove();

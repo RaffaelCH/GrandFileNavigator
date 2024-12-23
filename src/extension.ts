@@ -96,7 +96,8 @@ export function activate(context: vscode.ExtensionContext) {
     histogramViewProvider.updateNavigation(
       NavigationHistory.hasPreviousPosition(),
       NavigationHistory.hasNextPosition(),
-      NavigationHistory.getPreviousRanges()
+      NavigationHistory.getPreviousRanges(),
+      NavigationHistory.getNextRanges()
     );
 
     if (LocationTracker.shouldUpdateTracking()) {
@@ -112,7 +113,8 @@ export function activate(context: vscode.ExtensionContext) {
     histogramViewProvider.updateNavigation(
       NavigationHistory.hasPreviousPosition(),
       NavigationHistory.hasNextPosition(),
-      NavigationHistory.getPreviousRanges()
+      NavigationHistory.getPreviousRanges(),
+      NavigationHistory.getNextRanges()
     );
 
     if (LocationTracker.shouldUpdateTracking()) {

@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { LocationTracker } from "./LocationTracker";
 import { revealLocation } from "./revealLocation";
-import { start } from "repl";
 
 class FileLocation {
   constructor(
@@ -101,7 +100,7 @@ export class NavigationHistory {
     }
   }
 
-  // Returns the most recent locations (newest is first).
+  // Returns the most recent locations (ordering: newest is first).
   public static getPreviousRanges(locNumber: number = 3): vscode.Range[] {
     if (this.navigationHistoryIndex < 0) {
       return [];
@@ -115,6 +114,7 @@ export class NavigationHistory {
       this.navigationHistory[this.navigationHistoryIndex]
     );
 
+    // We already are at this position -> ignore.
     if (currentPositionInHistory) {
       --endIndex;
     }
@@ -124,6 +124,30 @@ export class NavigationHistory {
     return this.navigationHistory
       .slice(startIndex, endIndex)
       .reverse()
+      .map((loc) => loc.range);
+  }
+
+  // Returns the next jump locations.
+  public static getNextRanges(locNumber: number = 3): vscode.Range[] {
+    if (this.navigationHistoryIndex < 0) {
+      return [];
+    }
+
+    let startIndex = this.navigationHistoryIndex + 1;
+
+    let currentLocation = this.getCurrentLocation();
+    var currentPositionInHistory = this.tryMergeLocations(
+      currentLocation,
+      this.navigationHistory[startIndex]
+    );
+
+    // We already are at this position -> ignore.
+    if (currentPositionInHistory) {
+      ++startIndex;
+    }
+
+    return this.navigationHistory
+      .slice(startIndex, startIndex + locNumber)
       .map((loc) => loc.range);
   }
 
