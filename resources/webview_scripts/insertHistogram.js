@@ -96,6 +96,7 @@ function insertPositionHistoryIndicators() {
 
   var positionIndicatorsHtml = "";
 
+  // Reverse order of indicators to ensure the newest is always on top.
   previousRanges.reverse().map((previousRange, index) => {
     let yPosition =
       svgHeight *
