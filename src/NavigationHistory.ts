@@ -107,10 +107,7 @@ export class NavigationHistory {
       return [];
     }
 
-    let relevantPositions = this.navigationHistory.slice(
-      0,
-      this.navigationHistoryIndex + 1
-    );
+    let endIndex = this.navigationHistoryIndex + 1;
 
     let currentLocation = this.getCurrentLocation();
     var currentPositionInHistory = this.tryMergeLocations(
@@ -119,42 +116,15 @@ export class NavigationHistory {
     );
 
     if (currentPositionInHistory) {
-      relevantPositions = relevantPositions.slice(
-        0,
-        relevantPositions.length - 1
-      );
+      --endIndex;
     }
 
-    var startIndex = Math.max(0, relevantPositions.length - locNumber);
+    var startIndex = Math.max(0, endIndex - locNumber);
 
-    return relevantPositions
-      .slice(startIndex)
+    return this.navigationHistory
+      .slice(startIndex, endIndex)
       .reverse()
       .map((loc) => loc.range);
-
-    // let locations = this.navigationHistory.slice(
-    //   0,
-    //   this.navigationHistoryIndex + 1
-    // );
-
-    // let addIntermediateLocation = this.tryMergeLocations(
-    //   this.intermediateLocation,
-    //   this.navigationHistory[this.navigationHistoryIndex]
-    // );
-    // if (addIntermediateLocation && this.intermediateLocation) {
-    //   locations.push(this.intermediateLocation);
-    // }
-
-    // let currentLocation = this.getCurrentLocation();
-    // locations = locations.filter((location) =>
-    //   this.tryMergeLocations(location, currentLocation)
-    // );
-
-    // var startIndex = Math.max(0, locations.length - locNumber);
-    // return locations
-    //   .slice(startIndex)
-    //   .reverse()
-    //   .map((loc) => loc.range);
   }
 
   public static hasPreviousPosition(): boolean {
