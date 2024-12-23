@@ -96,7 +96,7 @@ function insertPositionHistoryIndicators() {
 
   var positionIndicatorsHtml = "";
 
-  previousRanges.map((previousRange, index) => {
+  previousRanges.reverse().map((previousRange, index) => {
     let yPosition =
       svgHeight *
         (previousRange[0].line /
@@ -107,11 +107,11 @@ function insertPositionHistoryIndicators() {
     }" cy="${yPosition}" r="7" fill="lightblue"></circle>
     <text  class="navigation-range-indicator" x="${svgWidth - 29}" y="${
       yPosition + 6
-    }" fill="black" font-size="16">${index + 1}</text>`;
+    }" fill="black" font-size="16">${previousRanges.length - index}</text>`;
     positionIndicatorsHtml += positionIndicatorHtml;
   });
 
-  nextRanges.map((nextRange, index) => {
+  nextRanges.reverse().map((nextRange, index) => {
     let yPosition =
       svgHeight *
         (nextRange[0].line /
@@ -122,7 +122,7 @@ function insertPositionHistoryIndicators() {
     }" cy="${yPosition}" r="7" fill="lightgreen"></circle>
     <text  class="navigation-range-indicator" x="${svgWidth - 12}" y="${
       yPosition + 6
-    }" fill="black" font-size="16">${index + 1}</text>`;
+    }" fill="black" font-size="16">${nextRanges.length - index}</text>`;
     positionIndicatorsHtml += positionIndicatorHtml;
   });
 
