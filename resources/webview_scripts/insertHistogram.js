@@ -82,8 +82,8 @@ function insertHistogram() {
     let positionIndicatorHtml = `<circle cx="${
       svgWidth * 0.95
     }" cy="${yPosition}" r="8" fill="lightblue"></circle>
-    <text x="${svgWidth * 0.9 + 7}" y="${
-      yPosition + 5
+    <text x="${svgWidth * 0.95 - 4}" y="${
+      yPosition + 6
     }" fill="black" font-size="16">${index + 1}</text>`;
     barsHtml += positionIndicatorHtml;
   });
