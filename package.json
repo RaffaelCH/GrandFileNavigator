@@ -26,6 +26,14 @@
         "title": "Send Main View Location To Visualization"
       },
       {
+        "command": "grandfilenavigator.jumpBackwards",
+        "title": "Jump to last relevant location"
+      },
+      {
+        "command": "grandfilenavigator.jumpForwards",
+        "title": "Jump to next relevant location"
+      },
+      {
         "command": "hotspots.refreshEntry",
         "title": "Refresh",
         "icon": {

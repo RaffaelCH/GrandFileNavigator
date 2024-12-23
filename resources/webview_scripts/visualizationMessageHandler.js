@@ -48,6 +48,10 @@
           message.hasNext
         );
         break;
+      case "updateLocationIndicators":
+        localStorage.setItem("previousRanges", message.previousRanges);
+        localStorage.setItem("nextRanges", message.nextRanges);
+        insertPositionHistoryIndicators();
     }
   });
 })();

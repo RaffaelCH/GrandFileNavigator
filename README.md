@@ -12,7 +12,11 @@ To package the extension, execute `npm install -g @vscode/vsce` and then `vsce p
 
 ## Features
 
-Here be features.
+### Navigation
+
+Two commands to jump between tracked locations can be bound to key combinations: grandfilenavigator.jumpBackwards and grandfilenavigator.jumpForwards
+They execute the same command as clicking the backwards/forwards buttons in the visualization.
+The jump locations are also visible in the histogram sidebar: lightblue circles for previous locations, green ones for next locations (if any).
 
 ## Requirements
 

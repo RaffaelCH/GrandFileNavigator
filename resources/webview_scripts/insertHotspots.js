@@ -2,8 +2,6 @@
 // const svgHeight = 700; // containerRect.height;
 // const svgWidth = 260; // containerRect.width;
 
-const { text } = require("stream/consumers");
-
 function insertHotspots() {
   let symbolNodesJson = localStorage.getItem("hotspotNodes");
   let symbolNodes = JSON.parse(symbolNodesJson);
