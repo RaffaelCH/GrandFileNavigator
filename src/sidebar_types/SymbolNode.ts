@@ -1,4 +1,4 @@
-import FileLocation from "./FileLocation";
+import FileLocation from "./fileLocation";
 import { NodeType } from "./NodeType";
 
 export default class SymbolNode {
