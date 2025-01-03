@@ -3,7 +3,7 @@
   "displayName": "GrandFileNavigator",
   "description": "",
   "publisher": "grandFileNavigator",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.91.0"
   },
@@ -124,6 +124,7 @@
     }
   ],
   "scripts": {
+    "build": "tsc",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { getFileRangeData } from "./location-tracking";
-import SidebarNode from "./sidebar_types/SidebarNode";
+import SidebarNode from "./sidebar_types/sidebarNode";
 import { NodeType } from "./sidebar_types/NodeType";
 
 export async function getFileHistogramData(

@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { RangeData, PositionHistory } from "./location-tracking";
 import * as path from "path"; // Using Node.js path module
 import { existsSync, writeFileSync } from "fs";
+import { logMessage } from "./extension";
 
 export interface EnrichedHotspot {
   filePath: string;
@@ -75,6 +76,15 @@ export async function enrichHotspotsByType(
         )
     );
   });
+  
+/*
+  enrichedHotspots.forEach((hotspot) => {
+    logMessage(
+      context.storageUri || context.globalStorageUri,
+      `New hotspot saved: File=${hotspot.filePath}, StartLine=${hotspot.rangeData.startLine}, EndLine=${hotspot.rangeData.endLine}, Importance=${hotspot.importance}`
+    );
+  });
+*/
 
   await saveHotspotData(context, enrichedHotspots, importanceArray);
 
