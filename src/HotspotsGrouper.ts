@@ -1,63 +1,77 @@
+/* 
+
+an importance array element is unique by this composite key:
+file path, range start line, range end line
+
+importance array element shares 
+(fileName, startLine, endLine, timeSpent, importance) 
+and differs by 
+(symbolName, symbolKindName)
+
+*/
+
 import * as vscode from "vscode";
 import { RangeData, PositionHistory } from "./location-tracking";
-import * as path from "path"; // Using Node.js path module
+import * as path from "path";
 import { existsSync, writeFileSync } from "fs";
 import { logMessage } from "./extension";
 
-export interface EnrichedHotspot {
+
+interface BasicHotspot {
   filePath: string;
+  startLine: number;
+  endLine: number;
+  totalDuration: number; // Summed from duplicates
+}
+
+
+export interface EnrichedHotspot {
+  filePath: string; // Absolute file path
   rangeData: RangeData;
   symbols: Array<{
-    symbolType: number; // Corresponds to vscode.SymbolKind
+    symbolType: number; 
     symbolName: string;
-    symbolLine: number; // Line number where the symbol was found
+    symbolLine: number;
     symbolEndLine: number;
   }>;
-  timeSpent: number;
+  timeSpent: number; 
   importance: number;
 }
+
 
 export class ImportanceElement {
   constructor(
     public importance: number,
-    public fileName: string, // TODO: Use relative path?
-    public hotspotRangeStartLine: number, // TODO: Remove?
-    public hotspotsRangeEndLine: number, // TODO: Remove?
+    public fileName: string,
+    public hotspotRangeStartLine: number,
+    public hotspotsRangeEndLine: number,
     public timeSpent: number,
     public symbolName: string,
     public symbolKindName: string,
-    public symbolLine: number, // line where symbol is defined
-    public symbolEndLine: number // endLine of symbol definition range
+    public symbolLine: number,
+    public symbolEndLine: number
   ) {}
 }
 
 const enrichedHotspotsFilename = "enrichedHotspots.json";
 const importanceArrayFilename = "importanceArray.json";
-let importanceArray: ImportanceElement[] = []; // Global 2D array with line number
+let importanceArray: ImportanceElement[] = [];
+
+/*
+ 1) Merge hotspots from PositionHistory.
+ 2) Enrich them by symbol lookups.
+ 3) Flatten into an importance array.
+ 4) Save to JSON files in the extension's FS.
+ */
 
 export async function enrichHotspotsByType(
   hotspots: PositionHistory,
   context: vscode.ExtensionContext
 ): Promise<EnrichedHotspot[]> {
-  const enrichedHotspots: EnrichedHotspot[] = [];
-  const symbolTypeCounts: { [key: string]: number } = {};
+  const mergedHotspots: BasicHotspot[] = collectAndMergeAllHotspots(hotspots);
 
-  const workspaceFolders = vscode.workspace.workspaceFolders;
-  if (!workspaceFolders || workspaceFolders.length === 0) {
-    vscode.window.showErrorMessage("No workspace folder found.");
-    return [];
-  }
-
-  const workspaceRoot = workspaceFolders[0].uri.fsPath;
-  await traverseHotspots(
-    hotspots,
-    workspaceRoot,
-    enrichedHotspots,
-    symbolTypeCounts
-  );
-
-  enrichedHotspots.sort(
-    (a, b) => a.rangeData.startLine - b.rangeData.startLine
+  const enrichedHotspots: EnrichedHotspot[] = await resolveSymbolsAndEnrichHotspots(
+    mergedHotspots
   );
 
   importanceArray = enrichedHotspots.flatMap((hotspot) => {
@@ -68,68 +82,199 @@ export async function enrichHotspotsByType(
           path.basename(hotspot.filePath),
           hotspot.rangeData.startLine,
           hotspot.rangeData.endLine,
-          hotspot.timeSpent, // Time spent in hotspot
-          symbolDetail.symbolName, // Actual symbol (e.g., "FlywayAutoConfigurationTests")
-          getSymbolKindName(symbolDetail.symbolType), // Symbol type (e.g., "Class", "Method")
-          symbolDetail.symbolLine, // Line number where the symbol was encountered
+          hotspot.timeSpent,
+          symbolDetail.symbolName,
+          getSymbolKindName(symbolDetail.symbolType),
+          symbolDetail.symbolLine,
           symbolDetail.symbolEndLine
         )
     );
   });
-  
-/*
-  enrichedHotspots.forEach((hotspot) => {
-    logMessage(
-      context.storageUri || context.globalStorageUri,
-      `New hotspot saved: File=${hotspot.filePath}, StartLine=${hotspot.rangeData.startLine}, EndLine=${hotspot.rangeData.endLine}, Importance=${hotspot.importance}`
-    );
-  });
-*/
 
   await saveHotspotData(context, enrichedHotspots, importanceArray);
+
+  logMessage(
+    context.storageUri || context.globalStorageUri,
+    `[enrichHotspotsByType] Done. importanceArray length=${importanceArray.length}`
+  );
 
   return enrichedHotspots;
 }
 
-// Helper function to save enrichedHotspots and importanceArray
-async function saveHotspotData(
-  context: vscode.ExtensionContext,
-  enrichedHotspots: EnrichedHotspot[],
-  importanceArray: ImportanceElement[]
-) {
-  try {
-    const storageUri = context.storageUri || context.globalStorageUri;
 
-    if (storageUri) {
-      // Save enrichedHotspots
-      const enrichedHotspotsFilePath = path.join(
-        storageUri.fsPath,
-        enrichedHotspotsFilename
-      );
-      writeFileSync(
-        enrichedHotspotsFilePath,
-        JSON.stringify(enrichedHotspots, null, 2)
-      );
+function collectAndMergeAllHotspots(hotspots: PositionHistory): BasicHotspot[] {
+  const mergedMap: Map<string, BasicHotspot> = new Map();
 
-      // Save importanceArray
-      const importanceFilePath = path.join(
-        storageUri.fsPath,
-        importanceArrayFilename
-      );
-      writeFileSync(
-        importanceFilePath,
-        JSON.stringify(importanceArray, null, 2)
-      );
+  let workspaceRoot = "";
+  const ws = vscode.workspace.workspaceFolders;
+  if (ws && ws.length > 0) {
+    workspaceRoot = ws[0].uri.fsPath;
+  }
 
-      //vscode.window.showInformationMessage("Enriched Hotspots and Importance Array have been written to storage.");
-    } else {
-      vscode.window.showErrorMessage("Unable to access storage location.");
+  function isRangeDataArray(arr: unknown): arr is RangeData[] {
+    if (!Array.isArray(arr) || arr.length === 0) {
+      return false;
     }
-  } catch (error) {
-    vscode.window.showErrorMessage(
-      `Error saving data: ${(error as Error).message}`
+    const firstElement = arr[0];
+    return (
+      typeof firstElement === "object" &&
+      firstElement !== null &&
+      "startLine" in firstElement &&
+      "endLine" in firstElement &&
+      "totalDuration" in firstElement
     );
   }
+
+  function traverseHistory(history: PositionHistory, parentPath: string) {
+    for (const key of Object.keys(history)) {
+      const value = history[key];
+
+      const nextFullPath = path.join(parentPath, key);
+
+      if (isRangeDataArray(value)) {
+        for (const range of value) {
+          if (!existsSync(nextFullPath)) {
+            continue;
+          }
+
+          const absoluteFilePath = path.resolve(nextFullPath);
+          const uniqueKey = `${absoluteFilePath}:${range.startLine}-${range.endLine}`;
+
+          const existing = mergedMap.get(uniqueKey);
+          if (existing) {
+            existing.totalDuration += range.totalDuration;
+          } else {
+            mergedMap.set(uniqueKey, {
+              filePath: absoluteFilePath,
+              startLine: range.startLine,
+              endLine: range.endLine,
+              totalDuration: range.totalDuration,
+            });
+          }
+        }
+      } else if (value && typeof value === "object") {
+        traverseHistory(value as PositionHistory, nextFullPath);
+      }
+    }
+  }
+
+  traverseHistory(hotspots, workspaceRoot);
+  return Array.from(mergedMap.values());
+}
+
+
+async function resolveSymbolsAndEnrichHotspots(
+  basicHotspots: BasicHotspot[]
+): Promise<EnrichedHotspot[]> {
+  // Group by filePath and do one DocumentSymbolProvider call per file
+  const byFileMap: Map<string, BasicHotspot[]> = new Map();
+  for (const hotspot of basicHotspots) {
+    const arr = byFileMap.get(hotspot.filePath) || [];
+    arr.push(hotspot);
+    byFileMap.set(hotspot.filePath, arr);
+  }
+
+  const enrichedResults: EnrichedHotspot[] = [];
+
+  for (const [filePath, hotspotsInFile] of byFileMap.entries()) {
+    if (!existsSync(filePath)) {
+      continue;
+    }
+
+    let symbols: vscode.DocumentSymbol[] = [];
+    try {
+      const docUri = vscode.Uri.file(filePath);
+      const document = await vscode.workspace.openTextDocument(docUri);
+      const docSymbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+        "vscode.executeDocumentSymbolProvider",
+        document.uri
+      );
+      symbols = docSymbols || [];
+    } catch (err) {
+      continue;
+    }
+
+    for (const hotspot of hotspotsInFile) {
+      const rangeData = new RangeData(
+        hotspot.startLine,
+        hotspot.endLine,
+        hotspot.totalDuration
+      );
+      const matchingSymbols = findAllMatchingSymbols(symbols, rangeData);
+
+      const symbolDetails = matchingSymbols.map((ms) => ({
+        symbolType: ms.kind,
+        symbolName: ms.name,
+        symbolLine: ms.range.start.line,
+        symbolEndLine: ms.range.end.line,
+      }));
+
+      const importance = calculateImportance(symbolDetails, hotspot.totalDuration);
+
+      enrichedResults.push({
+        filePath,
+        rangeData,
+        symbols: symbolDetails,
+        timeSpent: hotspot.totalDuration,
+        importance,
+      });
+    }
+  }
+
+  return enrichedResults;
+}
+
+
+function findAllMatchingSymbols(
+  allSymbols: vscode.DocumentSymbol[],
+  rangeData: RangeData
+): vscode.DocumentSymbol[] {
+  const matchingSymbols: vscode.DocumentSymbol[] = [];
+
+  function recurse(symbols: vscode.DocumentSymbol[]) {
+    for (const sym of symbols) {
+      const symStart = sym.range.start.line;
+      const symEnd = sym.range.end.line;
+
+      // Overlap check
+      if (symStart <= rangeData.endLine && symEnd >= rangeData.startLine) {
+        matchingSymbols.push(sym);
+      }
+      if (sym.children && sym.children.length > 0) {
+        recurse(sym.children);
+      }
+    }
+  }
+
+  recurse(allSymbols);
+  return matchingSymbols;
+}
+
+
+function calculateImportance(
+  symbols: Array<{ symbolType: number; symbolName: string }>,
+  timeSpent: number
+): number {
+  const symbolWeights: { [key: number]: number } = {
+    [vscode.SymbolKind.Class]: 10,
+    [vscode.SymbolKind.Interface]: 9,
+    [vscode.SymbolKind.Enum]: 8,
+    [vscode.SymbolKind.Constructor]: 7,
+    [vscode.SymbolKind.Method]: 6,
+    [vscode.SymbolKind.Field]: 4,
+    [vscode.SymbolKind.Property]: 4,
+    [vscode.SymbolKind.Variable]: 3,
+    [vscode.SymbolKind.EnumMember]: 5,
+    [vscode.SymbolKind.Package]: 6,
+    [vscode.SymbolKind.Namespace]: 6,
+  };
+
+  const symbolImportance = symbols.reduce((acc, s) => {
+    return acc + (symbolWeights[s.symbolType] || 1);
+  }, 0);
+
+  const timeFactor = 1 + Math.log(timeSpent + 1);
+  return symbolImportance * timeFactor;
 }
 
 function getSymbolKindName(symbolKind: number): string {
@@ -161,185 +306,60 @@ function getSymbolKindName(symbolKind: number): string {
   }
 }
 
+
+async function saveHotspotData(
+  context: vscode.ExtensionContext,
+  enrichedHotspots: EnrichedHotspot[],
+  importanceArray: ImportanceElement[]
+) {
+  try {
+    const storageUri = context.storageUri || context.globalStorageUri;
+    if (!storageUri) {
+      vscode.window.showErrorMessage("Unable to access storage location.");
+      return;
+    }
+
+    const enrichedHotspotsFilePath = path.join(
+      storageUri.fsPath,
+      enrichedHotspotsFilename
+    );
+    writeFileSync(
+      enrichedHotspotsFilePath,
+      JSON.stringify(enrichedHotspots, null, 2)
+    );
+
+    const importanceFilePath = path.join(
+      storageUri.fsPath,
+      importanceArrayFilename
+    );
+    writeFileSync(
+      importanceFilePath,
+      JSON.stringify(importanceArray, null, 2)
+    );
+  } catch (error) {
+    vscode.window.showErrorMessage(
+      `Error saving data: ${(error as Error).message}`
+    );
+  }
+}
+
+
 export function getImportanceArray(): ImportanceElement[] {
   return importanceArray;
 }
 
-// TODO: Think about better ways to combine the entries, esp. at earlier stages.
+
 export function getCondensedImportanceArray(): ImportanceElement[] {
-  let condensed = new Map<string, ImportanceElement>();
+  const condensed = new Map<string, ImportanceElement>();
   importanceArray.forEach((element) => {
-    let key = element.symbolName + element.symbolLine;
-    let existingElement = condensed.get(key);
-    if (existingElement) {
-      existingElement.importance += element.importance;
-      existingElement.timeSpent += element.timeSpent;
+    const key = element.symbolName + element.symbolLine + element.fileName;
+    const existing = condensed.get(key);
+    if (existing) {
+      existing.importance += element.importance;
+      existing.timeSpent += element.timeSpent;
     } else {
       condensed.set(key, { ...element });
     }
   });
-
   return Array.from(condensed.values());
-}
-
-const symbolWeights: { [key: number]: number } = {
-  [vscode.SymbolKind.Class]: 10,
-  [vscode.SymbolKind.Interface]: 9,
-  [vscode.SymbolKind.Enum]: 8,
-  [vscode.SymbolKind.Constructor]: 7,
-  [vscode.SymbolKind.Method]: 6,
-  [vscode.SymbolKind.Field]: 4,
-  [vscode.SymbolKind.Property]: 4,
-  [vscode.SymbolKind.Variable]: 3,
-  [vscode.SymbolKind.EnumMember]: 5,
-  [vscode.SymbolKind.Package]: 6,
-  [vscode.SymbolKind.Namespace]: 6,
-};
-
-function calculateImportance(
-  symbols: Array<{ symbolType: number; symbolName: string }>,
-  timeSpent: number
-): number {
-  const symbolImportance = symbols.reduce((total, symbol) => {
-    const weight = symbolWeights[symbol.symbolType] || 1;
-    return total + weight;
-  }, 0);
-
-  const timeFactor = 1 + Math.log(timeSpent + 1);
-  return symbolImportance * timeFactor;
-}
-
-async function traverseHotspots(
-  positionHistory: PositionHistory,
-  parentPath: string,
-  enrichedHotspots: EnrichedHotspot[],
-  symbolTypeCounts: { [key: string]: number }
-) {
-  for (const [key, value] of Object.entries(positionHistory)) {
-    const fullPath = existsSync(key) ? key : path.join(parentPath, key);
-
-    if (value instanceof PositionHistory) {
-      await traverseHotspots(
-        value,
-        fullPath,
-        enrichedHotspots,
-        symbolTypeCounts
-      );
-    } else if (
-      Array.isArray(value) &&
-      value.length > 0 &&
-      value[0] instanceof RangeData
-    ) {
-      try {
-        const resolvedFilePath = vscode.Uri.file(fullPath);
-        if (!existsSync(resolvedFilePath.fsPath)) {
-          continue;
-        }
-
-        const document = await vscode.workspace.openTextDocument(
-          resolvedFilePath
-        );
-
-        // TODO: Add caching.
-        const symbols = await vscode.commands.executeCommand<
-          vscode.DocumentSymbol[]
-        >("vscode.executeDocumentSymbolProvider", document.uri);
-
-        if (symbols) {
-          for (const rangeData of value) {
-            const matchingSymbols = await findAllMatchingSymbols(
-              symbols,
-              rangeData,
-              document
-            );
-
-            if (matchingSymbols.length > 0) {
-              const symbolDetails = matchingSymbols.map((matchingSymbol) => ({
-                symbolType: matchingSymbol.kind,
-                symbolName: matchingSymbol.name,
-                symbolLine: matchingSymbol.range.start.line, // Capture the line number where the symbol starts
-                symbolEndLine: matchingSymbol.range.end.line,
-              }));
-
-              const importance = calculateImportance(
-                symbolDetails,
-                rangeData.totalDuration
-              );
-
-              enrichedHotspots.push({
-                filePath: resolvedFilePath.fsPath,
-                rangeData,
-                symbols: symbolDetails,
-                timeSpent: rangeData.totalDuration,
-                importance,
-              });
-            }
-          }
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          vscode.window.showErrorMessage(
-            `Error opening file ${fullPath}: ${error.message}`
-          );
-        } else {
-          vscode.window.showErrorMessage(`Error opening file: ${error}`);
-        }
-      }
-    }
-  }
-}
-
-async function findAllMatchingSymbols(
-  symbols: vscode.DocumentSymbol[],
-  rangeData: RangeData,
-  document: vscode.TextDocument
-): Promise<vscode.DocumentSymbol[]> {
-  const matchingSymbols: vscode.DocumentSymbol[] = [];
-
-  function isCommentLine(line: string): boolean {
-    return (
-      line.trim().startsWith("//") ||
-      line.trim().startsWith("/*") ||
-      line.trim().startsWith("*")
-    );
-  }
-
-  async function findSymbols(symbols: vscode.DocumentSymbol[]) {
-    for (const symbol of symbols) {
-      let symbolStartLine = symbol.range.start.line;
-      const symbolEndLine = symbol.range.end.line;
-
-      // Adjust symbolStartLine to skip comments
-      while (symbolStartLine <= symbolEndLine) {
-        const lineText = document.lineAt(symbolStartLine).text;
-        if (!isCommentLine(lineText)) {
-          break;
-        }
-        symbolStartLine++;
-      }
-
-      const correctedStartPosition = new vscode.Position(symbolStartLine, 0);
-      const correctedEndPosition = new vscode.Position(
-        symbolEndLine,
-        symbol.range.end.character
-      );
-
-      if (
-        correctedStartPosition.line <= rangeData.endLine &&
-        correctedEndPosition.line >= rangeData.startLine
-      ) {
-        matchingSymbols.push({
-          ...symbol,
-          range: new vscode.Range(correctedStartPosition, correctedEndPosition),
-        });
-      }
-
-      if (symbol.children) {
-        await findSymbols(symbol.children);
-      }
-    }
-  }
-
-  await findSymbols(symbols);
-  return matchingSymbols;
 }
