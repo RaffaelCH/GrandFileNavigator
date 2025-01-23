@@ -105,7 +105,7 @@ function insertPositionHistoryIndicators() {
       7;
     let positionIndicatorHtml = `<circle class="navigation-range-indicator" cx="${
       svgWidth - 25
-    }" cy="${yPosition}" r="8" fill="lightblue"></circle>
+    }" cy="${yPosition}" r="8" fill="white"></circle>
     <text  class="navigation-range-indicator" x="${svgWidth - 29}" y="${
       yPosition + 6
     }" fill="black" font-size="16">${previousRanges.length - index}</text>`;
@@ -120,7 +120,7 @@ function insertPositionHistoryIndicators() {
       7;
     let positionIndicatorHtml = `<circle class="navigation-range-indicator" cx="${
       svgWidth - 8
-    }" cy="${yPosition}" r="8" fill="lightgreen"></circle>
+    }" cy="${yPosition}" r="8" fill="magenta"></circle>
     <text  class="navigation-range-indicator" x="${svgWidth - 12}" y="${
       yPosition + 6
     }" fill="black" font-size="16">${nextRanges.length - index}</text>`;
