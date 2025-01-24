@@ -6,7 +6,6 @@ import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
 import { adaptImportanceArray } from "./adapters/hotspotsGrouper.js";
 import { NavigationHistory } from "./NavigationHistory.js";
-import FileLocation from "./sidebar_types/fileLocation.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";

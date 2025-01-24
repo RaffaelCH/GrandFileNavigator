@@ -1,4 +1,4 @@
-import FileLocation from "./fileLocation";
+import FileLocation from "./FileLocation";
 import { NodeType } from "./NodeType";
 
 export default class SidebarNode {
