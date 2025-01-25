@@ -289,8 +289,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 			</head>
 			<body style="width:90%; height:95%; overflow-x: hidden; overflow-y: auto; padding: 10px;" >
         <div style="margin: 10px; display: flex; justify-content: space-around; flex-direction: row;">
-          <button id="nav-button-backward" onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
-          <button id="nav-button-forward" onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
+          <button id="nav-button-backward" style="background-color: white; color: black;"  onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
+          <button id="nav-button-forward" style="background-color: magenta; color: black;" onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
         </div>
         <div style="display: flex; justify-content: space-around; flex-direction: column;">
           <button onclick="vscodeApi.postMessage({command: 'switchVisualization'})">Switch Visualization</button>
