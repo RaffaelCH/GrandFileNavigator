@@ -101,7 +101,10 @@ export class NavigationHistory {
   }
 
   // Returns the most recent locations (ordering: newest is first).
-  public static getPreviousRanges(locNumber: number = 3): vscode.Range[] {
+  public static getPreviousRanges(
+    locNumber: number = 3,
+    currentEditorOnly = true
+  ): (vscode.Range | null)[] {
     if (this.navigationHistoryIndex < 0) {
       return [];
     }
@@ -124,11 +127,22 @@ export class NavigationHistory {
     return this.navigationHistory
       .slice(startIndex, endIndex)
       .reverse()
-      .map((loc) => loc.range);
+      .map((loc) => {
+        if (
+          !currentEditorOnly ||
+          loc.relativePath === currentLocation?.relativePath
+        ) {
+          return loc.range;
+        }
+        return null;
+      });
   }
 
   // Returns the next jump locations.
-  public static getNextRanges(locNumber: number = 3): vscode.Range[] {
+  public static getNextRanges(
+    locNumber: number = 3,
+    currentEditorOnly = true
+  ): (vscode.Range | null)[] {
     if (this.navigationHistoryIndex < 0) {
       return [];
     }
@@ -148,7 +162,15 @@ export class NavigationHistory {
 
     return this.navigationHistory
       .slice(startIndex, startIndex + locNumber)
-      .map((loc) => loc.range);
+      .map((loc) => {
+        if (
+          !currentEditorOnly ||
+          loc.relativePath === currentLocation?.relativePath
+        ) {
+          return loc.range;
+        }
+        return null;
+      });
   }
 
   public static hasPreviousPosition(): boolean {

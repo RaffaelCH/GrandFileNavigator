@@ -84,8 +84,8 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public async updateNavigation(
     hasPrevious: boolean,
     hasNext: boolean,
-    previousRanges: vscode.Range[],
-    nextRanges: vscode.Range[]
+    previousRanges: (vscode.Range | null)[],
+    nextRanges: (vscode.Range | null)[]
   ) {
     if (!this._view) {
       return;
