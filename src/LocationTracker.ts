@@ -44,7 +44,7 @@ export class LocationTracker {
       return false;
     }
 
-    if (Date.now() - this.lastVisibleRangeUpdate < 400) {
+    if (Date.now() - this.lastVisibleRangeUpdate < 5000) {
       return false;
     }
 
