@@ -230,30 +230,14 @@ export class NavigationHistory {
       return;
     }
 
-    console.log(
-      "Moving to previous position: index = " + this.navigationHistoryIndex
-    );
-
     if (!this.intermediateLocation) {
       this.navigationHistoryIndex -= 1;
-      console.log("check 1");
     } else {
       this.navigationHistory.push(this.intermediateLocation!);
       this.intermediateLocation = undefined;
-      console.log("check 2");
     }
 
     let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
-
-    console.log(
-      "Location to reveal: " +
-        locationToReveal.relativePath +
-        ", " +
-        locationToReveal.range.start.line +
-        ", " +
-        locationToReveal.range.end.line
-    );
-
     revealLocation(
       locationToReveal.relativePath,
       locationToReveal.range.start.line,
@@ -266,29 +250,14 @@ export class NavigationHistory {
       return;
     }
 
-    console.log(
-      "Moving to next position: index = " + this.navigationHistoryIndex
-    );
-
     var locationToReveal: FileLocation;
     if (!this.intermediateLocation) {
       this.navigationHistoryIndex += 1;
       locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
-      console.log("check 1");
     } else {
       locationToReveal = this.intermediateLocation;
       this.intermediateLocation = undefined;
-      console.log("check 2");
     }
-
-    console.log(
-      "Location to reveal: " +
-        locationToReveal.relativePath +
-        ", " +
-        locationToReveal.range.start.line +
-        ", " +
-        locationToReveal.range.end.line
-    );
 
     revealLocation(
       locationToReveal.relativePath,
