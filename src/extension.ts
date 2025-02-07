@@ -296,13 +296,15 @@ export function deactivate(context: vscode.ExtensionContext) {
 function updateBackwardsStatusBarItem(): void {
   if (NavigationHistory.hasPreviousPosition()) {
     let currentLocation = NavigationHistory.getCurrentLocation();
-    var previousPosition = NavigationHistory.getPreviousPositions(1)[0]!;
+    var previousPosition = NavigationHistory.getPreviousPositions(1, false)[0]!;
     let statusBarText = previousPosition.range.start.line.toString();
     if (previousPosition.relativePath === currentLocation?.relativePath) {
       statusBarText = "line " + statusBarText;
     } else {
       statusBarText =
-        vscode.window.activeTextEditor?.document.fileName + ":" + statusBarText;
+        previousPosition.relativePath.split(new RegExp("/")).pop() +
+        ":" +
+        statusBarText;
     }
     backwardsStatusBarItem.text = `← ${statusBarText}`;
     backwardsStatusBarItem.show();
@@ -314,13 +316,15 @@ function updateBackwardsStatusBarItem(): void {
 function updateForwardsStatusBarItem(): void {
   if (NavigationHistory.hasNextPosition()) {
     let currentLocation = NavigationHistory.getCurrentLocation();
-    var nextPosition = NavigationHistory.getNextLocations(1)[0]!;
+    var nextPosition = NavigationHistory.getNextLocations(1, false)[0]!;
     let statusBarText = nextPosition.range.start.line.toString();
     if (nextPosition.relativePath === currentLocation?.relativePath) {
       statusBarText = "line " + statusBarText;
     } else {
       statusBarText =
-        vscode.window.activeTextEditor?.document.fileName + ":" + statusBarText;
+        nextPosition.relativePath.split(new RegExp("/")).pop() +
+        ":" +
+        statusBarText;
     }
     forwardsStatusBarItem.text = `→ ${statusBarText}`;
     forwardsStatusBarItem.show();
