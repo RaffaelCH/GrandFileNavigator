@@ -1,5 +1,5 @@
 // The module 'vscode' contains the VS Code extensibility API
-import * as fs from 'fs';
+import * as fs from "fs";
 import * as vscode from "vscode";
 import * as path from "path";
 import {
@@ -19,6 +19,9 @@ import { LocationTracker } from "./LocationTracker";
 import { NavigationHistory } from "./NavigationHistory";
 import { HotspotLLMAnalyzer } from "./HotspotsLLMAnalyzer";
 
+let backwardsStatusBarItem: vscode.StatusBarItem;
+let forwardsStatusBarItem: vscode.StatusBarItem;
+
 var storageLocation: vscode.Uri | undefined;
 var locationUpdater: NodeJS.Timeout; // update location history in regular intervals
 
@@ -28,85 +31,100 @@ let currentLogDate: string;
 function initializeLogFile(context: vscode.ExtensionContext) {
   const storageLocation = context.storageUri || context.globalStorageUri;
   if (storageLocation) {
-      updateLogFilePath(storageLocation);
-      logMessage(storageLocation, `Log initialized: ${new Date().toISOString()}`);
+    updateLogFilePath(storageLocation);
+    logMessage(storageLocation, `Log initialized: ${new Date().toISOString()}`);
   } else {
-      vscode.window.showErrorMessage("Unable to initialize log file. Storage location not available.");
+    vscode.window.showErrorMessage(
+      "Unable to initialize log file. Storage location not available."
+    );
   }
 }
 
 function updateLogFilePath(storageLocation: vscode.Uri) {
   const logDate = new Date().toISOString().split("T")[0];
   if (currentLogDate !== logDate) {
-      currentLogDate = logDate;
-      logFilePath = path.join(storageLocation.fsPath, `navext_${logDate}.log`);
+    currentLogDate = logDate;
+    logFilePath = path.join(storageLocation.fsPath, `navext_${logDate}.log`);
   }
 }
 
 export function logMessage(storageLocation: vscode.Uri, message: string) {
   if (logFilePath) {
-      const now = new Date();
-      // Format to local timezone
-      const timestamp = now.toLocaleString("en-GB", {
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          hour12: false, // Optional: Disable 12-hour format
-      });
-      const logEntry = `[${timestamp}] ${message}\n`;
-      fs.appendFileSync(logFilePath, logEntry);
+    const now = new Date();
+    // Format to local timezone
+    const timestamp = now.toLocaleString("en-GB", {
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      hour12: false, // Optional: Disable 12-hour format
+    });
+    const logEntry = `[${timestamp}] ${message}\n`;
+    fs.appendFileSync(logFilePath, logEntry);
   } else {
-      vscode.window.showErrorMessage("Log file path is undefined. Log entry: " + message);
+    vscode.window.showErrorMessage(
+      "Log file path is undefined. Log entry: " + message
+    );
   }
 }
 
-
 function captureVSCodeLogs(context: vscode.ExtensionContext) {
-  const storageLocation = context.storageUri || context.globalStorageUri || vscode.Uri.file(context.extensionPath);
+  const storageLocation =
+    context.storageUri ||
+    context.globalStorageUri ||
+    vscode.Uri.file(context.extensionPath);
   if (!storageLocation) {
-      vscode.window.showErrorMessage("No valid storage location available for logging.");
-      return;
+    vscode.window.showErrorMessage(
+      "No valid storage location available for logging."
+    );
+    return;
   }
 
   logMessage(storageLocation, "Capturing VS Code logs...");
 
   vscode.workspace.onDidOpenTextDocument((doc) => {
-      logMessage(storageLocation, `Document opened: ${doc.uri.fsPath}`);
+    logMessage(storageLocation, `Document opened: ${doc.uri.fsPath}`);
   });
 
   vscode.workspace.onDidChangeTextDocument((event) => {
-      logMessage(storageLocation, `Document changed: ${event.document.uri.fsPath}`);
+    logMessage(
+      storageLocation,
+      `Document changed: ${event.document.uri.fsPath}`
+    );
   });
 
   vscode.workspace.onDidSaveTextDocument((doc) => {
-      logMessage(storageLocation, `Document saved: ${doc.uri.fsPath}`);
+    logMessage(storageLocation, `Document saved: ${doc.uri.fsPath}`);
   });
 
   vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor) {
-          logMessage(storageLocation, `Active editor changed to: ${editor.document.uri.fsPath}`);
-      }
+    if (editor) {
+      logMessage(
+        storageLocation,
+        `Active editor changed to: ${editor.document.uri.fsPath}`
+      );
+    }
   });
 
   logMessage(storageLocation, "VS Code logs are now being captured.");
 }
 
-
-
-
 export function activate(context: vscode.ExtensionContext) {
   initializeLogFile(context);
-  logMessage(context.storageUri || context.globalStorageUri!, 'Extension activated.');
+  logMessage(
+    context.storageUri || context.globalStorageUri!,
+    "Extension activated."
+  );
 
   process.on("uncaughtException", (error) => {
     const errorMessage = `Uncaught exception occurred: ${error.name} - ${error.message}\nStack: ${error.stack}`;
     logMessage(context.storageUri || context.globalStorageUri!, errorMessage);
-});
+  });
 
-process.on("unhandledRejection", (reason: any) => {
-  const errorDetails = reason instanceof Error
-      ? `Unhandled rejection: ${reason.name} - ${reason.message}\nStack: ${reason.stack}`
-      : `Unhandled rejection: ${reason}`;
-  logMessage(context.storageUri || context.globalStorageUri!, errorDetails);
-});
+  process.on("unhandledRejection", (reason: any) => {
+    const errorDetails =
+      reason instanceof Error
+        ? `Unhandled rejection: ${reason.name} - ${reason.message}\nStack: ${reason.stack}`
+        : `Unhandled rejection: ${reason}`;
+    logMessage(context.storageUri || context.globalStorageUri!, errorDetails);
+  });
 
   captureVSCodeLogs(context);
 
@@ -114,7 +132,9 @@ process.on("unhandledRejection", (reason: any) => {
     'Congratulations, your extension "grandfilenavigator" is now active!'
   );
 
-  vscode.window.showInformationMessage(`Log file is located at: ${logFilePath}`);
+  vscode.window.showInformationMessage(
+    `Log file is located at: ${logFilePath}`
+  );
 
   LocationTracker.initialize();
   NavigationHistory.initialize();
@@ -172,6 +192,31 @@ process.on("unhandledRejection", (reason: any) => {
     )
   );
 
+  // Set up status bar items.
+  backwardsStatusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    10
+  );
+  backwardsStatusBarItem.command = "grandfilenavigator.jumpBackwards";
+
+  forwardsStatusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    10
+  );
+  forwardsStatusBarItem.command = "grandfilenavigator.jumpForwards";
+
+  function updateNavigation() {
+    NavigationHistory.updateLocation();
+    histogramViewProvider.updateNavigation(
+      NavigationHistory.hasPreviousPosition(),
+      NavigationHistory.hasNextPosition(),
+      NavigationHistory.getPreviousRanges(),
+      NavigationHistory.getNextRanges()
+    );
+    updateBackwardsStatusBarItem();
+    updateForwardsStatusBarItem();
+  }
+
   async function updateEnrichedHotspots() {
     const hotspots = getPositionHistory();
     if (!hotspots) {
@@ -182,13 +227,7 @@ process.on("unhandledRejection", (reason: any) => {
   }
 
   vscode.window.onDidChangeActiveTextEditor(async () => {
-    NavigationHistory.updateLocation();
-    histogramViewProvider.updateNavigation(
-      NavigationHistory.hasPreviousPosition(),
-      NavigationHistory.hasNextPosition(),
-      NavigationHistory.getPreviousRanges(),
-      NavigationHistory.getNextRanges()
-    );
+    updateNavigation();
 
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory(context);
@@ -199,13 +238,7 @@ process.on("unhandledRejection", (reason: any) => {
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
-    NavigationHistory.updateLocation();
-    histogramViewProvider.updateNavigation(
-      NavigationHistory.hasPreviousPosition(),
-      NavigationHistory.hasNextPosition(),
-      NavigationHistory.getPreviousRanges(),
-      NavigationHistory.getNextRanges()
-    );
+    updateNavigation();
 
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory(context);
@@ -245,15 +278,57 @@ export function deactivate(context: vscode.ExtensionContext) {
   const storageLocation: vscode.Uri | undefined = context?.storageUri;
 
   if (storageLocation) {
-      savePositionHistory(storageLocation);
-      logMessage(storageLocation, 'Extension deactivated.');
+    savePositionHistory(storageLocation);
+    logMessage(storageLocation, "Extension deactivated.");
   } else {
-      vscode.window.showWarningMessage("Storage location is not defined. Unable to save position history.");
+    vscode.window.showWarningMessage(
+      "Storage location is not defined. Unable to save position history."
+    );
   }
 
   clearInterval(locationUpdater);
   const location = context?.storageUri || storageLocation;
   if (location !== undefined) {
     savePositionHistory(location);
+  }
+}
+
+function updateBackwardsStatusBarItem(): void {
+  if (NavigationHistory.hasPreviousPosition()) {
+    let currentLocation = NavigationHistory.getCurrentLocation();
+    var previousPosition = NavigationHistory.getPreviousPositions(1, false)[0]!;
+    let statusBarText = previousPosition.range.start.line.toString();
+    if (previousPosition.relativePath === currentLocation?.relativePath) {
+      statusBarText = "line " + statusBarText;
+    } else {
+      statusBarText =
+        previousPosition.relativePath.split(new RegExp("/")).pop() +
+        ":" +
+        statusBarText;
+    }
+    backwardsStatusBarItem.text = `← ${statusBarText}`;
+    backwardsStatusBarItem.show();
+  } else {
+    backwardsStatusBarItem.hide();
+  }
+}
+
+function updateForwardsStatusBarItem(): void {
+  if (NavigationHistory.hasNextPosition()) {
+    let currentLocation = NavigationHistory.getCurrentLocation();
+    var nextPosition = NavigationHistory.getNextLocations(1, false)[0]!;
+    let statusBarText = nextPosition.range.start.line.toString();
+    if (nextPosition.relativePath === currentLocation?.relativePath) {
+      statusBarText = "line " + statusBarText;
+    } else {
+      statusBarText =
+        nextPosition.relativePath.split(new RegExp("/")).pop() +
+        ":" +
+        statusBarText;
+    }
+    forwardsStatusBarItem.text = `→ ${statusBarText}`;
+    forwardsStatusBarItem.show();
+  } else {
+    forwardsStatusBarItem.hide();
   }
 }

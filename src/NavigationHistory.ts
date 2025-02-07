@@ -101,10 +101,10 @@ export class NavigationHistory {
   }
 
   // Returns the most recent locations (ordering: newest is first).
-  public static getPreviousRanges(
+  public static getPreviousPositions(
     locNumber: number = 3,
     currentEditorOnly = true
-  ): (vscode.Range | null)[] {
+  ): (FileLocation | null)[] {
     if (this.navigationHistoryIndex < 0) {
       return [];
     }
@@ -132,17 +132,27 @@ export class NavigationHistory {
           !currentEditorOnly ||
           loc.relativePath === currentLocation?.relativePath
         ) {
-          return loc.range;
+          return loc;
         }
         return null;
       });
   }
 
-  // Returns the next jump locations.
-  public static getNextRanges(
+  // Returns the most recent ranges (ordering: newest is first).
+  public static getPreviousRanges(
     locNumber: number = 3,
     currentEditorOnly = true
   ): (vscode.Range | null)[] {
+    return this.getPreviousPositions(locNumber, currentEditorOnly).map(
+      (fileLoc) => (fileLoc !== null ? fileLoc.range : null)
+    );
+  }
+
+  // Returns the next jump locations.
+  public static getNextLocations(
+    locNumber: number = 3,
+    currentEditorOnly = true
+  ): (FileLocation | null)[] {
     if (this.navigationHistoryIndex < 0) {
       return [];
     }
@@ -167,10 +177,20 @@ export class NavigationHistory {
           !currentEditorOnly ||
           loc.relativePath === currentLocation?.relativePath
         ) {
-          return loc.range;
+          return loc;
         }
         return null;
       });
+  }
+
+  // Returns the next jump ranges.
+  public static getNextRanges(
+    locNumber: number = 3,
+    currentEditorOnly = true
+  ): (vscode.Range | null)[] {
+    return this.getNextLocations(locNumber, currentEditorOnly).map((fileLoc) =>
+      fileLoc !== null ? fileLoc.range : null
+    );
   }
 
   public static hasPreviousPosition(): boolean {
@@ -218,7 +238,6 @@ export class NavigationHistory {
     }
 
     let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
-
     revealLocation(
       locationToReveal.relativePath,
       locationToReveal.range.start.line,
@@ -269,6 +288,14 @@ export class NavigationHistory {
       return undefined;
     }
 
+    // If one range is contained in other one, return larger one.
+    if (rangeOverlap.contains(previousLocation.range)) {
+      return currentLocation;
+    }
+    if (rangeOverlap.contains(currentLocation.range)) {
+      return previousLocation;
+    }
+
     let overlapLength = rangeOverlap.end.line - rangeOverlap.start.line;
     let visibleRangeLength =
       currentLocation.range.end.line - currentLocation.range.start.line;
@@ -281,7 +308,7 @@ export class NavigationHistory {
     return new FileLocation(currentLocation.relativePath, rangeOverlap);
   }
 
-  private static getCurrentLocation(): FileLocation | undefined {
+  public static getCurrentLocation(): FileLocation | undefined {
     let currentDocument = vscode.window.activeTextEditor?.document;
     let currentRanges = vscode.window.activeTextEditor?.visibleRanges;
     if (currentDocument === undefined || currentRanges === undefined) {
