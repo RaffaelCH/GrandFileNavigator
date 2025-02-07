@@ -45,6 +45,9 @@ function insertHistogram() {
       )}, 0)`
   );
 
+  var maxLabelCount = 20;
+  var nodeCountPerLabel = Math.ceil(histogramNodes.length / maxLabelCount);
+
   let barsHtml = histogramNodes
     .map((histogramNode, index) => {
       const maxBarWidth = svgWidth * 0.9;
@@ -55,17 +58,21 @@ function insertHistogram() {
       const yTextPosition = (index + 1) * barHeight + 2;
 
       // TODO: Add icon based on NodeType.
-      return `
+      var barHtml = `
         <rect index=${index}
           x="20" y="${index * barHeight}"
           width="${barWidth + 1}"
           height="${barHeight}"
           fill="${color}">
         </rect>
-        <text x="0" y="${yTextPosition}" fill="white" text-anchor="start" font-size="12">${
-        histogramNode.displayName
-      }</text>
-      `;
+        `;
+
+      if ((index + 1) % nodeCountPerLabel === 0) {
+        barHtml += `
+          <text x="0" y="${yTextPosition}" fill="white" text-anchor="start" font-size="12">${histogramNode.displayName}</text>
+          `;
+      }
+      return barHtml;
     })
     .join("");
 
