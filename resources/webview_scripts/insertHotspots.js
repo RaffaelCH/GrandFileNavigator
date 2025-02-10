@@ -21,6 +21,13 @@ function insertHotspots() {
     visualizationContainer.style.display = "initial";
   }
 
+    symbolNodes.sort((a, b) => b.metricValue - a.metricValue);
+
+    const MAX_METHODS = 20;
+    if (symbolNodes.length > MAX_METHODS) {
+      symbolNodes = symbolNodes.slice(0, MAX_METHODS);
+    }
+
   var bodyRect = document.body.getBoundingClientRect();
 
   svgWidth = bodyRect.width - 20; // leave some space

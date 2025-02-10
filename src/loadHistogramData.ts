@@ -17,7 +17,7 @@ export async function getFileHistogramData(
     .then((textDocument) => {
       return textDocument.lineCount;
     });
-
+    
   var maxSplitCount = Math.max(
     Math.min(120, totalLineCount / 10),
     Math.min(10, totalLineCount)
