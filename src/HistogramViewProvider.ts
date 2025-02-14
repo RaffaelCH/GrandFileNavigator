@@ -14,12 +14,6 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
   private _visualizationType: string = "histogram";
   private viewUpdateTimer = setInterval(() => this.updateView(), 5000);
   private hoverDataUpdateTimer = setInterval(() => {
-    this.updateNavigation(
-      NavigationHistory.hasPreviousPosition(),
-      NavigationHistory.hasNextPosition(),
-      NavigationHistory.getPreviousRanges(),
-      NavigationHistory.getNextRanges()
-    );
     this.updateHoverData();
   }, 100);
 
