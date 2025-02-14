@@ -195,13 +195,13 @@ export function activate(context: vscode.ExtensionContext) {
   // Set up status bar items.
   backwardsStatusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
-    10
+    9
   );
   backwardsStatusBarItem.command = "grandfilenavigator.jumpBackwards";
 
   forwardsStatusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
-    10
+    8
   );
   forwardsStatusBarItem.command = "grandfilenavigator.jumpForwards";
 
