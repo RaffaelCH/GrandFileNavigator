@@ -31,6 +31,9 @@ let currentLogDate: string;
 function initializeLogFile(context: vscode.ExtensionContext) {
   const storageLocation = context.storageUri || context.globalStorageUri;
   if (storageLocation) {
+    if (!fs.existsSync(storageLocation.fsPath)) {
+      fs.mkdirSync(storageLocation.fsPath);
+    }
     updateLogFilePath(storageLocation);
     logMessage(storageLocation, `Log initialized: ${new Date().toISOString()}`);
   } else {
