@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import FileLocation from "../sidebar_types/fileLocation"; // Adjust path as needed
+import FileLocation from "../sidebar_types/FileLocation";
 
 export async function getFileLocation(
   fileUri: vscode.Uri
