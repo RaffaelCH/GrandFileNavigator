@@ -132,7 +132,7 @@ export class NavigationHistory {
         var lineCountChange = linesAdded - linesRemoved;
 
         // Ignore character-level changes.
-        if (contentChange.range.isSingleLine) {
+        if (lineCountChange === 0) {
           continue;
         }
 
@@ -153,9 +153,15 @@ export class NavigationHistory {
         } else if (lineCountChange !== 0) {
           // When event is received the change already happened -> can't determine how the line changes were distributed.
           // Therefore assume equal distribution for simplicity.
-          var overlapFraction =
-            (rangeOverlap.end.line - rangeOverlap.start.line) /
-            (contentChange.range.end.line - contentChange.range.start.line);
+
+          // If no code was replaced, the range spans 0 lines (but the new code is > 0 lines).
+          var changeSize = Math.max(
+            contentChange.range.end.line - contentChange.range.start.line,
+            linesAdded
+          );
+          var overlapFraction = contentChange.range.isSingleLine
+            ? 1
+            : (rangeOverlap.end.line - rangeOverlap.start.line) / changeSize;
           var overlapLineCountChange = Math.floor(
             lineCountChange * overlapFraction
           );
@@ -166,8 +172,8 @@ export class NavigationHistory {
           newRange = new vscode.Range(
             new vscode.Position(newStartLine, newRange.start.character),
             new vscode.Position(
-              fileLocation.range.end.line -
-                fileLocation.range.start.line +
+              newStartLine +
+                (fileLocation.range.end.line - fileLocation.range.start.line) +
                 overlapLineCountChange,
               newRange.end.character
             )
