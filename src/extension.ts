@@ -106,6 +106,7 @@ function captureVSCodeLogs(context: vscode.ExtensionContext) {
       storageLocation,
       `Document changed: ${event.document.uri.fsPath}`
     );
+    NavigationHistory.handleTextDocumentChangeEvent(event);
   });
 
   vscode.workspace.onDidSaveTextDocument((doc) => {
