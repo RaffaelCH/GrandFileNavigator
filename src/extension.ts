@@ -88,16 +88,10 @@ function captureVSCodeLogs(context: vscode.ExtensionContext) {
   });
 
   vscode.workspace.onDidChangeTextDocument((event) => {
-    if (event.contentChanges.length > 0) {
-      console.log(JSON.stringify(event.contentChanges[0]));
-    }
     logMessage(
       storageLocation,
       `Document changed: ${event.document.uri.fsPath}`
     );
-
-    NavigationHistory.handleTextDocumentChangeEvent(event);
-    handleTextDocumentChangeEvent(event);
   });
 
   vscode.workspace.onDidSaveTextDocument((doc) => {
@@ -217,6 +211,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   function updateNavigation() {
     NavigationHistory.updateLocation();
+    updateNavigationViews();
+  }
+
+  function updateNavigationViews() {
     histogramViewProvider.updateNavigation(
       NavigationHistory.hasPreviousPosition(),
       NavigationHistory.hasNextPosition(),
@@ -263,6 +261,12 @@ export function activate(context: vscode.ExtensionContext) {
         visibleRanges.at(-1)?.end.line! + 1
       );
     }
+  });
+
+  vscode.workspace.onDidChangeTextDocument((event) => {
+    NavigationHistory.handleTextDocumentChangeEvent(event);
+    handleTextDocumentChangeEvent(event);
+    updateNavigationViews();
   });
 
   locationUpdater = setInterval(() => {
