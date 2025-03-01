@@ -236,7 +236,10 @@ export class NavigationHistory {
     }
     if (this.intermediateLocation) {
       let currentLocation = this.getCurrentLocation();
-      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
+      if (
+        currentLocation &&
+        !this.tryMergeLocations(this.intermediateLocation, currentLocation)
+      ) {
         return true;
       }
     }
