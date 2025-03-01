@@ -159,16 +159,25 @@ export class NavigationHistory {
             contentChange.range.end.line - contentChange.range.start.line,
             linesAdded
           );
+
+          // Fraction of the change that was below the current location.
+          var fractionBelow = Math.max(
+            0,
+            (rangeOverlap.start.line - contentChange.range.start.line) /
+              changeSize
+          );
+
           var overlapFraction = contentChange.range.isSingleLine
             ? 1
             : (rangeOverlap.end.line - rangeOverlap.start.line) / changeSize;
           var overlapLineCountChange = Math.floor(
             lineCountChange * overlapFraction
           );
+
           var newStartLine =
-            fileLocation.range.start.line -
-            lineCountChange +
-            overlapLineCountChange;
+            fileLocation.range.start.line +
+            Math.floor(fractionBelow * lineCountChange);
+
           newRange = new vscode.Range(
             new vscode.Position(newStartLine, newRange.start.character),
             new vscode.Position(
