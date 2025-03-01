@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { LocationTracker } from "./LocationTracker";
 import { revealLocation } from "./revealLocation";
+import { adjustRangeBasedOnChange } from "./utils/documentChangeUtils";
 
 class FileLocation {
   constructor(
@@ -98,6 +99,24 @@ export class NavigationHistory {
       this.intermediateLocation = undefined;
       this.lastLocationUpdate = Date.now();
     }
+  }
+
+  public static handleTextDocumentChangeEvent(
+    changeEvent: vscode.TextDocumentChangeEvent
+  ) {
+    if (changeEvent.contentChanges.length === 0) {
+      return;
+    }
+
+    this.navigationHistory = this.navigationHistory.map((fileLocation) => {
+      let newRange = adjustRangeBasedOnChange(
+        changeEvent,
+        fileLocation.relativePath,
+        fileLocation.range
+      );
+
+      return new FileLocation(fileLocation.relativePath, newRange);
+    });
   }
 
   // Returns the most recent locations (ordering: newest is first).

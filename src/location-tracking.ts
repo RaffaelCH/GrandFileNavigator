@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { LocationTracker } from "./LocationTracker";
 import { HotspotLLMAnalyzer } from "./HotspotsLLMAnalyzer";
 import * as path from "path";
+import { adjustRangeBasedOnChange } from "./utils/documentChangeUtils";
 
 // Encapsulates the information about one node (hotspot).
 export class RangeData {
@@ -134,6 +135,52 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
           }
         });
       }
+    }
+  }
+}
+
+export function handleTextDocumentChangeEvent(
+  changeEvent: vscode.TextDocumentChangeEvent
+) {
+  if (changeEvent.contentChanges.length === 0) {
+    return;
+  }
+
+  var relevantHistory = getFileRangeData(changeEvent.document.uri);
+  if (relevantHistory.length === 0) {
+    return;
+  }
+
+  let relativePath = vscode.workspace.asRelativePath(
+    changeEvent.document.uri.path
+  );
+
+  var updatedRanges = relevantHistory.map((rangeData) => {
+    let newRange = adjustRangeBasedOnChange(
+      changeEvent,
+      relativePath,
+      new vscode.Range(
+        new vscode.Position(rangeData.startLine, 0),
+        new vscode.Position(rangeData.endLine, 0)
+      )
+    );
+    return new RangeData(
+      newRange.start.line,
+      newRange.end.line,
+      rangeData.totalDuration
+    );
+  });
+
+  var positionHistoryData = positionHistory;
+  const identifierKeys = relativePath.split("/").filter((el) => el !== "");
+
+  // Replace old with new data in positionHistory.
+  for (var i = 0; i < identifierKeys.length; ++i) {
+    let nextKey = identifierKeys[i];
+    if (Array.isArray(positionHistoryData[nextKey])) {
+      positionHistoryData[nextKey] = updatedRanges;
+    } else if (positionHistoryData[nextKey] instanceof PositionHistory) {
+      positionHistoryData = positionHistoryData[nextKey];
     }
   }
 }

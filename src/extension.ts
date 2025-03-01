@@ -9,6 +9,7 @@ import {
   getPositionHistory,
   categorizePositionsByFileName,
   resetPositionHistory,
+  handleTextDocumentChangeEvent,
 } from "./location-tracking";
 import { HotspotsProvider, revealNodeLocation } from "./HotspotsProvider";
 import { registerWebviewVisualization } from "./WebviewVisualization";
@@ -210,6 +211,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   function updateNavigation() {
     NavigationHistory.updateLocation();
+    updateNavigationViews();
+  }
+
+  function updateNavigationViews() {
     histogramViewProvider.updateNavigation(
       NavigationHistory.hasPreviousPosition(),
       NavigationHistory.hasNextPosition(),
@@ -256,6 +261,12 @@ export function activate(context: vscode.ExtensionContext) {
         visibleRanges.at(-1)?.end.line! + 1
       );
     }
+  });
+
+  vscode.workspace.onDidChangeTextDocument((event) => {
+    NavigationHistory.handleTextDocumentChangeEvent(event);
+    handleTextDocumentChangeEvent(event);
+    updateNavigationViews();
   });
 
   locationUpdater = setInterval(() => {
