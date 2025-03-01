@@ -189,7 +189,12 @@ export class NavigationHistory {
       ++startIndex;
     }
 
-    return this.navigationHistory
+    var relevantLocations = this.navigationHistory;
+    if (this.intermediateLocation) {
+      relevantLocations = relevantLocations.concat(this.intermediateLocation);
+    }
+
+    return relevantLocations
       .slice(startIndex, startIndex + locNumber)
       .map((loc) => {
         if (
