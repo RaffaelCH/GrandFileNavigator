@@ -5,11 +5,11 @@ import { NodeType } from "./sidebar_types/NodeType";
 
 export async function getFileHistogramData(
   fileUri: vscode.Uri
-): Promise<SidebarNode[]> {
+): Promise<SidebarNode[] | null> {
   var rangeData = getFileRangeData(fileUri);
 
-  if (rangeData.length === 0) {
-    return [];
+  if (!rangeData) {
+    return rangeData;
   }
 
   var totalLineCount = await vscode.workspace
@@ -17,7 +17,7 @@ export async function getFileHistogramData(
     .then((textDocument) => {
       return textDocument.lineCount;
     });
-    
+
   var maxSplitCount = Math.max(
     Math.min(120, totalLineCount / 10),
     Math.min(10, totalLineCount)

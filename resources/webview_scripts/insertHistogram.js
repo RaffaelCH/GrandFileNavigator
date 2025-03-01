@@ -11,7 +11,7 @@ function insertHistogram() {
     "visualization-container"
   );
 
-  if (histogramNodes.length === 0) {
+  if (histogramNodes === null) {
     errorMessageContainer.textContent = "No histogram data found";
     visualizationContainer.style.display = "none";
     return;

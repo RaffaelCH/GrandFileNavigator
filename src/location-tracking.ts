@@ -64,7 +64,37 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
 //vscode.window.onDidChangeWindowState
 //vscode.workspace.onDidChangeTextDocument
 
-export function addLastLocationToHistory(context: vscode.ExtensionContext) {
+// Ensure file has empty array as data (to differentiate from untracked files).
+// Returns true if file was initialized.
+export function initFile(): boolean {
+  var currentFile = vscode.window.activeTextEditor?.document;
+  if (!currentFile) {
+    return false;
+  }
+  const fileIdentifier = vscode.workspace.asRelativePath(currentFile.uri.path);
+  const identifierKeys = fileIdentifier.split("/").filter((el) => el !== "");
+
+  var positionHistoryData = positionHistory;
+  for (var i = 0; i < identifierKeys.length; ++i) {
+    let nextKey = identifierKeys[i];
+    let positionNode = positionHistoryData[nextKey];
+
+    if (i < identifierKeys.length - 1) {
+      if (positionNode === undefined) {
+        positionHistoryData[nextKey] = new PositionHistory();
+        positionHistoryData = positionHistoryData[nextKey];
+      } else if (positionHistoryData[nextKey] instanceof PositionHistory) {
+        positionHistoryData = positionHistoryData[nextKey];
+      }
+    } else if (positionNode === undefined) {
+      positionHistoryData[nextKey] = [];
+    }
+  }
+
+  return true;
+}
+
+export function addLastLocationToHistory() {
   if (LocationTracker.lastDocument === undefined) {
     return;
   }
@@ -147,7 +177,7 @@ export function handleTextDocumentChangeEvent(
   }
 
   var relevantHistory = getFileRangeData(changeEvent.document.uri);
-  if (relevantHistory.length === 0) {
+  if (!relevantHistory || relevantHistory.length === 0) {
     return;
   }
 
@@ -234,15 +264,15 @@ export function categorizePositionsByFileName(): {
   return fileCountMap;
 }
 
-export function getFileRangeData(file: vscode.Uri): RangeData[] {
+export function getFileRangeData(file: vscode.Uri): RangeData[] | null {
   function traverseHistory(history: PositionHistory, path: string[] = []) {
     if (path.length === 0) {
-      return [];
+      return null;
     }
     var nextKey = path[0];
     var value = history[nextKey];
     if (value === undefined) {
-      return [];
+      return null;
     }
     if (Array.isArray(value)) {
       return value;

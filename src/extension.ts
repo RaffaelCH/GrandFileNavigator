@@ -10,6 +10,7 @@ import {
   categorizePositionsByFileName,
   resetPositionHistory,
   handleTextDocumentChangeEvent,
+  initFile,
 } from "./location-tracking";
 import { HotspotsProvider, revealNodeLocation } from "./HotspotsProvider";
 import { registerWebviewVisualization } from "./WebviewVisualization";
@@ -238,18 +239,18 @@ export function activate(context: vscode.ExtensionContext) {
     updateNavigation();
 
     if (LocationTracker.shouldUpdateTracking()) {
-      addLastLocationToHistory(context);
+      addLastLocationToHistory();
       await updateEnrichedHotspots(); // TODO: Only update current file.
     }
-    histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
+    histogramViewProvider.updateHistogramData();
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
     updateNavigation();
 
     if (LocationTracker.shouldUpdateTracking()) {
-      addLastLocationToHistory(context);
+      addLastLocationToHistory();
       await updateEnrichedHotspots(); // TODO: Only update current file.
     }
     LocationTracker.updateLocationTracking();
@@ -270,8 +271,14 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   locationUpdater = setInterval(() => {
+    if (LocationTracker.shouldTrackWindow()) {
+      var shouldUpdateVisualization = initFile();
+      if (shouldUpdateVisualization) {
+        histogramViewProvider.updateHistogramData();
+      }
+    }
     if (LocationTracker.shouldUpdateTracking()) {
-      addLastLocationToHistory(context);
+      addLastLocationToHistory();
     }
   }, 1000);
 
