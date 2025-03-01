@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { LocationTracker } from "./LocationTracker";
 import { revealLocation } from "./revealLocation";
+import { adjustRangeBasedOnChange } from "./utils/documentChangeUtils";
 
 class FileLocation {
   constructor(
@@ -107,97 +108,15 @@ export class NavigationHistory {
       return;
     }
 
-    var changedDocumentRelativePath = vscode.workspace.asRelativePath(
-      changeEvent.document.uri.path
-    );
-
-    var newNavigationHistory: FileLocation[] = [];
-    this.navigationHistory.forEach((fileLocation) => {
-      // Different file -> file location not impacted
-      if (fileLocation.relativePath !== changedDocumentRelativePath) {
-        newNavigationHistory.push(fileLocation);
-        return;
-      }
-
-      let newRange = fileLocation.range;
-      for (const contentChange of changeEvent.contentChanges) {
-        // Change was higher up in file -> not impacted
-        if (contentChange.range.start.line > fileLocation.range.end.line) {
-          continue;
-        }
-
-        var linesRemoved =
-          contentChange.range.end.line - contentChange.range.start.line;
-        var linesAdded = contentChange.text.split("\n").length - 1;
-        var lineCountChange = linesAdded - linesRemoved;
-
-        // Ignore character-level changes.
-        if (lineCountChange === 0) {
-          continue;
-        }
-
-        var rangeOverlap = fileLocation.range.intersection(contentChange.range);
-
-        // Change was lower down in file (no overlap) and in/decreased lines -> adjust start/end lines.
-        if (rangeOverlap === undefined) {
-          newRange = new vscode.Range(
-            new vscode.Position(
-              newRange.start.line + lineCountChange,
-              newRange.start.character
-            ),
-            new vscode.Position(
-              newRange.end.line + lineCountChange,
-              newRange.end.character
-            )
-          );
-        } else if (lineCountChange !== 0) {
-          // When event is received the change already happened -> can't determine how the line changes were distributed.
-          // Therefore assume equal distribution for simplicity.
-
-          // If no code was replaced, the range spans 0 lines (but the new code is > 0 lines).
-          var changeSize = Math.max(
-            contentChange.range.end.line - contentChange.range.start.line,
-            linesAdded
-          );
-
-          // Fraction of the change that was below the current location.
-          var fractionBelow = Math.max(
-            0,
-            (rangeOverlap.start.line - contentChange.range.start.line) /
-              changeSize
-          );
-
-          var overlapFraction = contentChange.range.isSingleLine
-            ? 1
-            : (rangeOverlap.end.line - rangeOverlap.start.line) / changeSize;
-          var overlapLineCountChange = Math.floor(
-            lineCountChange * overlapFraction
-          );
-
-          var newStartLine =
-            fileLocation.range.start.line +
-            Math.floor(fractionBelow * lineCountChange);
-
-          newRange = new vscode.Range(
-            new vscode.Position(newStartLine, newRange.start.character),
-            new vscode.Position(
-              newStartLine +
-                (fileLocation.range.end.line - fileLocation.range.start.line) +
-                overlapLineCountChange,
-              newRange.end.character
-            )
-          );
-        }
-      }
-
-      var newFileLocation = new FileLocation(
+    this.navigationHistory = this.navigationHistory.map((fileLocation) => {
+      let newRange = adjustRangeBasedOnChange(
+        changeEvent,
         fileLocation.relativePath,
-        newRange
+        fileLocation.range
       );
-      newNavigationHistory.push(newFileLocation);
-    });
 
-    this.navigationHistory = newNavigationHistory;
+      return new FileLocation(fileLocation.relativePath, newRange);
+    });
   }
 
   // Returns the most recent locations (ordering: newest is first).
