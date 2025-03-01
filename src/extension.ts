@@ -9,6 +9,7 @@ import {
   getPositionHistory,
   categorizePositionsByFileName,
   resetPositionHistory,
+  handleTextDocumentChangeEvent,
 } from "./location-tracking";
 import { HotspotsProvider, revealNodeLocation } from "./HotspotsProvider";
 import { registerWebviewVisualization } from "./WebviewVisualization";
@@ -89,24 +90,14 @@ function captureVSCodeLogs(context: vscode.ExtensionContext) {
   vscode.workspace.onDidChangeTextDocument((event) => {
     if (event.contentChanges.length > 0) {
       console.log(JSON.stringify(event.contentChanges[0]));
-
-      /*
-        Relevant info: event.contentChanges[0]
-        range.start.line -> range.end.line gives previous line count
-        text gives new text -> can count number of newline characters
-        => compute diff between old and new line count, update old data accordingly
-
-        event.document.lineCount gives new line count
-        -> keep track of it, compute diff this way?
-
-        Info to update: NavigationHistory, LocationTracker, location-tracking.positionHistory, maybe Hotspots (and files)
-      */
     }
     logMessage(
       storageLocation,
       `Document changed: ${event.document.uri.fsPath}`
     );
+
     NavigationHistory.handleTextDocumentChangeEvent(event);
+    handleTextDocumentChangeEvent(event);
   });
 
   vscode.workspace.onDidSaveTextDocument((doc) => {
