@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import FileLocation from "./sidebar_types/FileLocation";
+import FileLocation from "./sidebar_types/fileLocation";
+
+
 
 export function revealFileLocation(fileLocation: FileLocation) {
   revealLocation(

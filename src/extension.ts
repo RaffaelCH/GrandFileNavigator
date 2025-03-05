@@ -177,13 +177,29 @@ export function activate(context: vscode.ExtensionContext) {
     //vscode.window.showInformationMessage(`Grouped Hotspots: ${JSON.stringify(groupedHotspots)}`);
   });
 
-  vscode.commands.registerCommand("grandfilenavigator.jumpBackwards", () =>
-    NavigationHistory.moveToPreviousPosition()
-  );
+  vscode.commands.registerCommand("grandfilenavigator.jumpBackwards", () => {
+    const before = NavigationHistory.getCurrentLocation();
+    NavigationHistory.moveToPreviousPosition();
+    const after = NavigationHistory.getCurrentLocation();
+    if (before && after) {
+      logMessage(
+        storageLocation!,
+        `Jump Backward triggered: from ${before.range.start.line}-${before.range.end.line} to ${after.range.start.line}-${after.range.end.line}`
+      );
+    }
+  });
 
-  vscode.commands.registerCommand("grandfilenavigator.jumpForwards", () =>
-    NavigationHistory.moveToNextPosition()
-  );
+  vscode.commands.registerCommand("grandfilenavigator.jumpForwards", () => {
+    const before = NavigationHistory.getCurrentLocation();
+    NavigationHistory.moveToNextPosition();
+    const after = NavigationHistory.getCurrentLocation();
+    if (before && after) {
+      logMessage(
+        storageLocation!,
+        `Jump Forward triggered: from ${before.range.start.line}-${before.range.end.line} to ${after.range.start.line}-${after.range.end.line}`
+      );
+    }
+  });
 
   registerWebviewVisualization(context);
   registerWebviewPanelHistogram(context);
@@ -246,6 +262,25 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
+  const previousRanges = LocationTracker.lastVisibleRanges;
+
+  LocationTracker.updateLocationTracking();
+  const currentRanges = LocationTracker.lastVisibleRanges;
+
+  if (previousRanges && currentRanges && currentRanges.length > 0) {
+    const prevStart = previousRanges[0].start.line;
+    const currStart = currentRanges[0].start.line;
+    const lineDiff = Math.abs(currStart - prevStart);
+    const totalLines = vscode.window.activeTextEditor?.document.lineCount || 1;
+    const percentScrolled = ((lineDiff / totalLines) * 100).toFixed(2);
+    if (storageLocation) {
+      logMessage(
+        storageLocation,
+        `Scrolling: visible range moved ${lineDiff} lines (${percentScrolled}% of file)`
+      );
+    }
+  }
+  
     updateNavigation();
 
     if (LocationTracker.shouldUpdateTracking()) {

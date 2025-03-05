@@ -4,6 +4,7 @@ import { LocationTracker } from "./LocationTracker";
 import { HotspotLLMAnalyzer } from "./HotspotsLLMAnalyzer";
 import * as path from "path";
 import { adjustRangeBasedOnChange } from "./utils/documentChangeUtils";
+import { logMessage } from "./extension";
 
 // Encapsulates the information about one node (hotspot).
 export class RangeData {
@@ -69,6 +70,7 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
     return;
   }
 
+  const storageLocation = context.storageUri || context.globalStorageUri;
   const viewDuration = Date.now() - LocationTracker.lastVisibleRangeUpdate;
   const fileIdentifier = vscode.workspace.asRelativePath(
     LocationTracker.lastDocument.uri.path
@@ -102,36 +104,16 @@ export function addLastLocationToHistory(context: vscode.ExtensionContext) {
           );
 
           if (existingRange) {
-            // Only update the viewDuration for existing hotspots
+            // Update existing hotspot
             existingRange.totalDuration += viewDuration;
           } else {
-            // Add a new hotspot and trigger LLM analysis
+            // Create new hotspot.
             const newRange = new RangeData(
               visibleRange.start.line,
               visibleRange.end.line,
               viewDuration
             );
             positionDataArray.push(newRange);
-
-            // Create the enriched hotspot object
-            const enrichedHotspot = {
-              filePath: LocationTracker.lastDocument?.uri.fsPath || "", // Ensure it's safe
-              rangeData: newRange,
-              symbols: [], // Populate as needed
-              timeSpent: viewDuration,
-              importance: viewDuration, // You can change how you calculate importance
-            };
-
-            // TODO: Reenable
-            // Add the new hotspot to the LLM analysis queue
-            // if (LocationTracker.lastDocument) {
-            //   console.log("Adding hotspot to LLM analysis queue.");
-            //   HotspotLLMAnalyzer.addToQueue(
-            //     enrichedHotspot,
-            //     LocationTracker.lastDocument,
-            //     context
-            //   );
-            // }
           }
         });
       }
