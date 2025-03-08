@@ -259,28 +259,35 @@ export function activate(context: vscode.ExtensionContext) {
     }
     histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
+
+    // Ensure visible ranges always get updated.
+    if (vscode.window.activeTextEditor?.visibleRanges) {
+      updateNavigation();
+    }
   });
 
+  // Does not get triggered reliably when switching tabs!
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
-  const previousRanges = LocationTracker.lastVisibleRanges;
+    const previousRanges = LocationTracker.lastVisibleRanges;
 
-  LocationTracker.updateLocationTracking();
-  const currentRanges = LocationTracker.lastVisibleRanges;
+    LocationTracker.updateLocationTracking();
+    const currentRanges = LocationTracker.lastVisibleRanges;
 
-  if (previousRanges && currentRanges && currentRanges.length > 0) {
-    const prevStart = previousRanges[0].start.line;
-    const currStart = currentRanges[0].start.line;
-    const lineDiff = Math.abs(currStart - prevStart);
-    const totalLines = vscode.window.activeTextEditor?.document.lineCount || 1;
-    const percentScrolled = ((lineDiff / totalLines) * 100).toFixed(2);
-    if (storageLocation) {
-      logMessage(
-        storageLocation,
-        `Scrolling: visible range moved ${lineDiff} lines (${percentScrolled}% of file)`
-      );
+    if (previousRanges && currentRanges && currentRanges.length > 0) {
+      const prevStart = previousRanges[0].start.line;
+      const currStart = currentRanges[0].start.line;
+      const lineDiff = Math.abs(currStart - prevStart);
+      const totalLines =
+        vscode.window.activeTextEditor?.document.lineCount || 1;
+      const percentScrolled = ((lineDiff / totalLines) * 100).toFixed(2);
+      if (storageLocation) {
+        logMessage(
+          storageLocation,
+          `Scrolling: visible range moved ${lineDiff} lines (${percentScrolled}% of file)`
+        );
+      }
     }
-  }
-  
+
     updateNavigation();
 
     if (LocationTracker.shouldUpdateTracking()) {

@@ -33,6 +33,17 @@ export class NavigationHistory {
         this.intermediateLocation = currentLocation;
       }
     }, 200);
+
+    // setInterval(() => {
+    //   console.log(
+    //     this.navigationHistory.map(
+    //       (el) => el.relativePath + el.range.start.line
+    //     )
+    //   );
+    //   console.log(this.navigationHistoryIndex);
+    //   console.log(this.intermediateLocation);
+    //   console.log("------------");
+    // }, 5000);
   }
 
   public static updateLocation() {
@@ -52,6 +63,14 @@ export class NavigationHistory {
       this.lastLocationUpdate = Date.now();
       return;
     }
+
+    // console.log("--- Updating location ---");
+    // console.log(
+    //   this.navigationHistory.map((el) => el.relativePath + el.range.start.line)
+    // );
+    // console.log(this.navigationHistoryIndex);
+    // console.log(this.intermediateLocation);
+    // console.log("---");
 
     let lastLocationToMergeWith =
       this.intermediateLocation ??
@@ -99,6 +118,13 @@ export class NavigationHistory {
       this.intermediateLocation = undefined;
       this.lastLocationUpdate = Date.now();
     }
+
+    // console.log(
+    //   this.navigationHistory.map((el) => el.relativePath + el.range.start.line)
+    // );
+    // console.log(this.navigationHistoryIndex);
+    // console.log(this.intermediateLocation);
+    // console.log("--- End updating location ---");
   }
 
   public static handleTextDocumentChangeEvent(
@@ -234,12 +260,6 @@ export class NavigationHistory {
     if (this.navigationHistoryIndex < this.navigationHistory.length - 1) {
       return true;
     }
-    if (this.intermediateLocation) {
-      let currentLocation = this.getCurrentLocation();
-      if (!this.tryMergeLocations(this.intermediateLocation, currentLocation)) {
-        return true;
-      }
-    }
 
     return false;
   }
@@ -249,12 +269,38 @@ export class NavigationHistory {
       return;
     }
 
+    // Issue: intermediate location is current location, and approximately equal to previous location.
+    console.log("Moving to previous position");
+    console.log(this.intermediateLocation);
+    console.log(this.navigationHistoryIndex);
+
     if (!this.intermediateLocation) {
       this.navigationHistoryIndex -= 1;
     } else {
-      this.navigationHistory.push(this.intermediateLocation!);
+      var mergedLocation = this.tryMergeLocations(
+        this.intermediateLocation,
+        this.navigationHistory[this.navigationHistoryIndex]
+      );
+
+      if (!mergedLocation) {
+        if (this.navigationHistoryIndex < this.navigationHistory.length - 1) {
+          this.navigationHistory = this.navigationHistory.slice(
+            0,
+            this.navigationHistoryIndex + 1
+          );
+        }
+        this.navigationHistory.push(this.intermediateLocation);
+      }
       this.intermediateLocation = undefined;
     }
+
+    console.log("--- Moved to previous position ---");
+    console.log(
+      this.navigationHistory.map((el) => el.relativePath + el.range.start.line)
+    );
+    console.log(this.navigationHistoryIndex);
+    console.log(this.intermediateLocation);
+    console.log("-------------");
 
     let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
     revealLocation(
@@ -262,6 +308,8 @@ export class NavigationHistory {
       locationToReveal.range.start.line,
       locationToReveal.range.end.line
     );
+
+    this.lastLocationUpdate = Date.now(); // prevents the next location update from being triggered immediately
   }
 
   public static moveToNextPosition() {
@@ -283,6 +331,7 @@ export class NavigationHistory {
       locationToReveal.range.start.line,
       locationToReveal.range.end.line
     );
+    this.lastLocationUpdate = Date.now(); // prevents the next location update from being triggered immediately
   }
 
   private static tryMergeLocations(
