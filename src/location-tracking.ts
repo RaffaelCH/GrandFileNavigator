@@ -65,12 +65,11 @@ export function loadPositionHistory(storageLocation: vscode.Uri) {
 //vscode.window.onDidChangeWindowState
 //vscode.workspace.onDidChangeTextDocument
 
-export function addLastLocationToHistory(context: vscode.ExtensionContext) {
+export function addLastLocationToHistory() {
   if (LocationTracker.lastDocument === undefined) {
     return;
   }
 
-  const storageLocation = context.storageUri || context.globalStorageUri;
   const viewDuration = Date.now() - LocationTracker.lastVisibleRangeUpdate;
   const fileIdentifier = vscode.workspace.asRelativePath(
     LocationTracker.lastDocument.uri.path

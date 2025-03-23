@@ -270,9 +270,9 @@ export class NavigationHistory {
     }
 
     // Issue: intermediate location is current location, and approximately equal to previous location.
-    console.log("Moving to previous position");
-    console.log(this.intermediateLocation);
-    console.log(this.navigationHistoryIndex);
+    // console.log("Moving to previous position");
+    // console.log(this.intermediateLocation);
+    // console.log(this.navigationHistoryIndex);
 
     if (!this.intermediateLocation) {
       this.navigationHistoryIndex -= 1;
@@ -294,13 +294,13 @@ export class NavigationHistory {
       this.intermediateLocation = undefined;
     }
 
-    console.log("--- Moved to previous position ---");
-    console.log(
-      this.navigationHistory.map((el) => el.relativePath + el.range.start.line)
-    );
-    console.log(this.navigationHistoryIndex);
-    console.log(this.intermediateLocation);
-    console.log("-------------");
+    // console.log("--- Moved to previous position ---");
+    // console.log(
+    //   this.navigationHistory.map((el) => el.relativePath + el.range.start.line)
+    // );
+    // console.log(this.navigationHistoryIndex);
+    // console.log(this.intermediateLocation);
+    // console.log("-------------");
 
     let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
     revealLocation(

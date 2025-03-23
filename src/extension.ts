@@ -19,6 +19,7 @@ import { enrichHotspotsByType } from "./HotspotsGrouper";
 import { LocationTracker } from "./LocationTracker";
 import { NavigationHistory } from "./NavigationHistory";
 import { HotspotLLMAnalyzer } from "./HotspotsLLMAnalyzer";
+import { InteractionTracker } from "./utils/interactionTracker";
 
 let backwardsStatusBarItem: vscode.StatusBarItem;
 let forwardsStatusBarItem: vscode.StatusBarItem;
@@ -143,8 +144,7 @@ export function activate(context: vscode.ExtensionContext) {
   LocationTracker.initialize();
   NavigationHistory.initialize();
 
-  storageLocation = context.storageUri;
-
+  const storageLocation = context.storageUri || context.globalStorageUri;
   if (storageLocation === undefined) {
     vscode.window.showInformationMessage("Storage location not defined");
   } else {
@@ -154,6 +154,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     console.log("Storage location: " + storageLocation.fsPath);
     loadPositionHistory(storageLocation);
+    InteractionTracker.setStorageLocation(storageLocation);
   }
 
   const rootPath =
@@ -187,6 +188,13 @@ export function activate(context: vscode.ExtensionContext) {
         `Jump Backward triggered: from ${before.range.start.line}-${before.range.end.line} to ${after.range.start.line}-${after.range.end.line}`
       );
     }
+    InteractionTracker.ExecuteNavigationJump(
+      true,
+      before?.relativePath,
+      before?.range,
+      after!.relativePath,
+      after!.range.start.line
+    );
   });
 
   vscode.commands.registerCommand("grandfilenavigator.jumpForwards", () => {
@@ -199,6 +207,14 @@ export function activate(context: vscode.ExtensionContext) {
         `Jump Forward triggered: from ${before.range.start.line}-${before.range.end.line} to ${after.range.start.line}-${after.range.end.line}`
       );
     }
+
+    InteractionTracker.ExecuteNavigationJump(
+      false,
+      before?.relativePath,
+      before?.range,
+      after!.relativePath,
+      after!.range.start.line
+    );
   });
 
   registerWebviewVisualization(context);
@@ -254,9 +270,17 @@ export function activate(context: vscode.ExtensionContext) {
     updateNavigation();
 
     if (LocationTracker.shouldUpdateTracking()) {
-      addLastLocationToHistory(context);
+      addLastLocationToHistory();
       await updateEnrichedHotspots(); // TODO: Only update current file.
     }
+
+    InteractionTracker.changedFile(
+      LocationTracker.lastDocument?.fileName,
+      LocationTracker.lastVisibleRanges?.at(0),
+      vscode.window.activeTextEditor?.document.fileName,
+      vscode.window.activeTextEditor?.visibleRanges.at(0)
+    );
+
     histogramViewProvider.updateHistogramData();
     LocationTracker.updateLocationTracking();
 
@@ -269,6 +293,12 @@ export function activate(context: vscode.ExtensionContext) {
   // Does not get triggered reliably when switching tabs!
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
     const previousRanges = LocationTracker.lastVisibleRanges;
+
+    InteractionTracker.changedVisibleRanges(
+      LocationTracker.lastDocument?.fileName,
+      LocationTracker.lastVisibleRanges?.at(0),
+      vscode.window.activeTextEditor?.visibleRanges.at(0)
+    );
 
     LocationTracker.updateLocationTracking();
     const currentRanges = LocationTracker.lastVisibleRanges;
@@ -291,7 +321,7 @@ export function activate(context: vscode.ExtensionContext) {
     updateNavigation();
 
     if (LocationTracker.shouldUpdateTracking()) {
-      addLastLocationToHistory(context);
+      addLastLocationToHistory();
       await updateEnrichedHotspots(); // TODO: Only update current file.
     }
     LocationTracker.updateLocationTracking();
@@ -313,7 +343,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   locationUpdater = setInterval(() => {
     if (LocationTracker.shouldUpdateTracking()) {
-      addLastLocationToHistory(context);
+      addLastLocationToHistory();
     }
   }, 1000);
 

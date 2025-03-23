@@ -6,6 +6,7 @@ import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
 import { adaptImportanceArray } from "./adapters/hotspotsGrouper.js";
 import { NavigationHistory } from "./NavigationHistory.js";
+import { InteractionTracker } from "./utils/interactionTracker.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -192,25 +193,23 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
             this.updateHistogramData();
           }
         case "showRange":
-          vscode.window.activeTextEditor?.revealRange(
-            new vscode.Range(
-              new vscode.Position(message.startLine, 0),
-              new vscode.Position(message.endLine, 1)
-            )
+          const targetRange = new vscode.Range(
+            new vscode.Position(message.startLine, 0),
+            new vscode.Position(message.endLine, 1)
           );
-          return;
-        case "showLocation": // TODO: Handle jumping to other files.
-          vscode.window.activeTextEditor?.revealRange(
-            new vscode.Range(
-              new vscode.Position(message.startLine, 0),
-              new vscode.Position(message.endLine, 1)
-            )
+          InteractionTracker.changedVisibleRanges(
+            vscode.window.activeTextEditor?.document.fileName,
+            vscode.window.activeTextEditor?.visibleRanges.at(0),
+            targetRange
           );
+          vscode.window.activeTextEditor?.revealRange(targetRange);
           return;
         case "navigateBackwards":
+          InteractionTracker.clickJumpButton();
           NavigationHistory.moveToPreviousPosition();
           return;
         case "navigateForwards":
+          InteractionTracker.clickJumpButton();
           NavigationHistory.moveToNextPosition();
           return;
       }
