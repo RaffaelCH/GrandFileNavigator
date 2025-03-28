@@ -12,7 +12,8 @@
   ],
   "activationEvents": [
     "onWebviewPanel:grandFileNavigator",
-    "onCommand:grandfileNavigator.showFileHistogram"
+    "onCommand:grandfileNavigator.showFileHistogram",
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
