@@ -205,11 +205,11 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
           vscode.window.activeTextEditor?.revealRange(targetRange);
           return;
         case "navigateBackwards":
-          InteractionTracker.clickJumpButton();
+          InteractionTracker.clickJumpButton("backwards");
           NavigationHistory.moveToPreviousPosition();
           return;
         case "navigateForwards":
-          InteractionTracker.clickJumpButton();
+          InteractionTracker.clickJumpButton("forwards");
           NavigationHistory.moveToNextPosition();
           return;
       }

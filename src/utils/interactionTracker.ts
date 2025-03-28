@@ -68,10 +68,11 @@ export class InteractionTracker {
     fs.appendFileSync(this.storageLocation, `${stringified}\n`);
   }
 
-  public static clickJumpButton() {
+  public static clickJumpButton(direction: string) {
     let clickJumpButton = {
       timeStamp: Date.now(),
       interactionType: "ClickJumpButton",
+      direction: direction,
     };
     let stringified = JSON.stringify(clickJumpButton);
     fs.appendFileSync(this.storageLocation, `${stringified}\n`);
@@ -81,8 +82,8 @@ export class InteractionTracker {
     backwards: boolean,
     sourceFilePath: string | undefined,
     sourceRange: vscode.Range | undefined,
-    targetFilePath: string,
-    targetLine: number
+    targetFilePath: string | undefined,
+    targetLine: number | undefined
   ) {
     let navigationJumpData = {
       timeStamp: Date.now(),
@@ -94,6 +95,16 @@ export class InteractionTracker {
       targetLine: targetLine,
     };
     let stringified = JSON.stringify(navigationJumpData);
+    fs.appendFileSync(this.storageLocation, `${stringified}\n`);
+  }
+
+  public static editFile(filePath: string | undefined) {
+    let editFileData = {
+      timeStamp: Date.now(),
+      interactionType: "EditFile",
+      filePath: filePath,
+    };
+    let stringified = JSON.stringify(editFileData);
     fs.appendFileSync(this.storageLocation, `${stringified}\n`);
   }
 

@@ -199,8 +199,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.commands.registerCommand("grandfilenavigator.jumpForwards", () => {
     const before = NavigationHistory.getCurrentLocation();
+    const after = NavigationHistory.getNextLocations(1)[0];
     NavigationHistory.moveToNextPosition();
-    const after = NavigationHistory.getCurrentLocation();
     if (before && after) {
       logMessage(
         storageLocation!,
@@ -212,8 +212,8 @@ export function activate(context: vscode.ExtensionContext) {
       false,
       before?.relativePath,
       before?.range,
-      after!.relativePath,
-      after!.range.start.line
+      after?.relativePath,
+      after?.range.start.line
     );
   });
 
@@ -336,6 +336,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   vscode.workspace.onDidChangeTextDocument((event) => {
+    InteractionTracker.editFile(event.document.fileName);
     NavigationHistory.handleTextDocumentChangeEvent(event);
     handleTextDocumentChangeEvent(event);
     updateNavigationViews();
