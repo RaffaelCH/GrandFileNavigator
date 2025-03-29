@@ -34,6 +34,14 @@
         "title": "Jump to next relevant location"
       },
       {
+        "command": "grandfilenavigator.statusbar.jumpBackwards",
+        "title": "Jump to last relevant location (from statusbar)"
+      },
+      {
+        "command": "grandfilenavigator.statusbar.jumpForwards",
+        "title": "Jump to next relevant location (from statusbar)"
+      },
+      {
         "command": "hotspots.refreshEntry",
         "title": "Refresh",
         "icon": {

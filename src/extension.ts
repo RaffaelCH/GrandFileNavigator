@@ -188,7 +188,7 @@ export function activate(context: vscode.ExtensionContext) {
         `Jump Backward triggered: from ${before.range.start.line}-${before.range.end.line} to ${after.range.start.line}-${after.range.end.line}`
       );
     }
-    InteractionTracker.ExecuteNavigationJump(
+    InteractionTracker.registerNavigationJump(
       true,
       before?.relativePath,
       before?.range,
@@ -208,7 +208,7 @@ export function activate(context: vscode.ExtensionContext) {
       );
     }
 
-    InteractionTracker.ExecuteNavigationJump(
+    InteractionTracker.registerNavigationJump(
       false,
       before?.relativePath,
       before?.range,
@@ -216,6 +216,22 @@ export function activate(context: vscode.ExtensionContext) {
       after?.range.start.line
     );
   });
+
+  vscode.commands.registerCommand(
+    "grandfilenavigator.statusbar.jumpBackwards",
+    () => {
+      InteractionTracker.clickStatusBar(true);
+      vscode.commands.executeCommand("grandfilenavigator.jumpBackwards");
+    }
+  );
+
+  vscode.commands.registerCommand(
+    "grandfilenavigator.statusbar.jumpForwards",
+    () => {
+      InteractionTracker.clickStatusBar(false);
+      vscode.commands.executeCommand("grandfilenavigator.jumpForwards");
+    }
+  );
 
   registerWebviewVisualization(context);
   registerWebviewPanelHistogram(context);
@@ -233,13 +249,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.StatusBarAlignment.Left,
     9
   );
-  backwardsStatusBarItem.command = "grandfilenavigator.jumpBackwards";
+  backwardsStatusBarItem.command = "grandfilenavigator.statusbar.jumpBackwards";
 
   forwardsStatusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
     8
   );
-  forwardsStatusBarItem.command = "grandfilenavigator.jumpForwards";
+  forwardsStatusBarItem.command = "grandfilenavigator.statusbar.jumpForwards";
 
   function updateNavigation() {
     NavigationHistory.updateLocation();

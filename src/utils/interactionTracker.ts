@@ -52,6 +52,34 @@ export class InteractionTracker {
     fs.appendFileSync(this.storageLocation, `${stringified}\n`);
   }
 
+  public static openSidebar() {
+    let openSidebar = {
+      timeStamp: Date.now(),
+      interactionType: "OpenSidebar",
+    };
+    let stringified = JSON.stringify(openSidebar);
+    fs.appendFileSync(this.storageLocation, `${stringified}\n`);
+  }
+
+  public static switchSidebarView(targetView: string) {
+    let switchSidebarView = {
+      timeStamp: Date.now(),
+      targetView: targetView,
+    };
+    let stringified = JSON.stringify(switchSidebarView);
+    fs.appendFileSync(this.storageLocation, `${stringified}\n`);
+  }
+
+  public static changeSidebarVisibility(isVisible: boolean) {
+    let changeSidebarVisibility = {
+      timeStamp: Date.now(),
+      interactionType: "ChangeSidebarVisibility",
+      isVisible: isVisible,
+    };
+    let stringified = JSON.stringify(changeSidebarVisibility);
+    fs.appendFileSync(this.storageLocation, `${stringified}\n`);
+  }
+
   public static clickHistogram(
     sourceFilePath: string | undefined,
     sourceRange: vscode.Range | undefined,
@@ -68,17 +96,27 @@ export class InteractionTracker {
     fs.appendFileSync(this.storageLocation, `${stringified}\n`);
   }
 
-  public static clickJumpButton(direction: string) {
+  public static clickJumpButton(backwards: boolean) {
     let clickJumpButton = {
       timeStamp: Date.now(),
       interactionType: "ClickJumpButton",
-      direction: direction,
+      backwards: backwards,
     };
     let stringified = JSON.stringify(clickJumpButton);
     fs.appendFileSync(this.storageLocation, `${stringified}\n`);
   }
 
-  public static ExecuteNavigationJump(
+  public static clickStatusBar(backwards: boolean) {
+    let clickStatusBar = {
+      timeStamp: Date.now(),
+      interactionType: "ClickStatusBar",
+      backwards: backwards,
+    };
+    let stringified = JSON.stringify(clickStatusBar);
+    fs.appendFileSync(this.storageLocation, `${stringified}\n`);
+  }
+
+  public static registerNavigationJump(
     backwards: boolean,
     sourceFilePath: string | undefined,
     sourceRange: vscode.Range | undefined,

@@ -27,6 +27,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
   ) {
     this._view = webviewView;
 
+    webviewView.onDidChangeVisibility((e) =>
+      InteractionTracker.changeSidebarVisibility(webviewView.visible)
+    );
+
     webviewView.webview.options = {
       enableScripts: true, // Allow scripts in the webview.
       localResourceRoots: [this._extensionUri],
@@ -187,9 +191,11 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         case "switchVisualization":
           if (this._visualizationType === "histogram") {
             this._visualizationType = "hotspots";
+            InteractionTracker.switchSidebarView("hotspots");
             this.updateHotspotsData();
           } else {
             this._visualizationType = "histogram";
+            InteractionTracker.switchSidebarView("histogram");
             this.updateHistogramData();
           }
         case "showRange":
@@ -205,12 +211,12 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
           vscode.window.activeTextEditor?.revealRange(targetRange);
           return;
         case "navigateBackwards":
-          InteractionTracker.clickJumpButton("backwards");
-          NavigationHistory.moveToPreviousPosition();
+          InteractionTracker.clickJumpButton(true);
+          vscode.commands.executeCommand("grandfilenavigator.jumpBackwards");
           return;
         case "navigateForwards":
-          InteractionTracker.clickJumpButton("forwards");
-          NavigationHistory.moveToNextPosition();
+          InteractionTracker.clickJumpButton(false);
+          vscode.commands.executeCommand("grandfilenavigator.jumpForwards");
           return;
       }
     }, undefined);

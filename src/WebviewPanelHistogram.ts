@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { categorizePositionsByFileName } from "./location-tracking.js";
+import { InteractionTracker } from "./utils/interactionTracker.js";
 
 export function registerWebviewPanelHistogram(
   context: vscode.ExtensionContext
@@ -20,6 +21,7 @@ export function registerWebviewPanelHistogram(
 
       //const fileCounts = categorizePositionsByFileName();
       panel.webview.html = getWebviewContent(fileCounts);
+      InteractionTracker.openSidebar();
     }
   );
 
