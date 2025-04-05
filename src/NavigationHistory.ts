@@ -303,6 +303,14 @@ export class NavigationHistory {
     // console.log("-------------");
 
     let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    if (
+      this.navigationHistoryIndex > 0 &&
+      this.tryMergeLocations(locationToReveal, this.getCurrentLocation())
+    ) {
+      this.navigationHistoryIndex -= 1;
+      locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    }
+
     revealLocation(
       locationToReveal.relativePath,
       locationToReveal.range.start.line,
@@ -318,12 +326,15 @@ export class NavigationHistory {
     }
 
     var locationToReveal: FileLocation;
-    if (!this.intermediateLocation) {
+
+    if (this.navigationHistoryIndex < this.navigationHistory.length - 1) {
       this.navigationHistoryIndex += 1;
       locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
-    } else {
+    } else if (this.intermediateLocation) {
       locationToReveal = this.intermediateLocation;
       this.intermediateLocation = undefined;
+    } else {
+      return;
     }
 
     revealLocation(
