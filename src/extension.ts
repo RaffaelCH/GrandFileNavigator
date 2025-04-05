@@ -285,6 +285,9 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.window.onDidChangeActiveTextEditor(async () => {
     updateNavigation();
 
+    histogramViewProvider.updateHistogramData();
+    LocationTracker.updateLocationTracking();
+
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory();
       await updateEnrichedHotspots(); // TODO: Only update current file.
@@ -297,9 +300,6 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.activeTextEditor?.visibleRanges.at(0)
     );
 
-    histogramViewProvider.updateHistogramData();
-    LocationTracker.updateLocationTracking();
-
     // Ensure visible ranges always get updated.
     if (vscode.window.activeTextEditor?.visibleRanges) {
       updateNavigation();
@@ -308,39 +308,19 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Does not get triggered reliably when switching tabs!
   vscode.window.onDidChangeTextEditorVisibleRanges(async () => {
-    const previousRanges = LocationTracker.lastVisibleRanges;
-
     InteractionTracker.changedVisibleRanges(
       LocationTracker.lastDocument?.fileName,
       LocationTracker.lastVisibleRanges?.at(0),
       vscode.window.activeTextEditor?.visibleRanges.at(0)
     );
 
-    LocationTracker.updateLocationTracking();
-    const currentRanges = LocationTracker.lastVisibleRanges;
-
-    if (previousRanges && currentRanges && currentRanges.length > 0) {
-      const prevStart = previousRanges[0].start.line;
-      const currStart = currentRanges[0].start.line;
-      const lineDiff = Math.abs(currStart - prevStart);
-      const totalLines =
-        vscode.window.activeTextEditor?.document.lineCount || 1;
-      const percentScrolled = ((lineDiff / totalLines) * 100).toFixed(2);
-      if (storageLocation) {
-        logMessage(
-          storageLocation,
-          `Scrolling: visible range moved ${lineDiff} lines (${percentScrolled}% of file)`
-        );
-      }
-    }
-
-    updateNavigation();
-
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory();
       await updateEnrichedHotspots(); // TODO: Only update current file.
     }
+
     LocationTracker.updateLocationTracking();
+    updateNavigation();
 
     const visibleRanges = LocationTracker.lastVisibleRanges;
     if (visibleRanges !== undefined) {

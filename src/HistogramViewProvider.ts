@@ -1,12 +1,16 @@
 import * as vscode from "vscode";
 import { getFileHistogramData } from "./loadHistogramData.js";
-import { getCondensedImportanceArray } from "./HotspotsGrouper.js";
+import {
+  getCondensedImportanceArray,
+  updateHotspotsData,
+} from "./HotspotsGrouper.js";
 import SidebarNode from "./sidebar_types/sidebarNode.js";
 import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
 import { adaptImportanceArray } from "./adapters/hotspotsGrouper.js";
 import { NavigationHistory } from "./NavigationHistory.js";
 import { InteractionTracker } from "./utils/interactionTracker.js";
+import { getPositionHistory } from "./location-tracking.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -139,6 +143,9 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     }
 
     let currentFileName = activeTextEditor?.document.fileName;
+
+    let positionHistory = getPositionHistory();
+    updateHotspotsData(positionHistory);
 
     var importanceData = getCondensedImportanceArray();
     importanceData = importanceData.filter((importanceElement) =>
