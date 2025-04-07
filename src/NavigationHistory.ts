@@ -270,9 +270,9 @@ export class NavigationHistory {
     }
 
     // Issue: intermediate location is current location, and approximately equal to previous location.
-    console.log("Moving to previous position");
-    console.log(this.intermediateLocation);
-    console.log(this.navigationHistoryIndex);
+    // console.log("Moving to previous position");
+    // console.log(this.intermediateLocation);
+    // console.log(this.navigationHistoryIndex);
 
     if (!this.intermediateLocation) {
       this.navigationHistoryIndex -= 1;
@@ -294,15 +294,23 @@ export class NavigationHistory {
       this.intermediateLocation = undefined;
     }
 
-    console.log("--- Moved to previous position ---");
-    console.log(
-      this.navigationHistory.map((el) => el.relativePath + el.range.start.line)
-    );
-    console.log(this.navigationHistoryIndex);
-    console.log(this.intermediateLocation);
-    console.log("-------------");
+    // console.log("--- Moved to previous position ---");
+    // console.log(
+    //   this.navigationHistory.map((el) => el.relativePath + el.range.start.line)
+    // );
+    // console.log(this.navigationHistoryIndex);
+    // console.log(this.intermediateLocation);
+    // console.log("-------------");
 
     let locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    if (
+      this.navigationHistoryIndex > 0 &&
+      this.tryMergeLocations(locationToReveal, this.getCurrentLocation())
+    ) {
+      this.navigationHistoryIndex -= 1;
+      locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
+    }
+
     revealLocation(
       locationToReveal.relativePath,
       locationToReveal.range.start.line,
@@ -318,12 +326,15 @@ export class NavigationHistory {
     }
 
     var locationToReveal: FileLocation;
-    if (!this.intermediateLocation) {
+
+    if (this.navigationHistoryIndex < this.navigationHistory.length - 1) {
       this.navigationHistoryIndex += 1;
       locationToReveal = this.navigationHistory[this.navigationHistoryIndex];
-    } else {
+    } else if (this.intermediateLocation) {
       locationToReveal = this.intermediateLocation;
       this.intermediateLocation = undefined;
+    } else {
+      return;
     }
 
     revealLocation(

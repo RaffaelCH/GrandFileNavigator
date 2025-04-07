@@ -1,11 +1,16 @@
 import * as vscode from "vscode";
 import { getFileHistogramData } from "./loadHistogramData.js";
-import { getCondensedImportanceArray } from "./HotspotsGrouper.js";
+import {
+  getCondensedImportanceArray,
+  updateHotspotsData,
+} from "./HotspotsGrouper.js";
 import SidebarNode from "./sidebar_types/sidebarNode.js";
 import { NodeType } from "./sidebar_types/NodeType.js";
 import * as path from "path";
 import { adaptImportanceArray } from "./adapters/hotspotsGrouper.js";
 import { NavigationHistory } from "./NavigationHistory.js";
+import { InteractionTracker } from "./utils/interactionTracker.js";
+import { getPositionHistory } from "./location-tracking.js";
 
 export class HistogramViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "grandfilenavigator-histogram";
@@ -25,6 +30,10 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
     _token: vscode.CancellationToken
   ) {
     this._view = webviewView;
+
+    webviewView.onDidChangeVisibility((e) =>
+      InteractionTracker.changeSidebarVisibility(webviewView.visible)
+    );
 
     webviewView.webview.options = {
       enableScripts: true, // Allow scripts in the webview.
@@ -135,6 +144,9 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
 
     let currentFileName = activeTextEditor?.document.fileName;
 
+    let positionHistory = getPositionHistory();
+    updateHotspotsData(positionHistory);
+
     var importanceData = getCondensedImportanceArray();
     importanceData = importanceData.filter((importanceElement) =>
       currentFileName.endsWith(importanceElement.fileName)
@@ -186,32 +198,32 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         case "switchVisualization":
           if (this._visualizationType === "histogram") {
             this._visualizationType = "hotspots";
+            InteractionTracker.switchSidebarView("hotspots");
             this.updateHotspotsData();
           } else {
             this._visualizationType = "histogram";
+            InteractionTracker.switchSidebarView("histogram");
             this.updateHistogramData();
           }
         case "showRange":
-          vscode.window.activeTextEditor?.revealRange(
-            new vscode.Range(
-              new vscode.Position(message.startLine, 0),
-              new vscode.Position(message.endLine, 1)
-            )
+          const targetRange = new vscode.Range(
+            new vscode.Position(message.startLine, 0),
+            new vscode.Position(message.endLine, 1)
           );
-          return;
-        case "showLocation": // TODO: Handle jumping to other files.
-          vscode.window.activeTextEditor?.revealRange(
-            new vscode.Range(
-              new vscode.Position(message.startLine, 0),
-              new vscode.Position(message.endLine, 1)
-            )
+          InteractionTracker.changedVisibleRanges(
+            vscode.window.activeTextEditor?.document.fileName,
+            vscode.window.activeTextEditor?.visibleRanges.at(0),
+            targetRange
           );
+          vscode.window.activeTextEditor?.revealRange(targetRange);
           return;
         case "navigateBackwards":
-          NavigationHistory.moveToPreviousPosition();
+          InteractionTracker.clickJumpButton(true);
+          vscode.commands.executeCommand("grandfilenavigator.jumpBackwards");
           return;
         case "navigateForwards":
-          NavigationHistory.moveToNextPosition();
+          InteractionTracker.clickJumpButton(false);
+          vscode.commands.executeCommand("grandfilenavigator.jumpForwards");
           return;
       }
     }, undefined);

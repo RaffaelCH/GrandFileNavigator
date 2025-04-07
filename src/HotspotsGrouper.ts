@@ -11,11 +11,14 @@ and differs by
 */
 
 import * as vscode from "vscode";
-import { RangeData, PositionHistory } from "./location-tracking";
+import {
+  RangeData,
+  PositionHistory,
+  getPositionHistory,
+} from "./location-tracking";
 import * as path from "path";
 import { existsSync, writeFileSync } from "fs";
 import { logMessage } from "./extension";
-
 
 interface BasicHotspot {
   filePath: string;
@@ -24,20 +27,18 @@ interface BasicHotspot {
   totalDuration: number; // Summed from duplicates
 }
 
-
 export interface EnrichedHotspot {
   filePath: string; // Absolute file path
   rangeData: RangeData;
   symbols: Array<{
-    symbolType: number; 
+    symbolType: number;
     symbolName: string;
     symbolLine: number;
     symbolEndLine: number;
   }>;
-  timeSpent: number; 
+  timeSpent: number;
   importance: number;
 }
-
 
 export class ImportanceElement {
   constructor(
@@ -57,22 +58,13 @@ const enrichedHotspotsFilename = "enrichedHotspots.json";
 const importanceArrayFilename = "importanceArray.json";
 let importanceArray: ImportanceElement[] = [];
 
-/*
- 1) Merge hotspots from PositionHistory.
- 2) Enrich them by symbol lookups.
- 3) Flatten into an importance array.
- 4) Save to JSON files in the extension's FS.
- */
-
-export async function enrichHotspotsByType(
-  hotspots: PositionHistory,
-  context: vscode.ExtensionContext
+export async function updateHotspotsData(
+  hotspots: PositionHistory
 ): Promise<EnrichedHotspot[]> {
   const mergedHotspots: BasicHotspot[] = collectAndMergeAllHotspots(hotspots);
 
-  const enrichedHotspots: EnrichedHotspot[] = await resolveSymbolsAndEnrichHotspots(
-    mergedHotspots
-  );
+  const enrichedHotspots: EnrichedHotspot[] =
+    await resolveSymbolsAndEnrichHotspots(mergedHotspots);
 
   importanceArray = enrichedHotspots.flatMap((hotspot) => {
     return hotspot.symbols.map(
@@ -91,6 +83,20 @@ export async function enrichHotspotsByType(
     );
   });
 
+  return enrichedHotspots;
+}
+
+/*
+ 1) Merge hotspots from PositionHistory.
+ 2) Enrich them by symbol lookups.
+ 3) Flatten into an importance array.
+ 4) Save to JSON files in the extension's FS.
+ */
+export async function enrichHotspotsByType(
+  hotspots: PositionHistory,
+  context: vscode.ExtensionContext
+): Promise<EnrichedHotspot[]> {
+  let enrichedHotspots = await updateHotspotsData(hotspots);
   await saveHotspotData(context, enrichedHotspots, importanceArray);
 
   logMessage(
@@ -100,7 +106,6 @@ export async function enrichHotspotsByType(
 
   return enrichedHotspots;
 }
-
 
 function collectAndMergeAllHotspots(hotspots: PositionHistory): BasicHotspot[] {
   const mergedMap: Map<string, BasicHotspot> = new Map();
@@ -162,7 +167,6 @@ function collectAndMergeAllHotspots(hotspots: PositionHistory): BasicHotspot[] {
   return Array.from(mergedMap.values());
 }
 
-
 async function resolveSymbolsAndEnrichHotspots(
   basicHotspots: BasicHotspot[]
 ): Promise<EnrichedHotspot[]> {
@@ -185,10 +189,9 @@ async function resolveSymbolsAndEnrichHotspots(
     try {
       const docUri = vscode.Uri.file(filePath);
       const document = await vscode.workspace.openTextDocument(docUri);
-      const docSymbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
-        "vscode.executeDocumentSymbolProvider",
-        document.uri
-      );
+      const docSymbols = await vscode.commands.executeCommand<
+        vscode.DocumentSymbol[]
+      >("vscode.executeDocumentSymbolProvider", document.uri);
       symbols = docSymbols || [];
     } catch (err) {
       continue;
@@ -209,7 +212,10 @@ async function resolveSymbolsAndEnrichHotspots(
         symbolEndLine: ms.range.end.line,
       }));
 
-      const importance = calculateImportance(symbolDetails, hotspot.totalDuration);
+      const importance = calculateImportance(
+        symbolDetails,
+        hotspot.totalDuration
+      );
 
       enrichedResults.push({
         filePath,
@@ -223,7 +229,6 @@ async function resolveSymbolsAndEnrichHotspots(
 
   return enrichedResults;
 }
-
 
 function findAllMatchingSymbols(
   allSymbols: vscode.DocumentSymbol[],
@@ -249,7 +254,6 @@ function findAllMatchingSymbols(
   recurse(allSymbols);
   return matchingSymbols;
 }
-
 
 function calculateImportance(
   symbols: Array<{ symbolType: number; symbolName: string }>,
@@ -306,7 +310,6 @@ function getSymbolKindName(symbolKind: number): string {
   }
 }
 
-
 async function saveHotspotData(
   context: vscode.ExtensionContext,
   enrichedHotspots: EnrichedHotspot[],
@@ -332,10 +335,7 @@ async function saveHotspotData(
       storageUri.fsPath,
       importanceArrayFilename
     );
-    writeFileSync(
-      importanceFilePath,
-      JSON.stringify(importanceArray, null, 2)
-    );
+    writeFileSync(importanceFilePath, JSON.stringify(importanceArray, null, 2));
   } catch (error) {
     vscode.window.showErrorMessage(
       `Error saving data: ${(error as Error).message}`
@@ -343,11 +343,9 @@ async function saveHotspotData(
   }
 }
 
-
 export function getImportanceArray(): ImportanceElement[] {
   return importanceArray;
 }
-
 
 export function getCondensedImportanceArray(): ImportanceElement[] {
   const condensed = new Map<string, ImportanceElement>();
