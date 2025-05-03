@@ -64,6 +64,7 @@ export class InteractionTracker {
   public static switchSidebarView(targetView: string) {
     let switchSidebarView = {
       timeStamp: Date.now(),
+      interactionType: "SwitchView",
       targetView: targetView,
     };
     let stringified = JSON.stringify(switchSidebarView);

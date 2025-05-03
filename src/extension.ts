@@ -279,7 +279,9 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showErrorMessage("No hotspots found.");
       return;
     }
-    await enrichHotspotsByType(hotspots, context);
+    await enrichHotspotsByType(hotspots, context).catch((err) =>
+      console.log(err)
+    );
   }
 
   vscode.window.onDidChangeActiveTextEditor(async () => {
@@ -290,7 +292,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory();
-      await updateEnrichedHotspots(); // TODO: Only update current file.
+      updateEnrichedHotspots(); // TODO: Only update current file.
     }
 
     InteractionTracker.changedFile(
@@ -316,7 +318,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (LocationTracker.shouldUpdateTracking()) {
       addLastLocationToHistory();
-      await updateEnrichedHotspots(); // TODO: Only update current file.
+      updateEnrichedHotspots(); // TODO: Only update current file.
     }
 
     LocationTracker.updateLocationTracking();
@@ -389,6 +391,7 @@ function updateBackwardsStatusBarItem(): void {
         ":" +
         statusBarText;
     }
+
     backwardsStatusBarItem.text = `← ${statusBarText}`;
     backwardsStatusBarItem.show();
   } else {
