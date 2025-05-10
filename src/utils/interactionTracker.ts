@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
+import { timeStamp } from "console";
 
 // Track all user interactions during the evaluation.
 export class InteractionTracker {
@@ -144,6 +145,15 @@ export class InteractionTracker {
       filePath: filePath,
     };
     let stringified = JSON.stringify(editFileData);
+    fs.appendFileSync(this.storageLocation, `${stringified}\n`);
+  }
+
+  public static toggleTracking() {
+    let toggleTrackingData = {
+      timeStamp: Date.now(),
+      interactionType: "toggleTracking",
+    };
+    let stringified = JSON.stringify(toggleTrackingData);
     fs.appendFileSync(this.storageLocation, `${stringified}\n`);
   }
 

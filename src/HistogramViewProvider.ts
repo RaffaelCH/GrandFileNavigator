@@ -225,6 +225,9 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
           InteractionTracker.clickJumpButton(false);
           vscode.commands.executeCommand("grandfilenavigator.jumpForwards");
           return;
+        case "toggleTracking":
+          InteractionTracker.toggleTracking();
+          return;
       }
     }, undefined);
   }
@@ -294,6 +297,9 @@ export class HistogramViewProvider implements vscode.WebviewViewProvider {
         <script id="message-handler" nonce="${nonce}" src="${messageHandlerUri}"></script>
 			</head>
 			<body style="width:90%; height:95%; overflow-x: hidden; overflow-y: auto; padding: 10px;" >
+        <div style="margin: 10px; display: flex; justify-content: space-around;" id="toggle-tracking">
+          <button style="background-color: white; color: black;" onclick="vscodeApi.postMessage({command: 'toggleTracking'})">Start/Stop Task</button>
+        </div>
         <div style="margin: 10px; display: flex; justify-content: space-around; flex-direction: row;">
           <button id="nav-button-backward" style="background-color: white; color: black;"  onclick="vscodeApi.postMessage({command: 'navigateBackwards'})">Jump Backward</button>
           <button id="nav-button-forward" style="background-color: magenta; color: black;" onclick="vscodeApi.postMessage({command: 'navigateForwards'})">Jump Forward</button>
