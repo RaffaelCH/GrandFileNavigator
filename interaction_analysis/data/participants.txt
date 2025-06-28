@@ -1,0 +1,6 @@
+P1 - T1 with, T2 without (only T1 tracked)
+P2 - T1 without, T2 with (only T2 tracked)
+P3 - T1 with, T2 without (only T2 tracked)
+
+P5 - T1 without, T2 with
+P6 - T2 without, T1 with
