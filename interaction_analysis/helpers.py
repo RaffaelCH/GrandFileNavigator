@@ -13,6 +13,8 @@ def remove_erroneous(interactionData):
         if interaction["interactionType"] == "ChangeFile":
             if not interaction["targetFilePath"] or interaction["sourceFilePath"] == interaction["targetFilePath"]:
                 continue
+        if interaction["interactionType"] == "ChangeVisibleRanges" and interaction["targetRange"] == "undefined-undefined":
+            continue
         fixedInteractionData.append(interaction)
 
     return fixedInteractionData
@@ -33,10 +35,30 @@ def remove_duplicates(interactionData):
 # Processing
 
 
-# Merge scrolls together.
-# A scroll is all changes of the visible ranges with less than 250 between them (i.e., covers short interruptions).
+def parseRanges(interaction):
+    """Returns [(sourceRangeStart, sourceRangeEnd), (targetRangeStart, targetRangeEnd)]"""
+    interactionSourceStart = int(interaction["sourceRange"].split("-")[0])
+    interactionSourceEnd = int(interaction["sourceRange"].split("-")[1])
+    interactionTargetStart = int(interaction["targetRange"].split("-")[0])
+    interactionTargetEnd = int(interaction["targetRange"].split("-")[1])
+    return [(interactionSourceStart, interactionSourceEnd), (interactionTargetStart, interactionTargetEnd)]
 
-def detect_scrolling(interactionData):
+
+def rangeChangeDirection(interaction):
+    """Returns 1 if the interaction resulted in a move down, 0 is no change, and -1 otherwise."""
+    ranges = parseRanges(interaction)
+    if ranges[0][0] < ranges[1][0] or ranges[0][1] < ranges[1][1]:
+        return 1
+    if ranges[0][0] > ranges[1][0] or ranges[0][1] > ranges[1][1]:
+        return 1
+    return 0
+
+
+def process_scrolling(interactionData):
+    """
+    Merge scrolls together (changes of visible ranges close together in time, with same direction).
+    """
+
     # max time in ms between ChangeVisibleRanges entries to still be considered part of one scroll
     maxTimeBetweenChanges = 250
     scrollingInteractionData = []
@@ -54,15 +76,36 @@ def detect_scrolling(interactionData):
             changeRangesInteraction = copy.deepcopy(interaction)
             continue
 
+        changeRangesInteractionDirection = rangeChangeDirection(
+            changeRangesInteraction)
+        currentInteractionDirection = rangeChangeDirection(
+            interaction)
+
+        if (changeRangesInteractionDirection != currentInteractionDirection):
+            scrollingInteractionData.append(changeRangesInteraction)
+            changeRangesInteraction = copy.deepcopy(interaction)
+            continue
+
+        previousInteractionDirection = int(changeRangesInteraction["sourceRange"].split(
+            "-")[0]) < int(changeRangesInteraction["targetRange"].split("-")[0])
+        currentInteractionDirection = int(interaction["sourceRange"].split(
+            "-")[0]) < int(interaction["targetRange"].split("-")[0])
+
+        if previousInteractionDirection != currentInteractionDirection:
+            scrollingInteractionData.append(changeRangesInteraction)
+            changeRangesInteraction = copy.deepcopy(interaction)
+            continue
+
         isScrollInteraction = changeRangesInteraction["interactionType"] == "Scroll"
         lastInteractionEndTime = changeRangesInteraction[
             "endTime"] if isScrollInteraction else changeRangesInteraction["timeStamp"]
+
         if interaction["timeStamp"] - lastInteractionEndTime > maxTimeBetweenChanges:
             scrollingInteractionData.append(changeRangesInteraction)
-            changeRangesInteraction = None
+            changeRangesInteraction = interaction
         else:
             # wasn't treated as scroll yet
-            if changeRangesInteraction["interactionType"] == "ChangeVisibleRanges":
+            if not isScrollInteraction:
                 changeRangesInteraction["interactionType"] = "Scroll"
                 changeRangesInteraction["startTime"] = changeRangesInteraction["timeStamp"]
             changeRangesInteraction["endTime"] = interaction["timeStamp"]
@@ -111,8 +154,38 @@ def combine_edits(interactionData):
     return editingInteractionData
 
 
-# Data Loading
+def process_jumps(interactionData):
+    navigationInteractions = ["ClickJumpButton",
+                              "ClickStatusBar", "NavigationJump"]
+    jumpInteractionData = []
 
+    i = 0
+    while i < len(interactionData):
+        if interactionData[i]["interactionType"] in navigationInteractions:
+            triggeredByUiInteraction = interactionData[i]["interactionType"] != "NavigationJump"
+            jumpEntryIndex = i+2 if triggeredByUiInteraction else i+1
+
+            combinedEntry = interactionData[jumpEntryIndex]
+            combinedEntry["interactionType"] = "NavigationJump"
+            combinedEntry["backwards"] = interactionData[i]["backwards"]
+
+            if interactionData[i]["interactionType"] == "ClickJumpButton":
+                combinedEntry["origin"] = "SidebarButton"
+            elif interactionData[i]["interactionType"] == "ClickStatusBar":
+                combinedEntry["origin"] = "StatusBar"
+            else:
+                combinedEntry["origin"] = "KeyboardShortcut"
+
+            jumpInteractionData.append(combinedEntry)
+            i += 3 if triggeredByUiInteraction else 2
+        else:
+            jumpInteractionData.append(interactionData[i])
+            i += 1
+
+    return jumpInteractionData
+
+
+# Data Loading
 
 def get_newest_file(directory, startsWith="interactions_"):
     # Get list of all files in the directory
@@ -138,10 +211,10 @@ def loadInteractionData(filepath):
     if not filepath:
         userprofile = os.path.expanduser("~").replace("\\", "/")
         fileDir = userprofile + '/AppData/Roaming/Code/User/workspaceStorage/d7a43fe73afccc995dbf874aaf3cc4ab/grandFileNavigator.grandfilenavigator'
-        filePath = get_newest_file(fileDir)
+        filepath = get_newest_file(fileDir)
 
     interactionData = []
-    with open(filePath) as interactionDataFile:
+    with open(filepath) as interactionDataFile:
         for interaction in interactionDataFile.readlines():
             interactionData.append(json.loads(interaction))
 
