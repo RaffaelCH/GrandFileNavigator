@@ -1,5 +1,6 @@
 # Cleanup
 
+from collections import defaultdict
 import json
 import glob
 import os
@@ -183,6 +184,79 @@ def process_jumps(interactionData):
             i += 1
 
     return jumpInteractionData
+
+
+def refineInteractionData(interactionData):
+    fixedInteractionData = remove_erroneous(interactionData)
+
+    if (len(interactionData) > len(fixedInteractionData)):
+        print(
+            f"Removed {len(interactionData) - len(fixedInteractionData)} invalid interaction entries!")
+
+    cleanedInteractionData = remove_duplicates(fixedInteractionData)
+
+    if (len(fixedInteractionData) > len(cleanedInteractionData)):
+        print(
+            f"Removed {len(fixedInteractionData) - len(cleanedInteractionData)} duplicate interaction entries.")
+
+    refinedInteractionData = process_scrolling(cleanedInteractionData)
+    refinedInteractionData = combine_edits(refinedInteractionData)
+    refinedInteractionData = process_jumps(refinedInteractionData)
+
+    return refinedInteractionData
+
+
+# Analysis
+
+def splitInteractionsByTask(interactionData):
+    trackingToggles = [
+        interaction for interaction in interactionData if interaction["interactionType"] == "toggleTracking"]
+
+    if len(trackingToggles) == 0:
+        firstSessionInteractions = interactionData
+        secondSessionInteractions = []
+    elif len(trackingToggles) == 2 or len(trackingToggles) == 4:
+        trackingTogglesEncountered = 0
+        firstSessionInteractions = []
+        secondSessionInteractions = []
+        for interaction in interactionData:
+            if interaction["interactionType"] == "toggleTracking":
+                trackingTogglesEncountered += 1
+            elif trackingTogglesEncountered == 1:
+                firstSessionInteractions.append(interaction)
+            elif trackingTogglesEncountered == 3:
+                secondSessionInteractions.append(interaction)
+    else:
+        raise Exception(
+            "Unexpected number of toggles encountered! Unable to analyze data.")
+
+    return firstSessionInteractions, secondSessionInteractions
+
+
+def countInteractions(interactions):
+    interactionCounts = defaultdict(int)
+
+    for interaction in interactions:
+        interactionCounts[interaction["interactionType"]] += 1
+
+    return interactionCounts
+
+
+def getScrollingDistance(interactions):
+    scrollingDistance = 0
+
+    for interaction in interactions:
+        if interaction["interactionType"] != "Scroll":
+            continue
+
+        rangeData = parseRanges(interaction)
+        direction = rangeChangeDirection(interaction)
+
+        upperBorderChange = abs(rangeData[0][0] - rangeData[1][0])
+        lowerBorderChange = abs(rangeData[0][1] - rangeData[1][1])
+        scrollingDistance += max(upperBorderChange, lowerBorderChange)
+
+    return scrollingDistance
 
 
 # Data Loading
