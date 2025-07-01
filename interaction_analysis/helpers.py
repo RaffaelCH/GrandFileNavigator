@@ -51,7 +51,7 @@ def rangeChangeDirection(interaction):
     if ranges[0][0] < ranges[1][0] or ranges[0][1] < ranges[1][1]:
         return 1
     if ranges[0][0] > ranges[1][0] or ranges[0][1] > ranges[1][1]:
-        return 1
+        return -1
     return 0
 
 
@@ -87,16 +87,6 @@ def process_scrolling(interactionData):
             changeRangesInteraction = copy.deepcopy(interaction)
             continue
 
-        previousInteractionDirection = int(changeRangesInteraction["sourceRange"].split(
-            "-")[0]) < int(changeRangesInteraction["targetRange"].split("-")[0])
-        currentInteractionDirection = int(interaction["sourceRange"].split(
-            "-")[0]) < int(interaction["targetRange"].split("-")[0])
-
-        if previousInteractionDirection != currentInteractionDirection:
-            scrollingInteractionData.append(changeRangesInteraction)
-            changeRangesInteraction = copy.deepcopy(interaction)
-            continue
-
         isScrollInteraction = changeRangesInteraction["interactionType"] == "Scroll"
         lastInteractionEndTime = changeRangesInteraction[
             "endTime"] if isScrollInteraction else changeRangesInteraction["timeStamp"]
@@ -116,6 +106,24 @@ def process_scrolling(interactionData):
         scrollingInteractionData.append(changeRangesInteraction)
 
     return scrollingInteractionData
+
+
+def remove_micronavigations(interactionData):
+    """
+        Remove isolated range changes of 1-2 lines (after processing scrolling).
+        They can occur due to automated formatting or edits made.
+    """
+
+    cleanedData = []
+
+    for interaction in interactionData:
+        if interaction["interactionType"] == "ChangeVisibleRanges" or interaction["interactionType"] == "Scroll":
+            ranges = parseRanges(interaction)
+            if (abs(ranges[0][0] - ranges[1][0]) < 3 and abs(ranges[0][1] - ranges[1][1]) < 3):
+                continue
+        cleanedData.append(interaction)
+
+    return cleanedData
 
 
 # Each edit is tracked separately. An uninterrupted writing session is combined into one entry.
@@ -199,7 +207,8 @@ def refineInteractionData(interactionData):
         print(
             f"Removed {len(fixedInteractionData) - len(cleanedInteractionData)} duplicate interaction entries.")
 
-    refinedInteractionData = process_scrolling(cleanedInteractionData)
+    scrollingInteractionData = process_scrolling(cleanedInteractionData)
+    refinedInteractionData = remove_micronavigations(scrollingInteractionData)
     refinedInteractionData = combine_edits(refinedInteractionData)
     refinedInteractionData = process_jumps(refinedInteractionData)
 
