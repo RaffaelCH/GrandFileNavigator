@@ -5,3 +5,5 @@ P4 - T1 with, T2 without (only T1 tracked)
 P5 - T1 without, T2 with
 P6 - T2 without, T1 with
 P7 - T2 without, T1 with (TODO: Check start/stop)
+P8 - T2 with, T1 without
+P9 - T1 without, T2 with (TODO: Check start/stop)
