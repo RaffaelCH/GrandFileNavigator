@@ -1,11 +1,31 @@
-# Cleanup
-
+from enum import Enum
 from collections import defaultdict
 import json
 import glob
 import os
 import copy
 
+
+# Structuring
+
+class TaskOrder(Enum):
+    T1T2 = 0
+    T2T1 = 1
+
+
+class EvaluationTask(Enum):
+    T1 = 0
+    T2 = 1
+
+
+class EvaluationData:
+    def __init__(self, name, taskOrder, evalTask):
+        self.name = name
+        self.taskOrder = taskOrder
+        self.evalTask = evalTask
+
+
+# Cleanup
 
 def remove_erroneous(interactionData):
     fixedInteractionData = []
@@ -253,6 +273,25 @@ def countInteractions(interactions):
 
 def getScrollingDistance(interactions):
     scrollingDistance = 0
+
+    for interaction in interactions:
+        if interaction["interactionType"] != "Scroll":
+            continue
+
+        rangeData = parseRanges(interaction)
+        direction = rangeChangeDirection(interaction)
+
+        upperBorderChange = abs(rangeData[0][0] - rangeData[1][0])
+        lowerBorderChange = abs(rangeData[0][1] - rangeData[1][1])
+        scrollingDistance += max(upperBorderChange, lowerBorderChange)
+
+    return scrollingDistance
+
+
+def getScrollingMetrics(interactions):
+    scrollingDistance = 0
+    # TODO: Get time for all navigations? Check for gaps to include in this time.
+    scrollingTime = 0
 
     for interaction in interactions:
         if interaction["interactionType"] != "Scroll":

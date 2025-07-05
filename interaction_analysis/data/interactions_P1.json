@@ -1692,5 +1692,4 @@
 {"timeStamp":1747774014947,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\WishList.java","sourceRange":"47-80","targetRange":"50-82"}
 {"timeStamp":1747774014981,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\WishList.java","sourceRange":"50-82","targetRange":"52-85"}
 {"timeStamp":1747774015009,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\WishList.java","sourceRange":"52-85","targetRange":"55-87"}
-{"timeStamp":1747774283361,"interactionType":"ChangeSidebarVisibility","isVisible":true}
-{"timeStamp":1747774304153,"interactionType":"ChangeSidebarVisibility","isVisible":false}
+{"timeStamp":1747774016109,"interactionType":"toggleTracking"}
