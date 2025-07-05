@@ -1,4 +1,5 @@
-{"timeStamp":1748977940463,"interactionType":"ChangeSidebarVisibility","isVisible":false}
+{"timeStamp":1748978078264,"interactionType":"toggleTracking"}
+{"timeStamp":1748978079001,"interactionType":"ChangeSidebarVisibility","isVisible":false}
 {"timeStamp":1748978080031,"interactionType":"ChangeFile","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\services\\EmailService.java","sourceRange":"51-85","targetFilePath":"","targetRange":""}
 {"timeStamp":1748978080134,"interactionType":"ChangeFile","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\WishList.java","sourceRange":"0-34","targetFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\WishList.java","targetRange":"0-34"}
 {"timeStamp":1748978080147,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\WishList.java","sourceRange":"0-34","targetRange":"45-77"}
@@ -913,6 +914,7 @@
 {"timeStamp":1748979623920,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\User.java","sourceRange":"61-95","targetRange":"63-96"}
 {"timeStamp":1748979623922,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\User.java","sourceRange":"63-96","targetRange":"61-95"}
 {"timeStamp":1748979623924,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\User.java","sourceRange":"61-95","targetRange":"69-102"}
+{"timeStamp":1748979625924,"interactionType":"toggleTracking"}
 {"timeStamp":1748979627569,"interactionType":"ChangeFile","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\User.java","sourceRange":"69-102","targetFilePath":"","targetRange":""}
 {"timeStamp":1748979645548,"interactionType":"ChangeFile","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\test\\java\\com\\ecommerce\\backend\\EcommerceBackendApplicationTests.java","sourceRange":"0-34","targetFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\test\\java\\com\\ecommerce\\backend\\EcommerceBackendApplicationTests.java","targetRange":"0-34"}
 {"timeStamp":1748979645575,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\test\\java\\com\\ecommerce\\backend\\EcommerceBackendApplicationTests.java","sourceRange":"0-34","targetRange":"244-277"}
@@ -1710,7 +1712,4 @@
 {"timeStamp":1748981081520,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\User.java","sourceRange":"32-65","targetRange":"29-63"}
 {"timeStamp":1748981081552,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\User.java","sourceRange":"29-63","targetRange":"27-60"}
 {"timeStamp":1748981084882,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\User.java","sourceRange":"27-60","targetRange":"29-63"}
-{"timeStamp":1748981399721,"interactionType":"ChangeSidebarVisibility","isVisible":true}
-{"timeStamp":1748981421863,"interactionType":"SwitchView","targetView":"hotspots"}
-{"timeStamp":1748981421880,"interactionType":"ChangeVisibleRanges","sourceFilePath":"c:\\Users\\evaluator\\mon-e-commerce\\moon-e-commerce\\Backend\\EcommerceBackend\\src\\main\\java\\com\\ecommerce\\backend\\models\\User.java","sourceRange":"29-63","targetRange":"undefined-undefined"}
-{"timeStamp":1748981422620,"interactionType":"toggleTracking"}
+{"timeStamp":1748981087842,"interactionType":"toggleTracking"}
