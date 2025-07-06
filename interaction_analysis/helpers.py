@@ -27,6 +27,33 @@ class EvaluationData:
 
 # Cleanup
 
+def fix_change_file_interactions(interactionData):
+    fixedInteractions = []
+
+    i = 0
+    while i < len(interactionData):
+        # ChangeFile interactions are split up into two interactions, containing source and target info.
+        if interactionData[i]["interactionType"] == "ChangeFile" and interactionData[i + 1]["interactionType"] == "ChangeFile":
+            fileTargetInteraction = interactionData[i + 1]
+            newInteraction = copy.deepcopy(interactionData[i])
+            newInteraction["targetFilePath"] = fileTargetInteraction["targetFilePath"]
+            newInteraction["targetRange"] = fileTargetInteraction["targetRange"]
+
+            # visible range after file change is initially 0, then jumps to actual range
+            followupInteraction = interactionData[i+2]
+            if followupInteraction["interactionType"] == "ChangeVisibleRanges" and followupInteraction["timeStamp"] - fileTargetInteraction["timeStamp"] < 100:
+                newInteraction["targetRange"] = followupInteraction["targetRange"]
+                i += 1
+
+            fixedInteractions.append(newInteraction)
+            i += 2
+        else:
+            fixedInteractions.append(interactionData[i])
+            i += 1
+
+    return fixedInteractions
+
+
 def remove_erroneous(interactionData):
     fixedInteractionData = []
 
@@ -128,6 +155,22 @@ def process_scrolling(interactionData):
     return scrollingInteractionData
 
 
+def identify_unknown_jumps(interactionData):
+    """VS Code offers ways to jump that aren't tracked -> treat them separately"""
+    refactoredData = []
+
+    for interaction in interactionData:
+        if interaction["interactionType"] == "ChangeVisibleRanges":
+            ranges = parseRanges(interaction)
+            if (abs(ranges[0][0] - ranges[1][0]) > 50 and abs(ranges[0][1] - ranges[1][1]) > 50):
+                jumpInteraction = copy.deepcopy(interaction)
+                jumpInteraction["interactionType"] = "UnknownJump"
+                interaction = jumpInteraction
+        refactoredData.append(interaction)
+
+    return refactoredData
+
+
 def remove_micronavigations(interactionData):
     """
         Remove isolated range changes of 1-2 lines (after processing scrolling).
@@ -215,7 +258,11 @@ def process_jumps(interactionData):
 
 
 def refineInteractionData(interactionData):
-    fixedInteractionData = remove_erroneous(interactionData)
+    interactionData = [copy.deepcopy(interaction)
+                       for interaction in interactionData]
+
+    fixedInteractionData = fix_change_file_interactions(interactionData)
+    fixedInteractionData = remove_erroneous(fixedInteractionData)
 
     if (len(interactionData) > len(fixedInteractionData)):
         print(
@@ -227,7 +274,8 @@ def refineInteractionData(interactionData):
         print(
             f"Removed {len(fixedInteractionData) - len(cleanedInteractionData)} duplicate interaction entries.")
 
-    scrollingInteractionData = process_scrolling(cleanedInteractionData)
+    jumpsInteractionData = identify_unknown_jumps(cleanedInteractionData)
+    scrollingInteractionData = process_scrolling(jumpsInteractionData)
     refinedInteractionData = remove_micronavigations(scrollingInteractionData)
     refinedInteractionData = combine_edits(refinedInteractionData)
     refinedInteractionData = process_jumps(refinedInteractionData)
