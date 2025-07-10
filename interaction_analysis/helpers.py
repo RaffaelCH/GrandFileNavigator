@@ -171,7 +171,7 @@ def identify_unknown_jumps(interactionData):
     return refactoredData
 
 
-def remove_micronavigations(interactionData):
+def remove_micronavigations(interactionData, min_line_change=3):
     """
         Remove isolated range changes of 1-2 lines (after processing scrolling).
         They can occur due to automated formatting or edits made.
@@ -182,7 +182,7 @@ def remove_micronavigations(interactionData):
     for interaction in interactionData:
         if interaction["interactionType"] == "ChangeVisibleRanges" or interaction["interactionType"] == "Scroll":
             ranges = parseRanges(interaction)
-            if (abs(ranges[0][0] - ranges[1][0]) < 3 and abs(ranges[0][1] - ranges[1][1]) < 3):
+            if (abs(ranges[0][0] - ranges[1][0]) < min_line_change and abs(ranges[0][1] - ranges[1][1]) < min_line_change):
                 continue
         cleanedData.append(interaction)
 
