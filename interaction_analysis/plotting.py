@@ -1,3 +1,4 @@
+import copy
 import matplotlib
 import matplotlib.pyplot as plt
 from helpers import remove_micronavigations
@@ -88,6 +89,7 @@ def convert_interactions(interactions):
 
 
 def plot_interactions(interactions, extension_active):
+    interactions = copy.deepcopy(interactions)
     interactions = preprocess_interactions(interactions)
     sidebar_range_interactions = convert_sidebar_toggles_to_range(
         interactions, extension_active)
