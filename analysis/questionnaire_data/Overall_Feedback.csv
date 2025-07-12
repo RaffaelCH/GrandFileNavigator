@@ -1,0 +1,22 @@
+ID;Start time;Completion time;Email;Name;Last modified time;What is your current occupation?;How many years of experience do you have in writing Java code at least weekly? ;How experienced are you with using VS Code for Software Development?;In general, I think the extension would help me to find relevant locations in the code for the first time.;In general, I think the extension would help me to find again already visited code locations.;In general, I think the extension would help me to keep track of relevant code locations.;In general, I think the extension would reduce my time to navigate to other relevant code locations.;In general, I think the extension would help me to retain my thought process or concentration when (trying to) navigate to relevant code locations.;I liked using the extension.;I would use the navigation part of the extension again.;I would use the histogram part of the extension again.;I would use the method view of the extension again.;Do you have any other feedback or comment?
+P1;5.20.25 23:20:38;5.20.25 23:22:37;anonymous;;;software developer;15;No experience;Agree;Strongly agree;Neutral;Strongly agree;Agree;Strongly agree;Strongly agree;Neutral;Agree;I found the jumping back and forth from keyboard the most handy.
+P2;5.26.25 21:16:27;5.26.25 21:18:09;anonymous;;;software developer;25;No experience;Strongly disagree;Strongly disagree;Strongly disagree;Strongly disagree;Strongly disagree;Neutral;Strongly disagree;Neutral;Neutral;maybe you can try with Intellij ?
+P3;5.28.25 21:38:27;5.28.25 21:39:51;anonymous;;;CTO;0;Intermediate;Disagree;Agree;Agree;Agree;Strongly agree;Agree;Neutral;Strongly agree;Agree;
+P4;5.31.25 15:04:37;5.31.25 15:11:17;anonymous;;;Software Engineer;1;Beginner;Strongly agree;Neutral;Neutral;Strongly agree;Agree;Strongly agree;Strongly agree;Neutral;Neutral;"I'd love to see a list of the locations, for example last 6 and next 6, instead of the histogram. Like a table:
+
+3: FileX.java methodNameC()
+2: FileX.java methodNameB()
+1: FileX.java methodNameA()
+-----
+1: FileZ.java methodNameA()
+2: FileZ.java methodNameB()
+3: FileZ.java methodNameC()
+
+Then you can press the shortcut that you use to jump forward or backwards plus a number and you get to that point.
+
+I think the extension is super handy, you don't need to use the mouse to navigate in the codebase. That's a great plus."
+P5;6.3.25 22:07:10;6.3.25 22:08:11;anonymous;;;IT specialist;0;Advanced;Agree;Strongly agree;Strongly agree;Strongly agree;Strongly agree;;Strongly agree;Neutral;Neutral;
+P6;6.23.25 10:59:40;6.23.25 11:23:32;anonymous;;;Student;2;Intermediate;Strongly disagree;Agree;Agree;Neutral;Neutral;Agree;Disagree;Agree;Agree;
+P7;6.24.25 21:34:48;6.24.25 21:38:41;anonymous;;;Student;approx. 1 Year;No experience;Disagree;Agree;Strongly agree;Disagree;Agree;Neutral;Agree;Neutral;Agree;I forgot to use the other method unfortunately. I think maybe my feedback would look differently, if I had used not only the histogram method.
+P9;6.30.25 20:58:21;6.30.25 21:02:56;anonymous;;;IT Analyst;0;Beginner;Agree;Agree;Agree;Agree;Agree;Agree;Agree;Agree;Agree;Would be nice to have a help menu to introduce users into the functionalities of the extension, a product demo video would be desired. 
+P8;7.3.25 14:34:51;7.3.25 14:47:01;anonymous;;;Software Engineer;(.NET) 8 Years;Advanced;Neutral;Strongly agree;Agree;Neutral;Agree;Agree;Agree;Agree;Agree;

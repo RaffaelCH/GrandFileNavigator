@@ -1,7 +1,7 @@
 import copy
 import matplotlib
 import matplotlib.pyplot as plt
-from helpers import remove_micronavigations
+from .helpers import remove_micronavigations
 
 step_size = 100  # plot step size in ms
 

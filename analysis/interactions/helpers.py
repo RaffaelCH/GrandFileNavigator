@@ -1,28 +1,8 @@
-from enum import Enum
 from collections import defaultdict
 import json
 import glob
 import os
 import copy
-
-
-# Structuring
-
-class TaskOrder(Enum):
-    T1T2 = 0
-    T2T1 = 1
-
-
-class EvaluationTask(Enum):
-    T1 = 0
-    T2 = 1
-
-
-class EvaluationData:
-    def __init__(self, name, taskOrder, evalTask):
-        self.name = name
-        self.taskOrder = taskOrder
-        self.evalTask = evalTask
 
 
 # Cleanup
