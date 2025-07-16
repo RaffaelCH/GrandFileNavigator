@@ -335,6 +335,61 @@ def getScrollingMetrics(interactions):
     return scrollingDistance
 
 
+def approximateNavigationTime(interactions):
+    navigationTime = 0
+    isNavigating = False
+    lastNavigationStartTime = 0
+    lastNavigationEndTime = 0
+
+    navigationInteractions = ["NavigationJump", "Scroll",
+                              "UnknownJump", "ChangeVisibleRanges", "ChangeFile"]
+    for interaction in interactions:
+        # interruptions of < 1s are ignored
+        if interaction["timeStamp"] - lastNavigationEndTime > 1000:
+            # navigations take at least 0.5s
+            navigationTime += max((lastNavigationEndTime -
+                                  lastNavigationStartTime), 500)
+            isNavigating = False
+        if interaction["interactionType"] in navigationInteractions:
+            if not isNavigating:
+                isNavigating = True
+                lastNavigationStartTime = interaction[
+                    "startTime"] if "startTime" in interaction else interaction["timeStamp"]
+            lastNavigationEndTime = interaction["endTime"] if "endTime" in interaction else interaction["timeStamp"]
+    if isNavigating:
+        endTime = interactions[-1]["endTime"] if "endTime" in interactions[-1] else interactions[-1]["timeStamp"]
+        navigationTime += (endTime - lastNavigationStartTime)
+
+    return navigationTime
+
+
+def approximateEditingTime(interactions):
+    editingTime = 0
+    isEditing = False
+    lastEditStartTime = 0
+    lastEditEndTime = 0
+
+    editInteractions = ["EditFile", "EditingSession"]
+    for interaction in interactions:
+        # interruptions of < 1s are ignored
+        if interaction["timeStamp"] - lastEditEndTime > 1000:
+            if isEditing:
+                # edits take at least 0.5s
+                editingTime += max((lastEditEndTime - lastEditStartTime), 500)
+            isEditing = False
+        if interaction["interactionType"] in editInteractions:
+            if not isEditing:
+                isEditing = True
+                lastEditStartTime = interaction[
+                    "startTime"] if "startTime" in interaction else interaction["timeStamp"]
+            lastEditEndTime = interaction["endTime"] if "endTime" in interaction else interaction["timeStamp"]
+    if isEditing:
+        endTime = interactions[-1]["endTime"] if "endTime" in interactions[-1] else interactions[-1]["timeStamp"]
+        editingTime += (endTime - lastEditStartTime)
+
+    return editingTime
+
+
 # Data Loading
 
 def get_newest_file(directory, startsWith="interactions_"):
