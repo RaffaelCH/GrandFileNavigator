@@ -82,6 +82,7 @@ export class InteractionTracker {
     fs.appendFileSync(this.storageLocation, `${stringified}\n`);
   }
 
+  // TODO: Connect to histogram clicks.
   public static clickHistogram(
     sourceFilePath: string | undefined,
     sourceRange: vscode.Range | undefined,

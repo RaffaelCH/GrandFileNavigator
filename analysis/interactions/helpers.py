@@ -49,13 +49,36 @@ def remove_erroneous(interactionData):
 
 
 def remove_duplicates(interactionData):
-    cleanedInteractionData = []
+    dedupedInteractionData = []
 
-    i = 0
-    while i < len(interactionData):
+    for i in range(len(interactionData)):
         if i == len(interactionData) - 1 or interactionData[i] != interactionData[i+1]:
-            cleanedInteractionData.append(interactionData[i])
-        i += 1
+            dedupedInteractionData.append(interactionData[i])
+
+    cleanedInteractionData = []
+    interactionDelay = 50  # max time in ms in which entries are considered duplicates
+
+    lastInteraction = dedupedInteractionData[0]
+    for i in range(len(dedupedInteractionData)):
+        timeDifference = dedupedInteractionData[i]["timeStamp"] - \
+            lastInteraction["timeStamp"]
+
+        if timeDifference > interactionDelay:
+            cleanedInteractionData.append(lastInteraction)
+            lastInteraction = dedupedInteractionData[i]
+            continue
+
+        currentUntimedInteraction = copy.deepcopy(dedupedInteractionData[i])
+        del currentUntimedInteraction["timeStamp"]
+        lastUntimedInteraction = copy.deepcopy(lastInteraction)
+        del lastUntimedInteraction["timeStamp"]
+        if json.dumps(lastUntimedInteraction) == json.dumps(currentUntimedInteraction):
+            lastInteraction = dedupedInteractionData[i]
+        else:
+            cleanedInteractionData.append(lastInteraction)
+            lastInteraction = dedupedInteractionData[i]
+
+    cleanedInteractionData.append(lastInteraction)
 
     return cleanedInteractionData
 
@@ -80,6 +103,35 @@ def rangeChangeDirection(interaction):
     if ranges[0][0] > ranges[1][0] or ranges[0][1] > ranges[1][1]:
         return -1
     return 0
+
+
+def rangesOverlap(rangeOne, rangeTwo):
+    rangeOneStart = int(rangeOne.split("-")[0])
+    rangeOneEnd = int(rangeOne.split("-")[1])
+    rangeTwoStart = int(rangeTwo.split("-")[0])
+    rangeTwoEnd = int(rangeTwo.split("-")[1])
+
+    # one range contained in other
+    if rangeOneStart < rangeTwoStart and rangeOneEnd > rangeTwoEnd:
+        return True
+    if rangeTwoStart < rangeOneStart and rangeTwoEnd > rangeOneEnd:
+        return True
+
+    rangeOneBeforeRangeTwo = rangeOneStart < rangeTwoStart
+
+    # no overlap
+    if rangeOneBeforeRangeTwo and rangeOneEnd < rangeTwoStart:
+        return False
+    if not rangeOneBeforeRangeTwo and rangeTwoEnd < rangeOneStart:
+        return False
+
+    if rangeOneBeforeRangeTwo:
+        overlap = rangeOneEnd - rangeTwoStart + 1
+    else:
+        overlap = rangeTwoStart - rangeOneEnd + 1
+
+    rangeSizes = min(rangeOneEnd - rangeOneStart, rangeTwoEnd - rangeTwoStart)
+    return overlap / rangeSizes > 0.75
 
 
 def process_scrolling(interactionData):
@@ -135,15 +187,19 @@ def process_scrolling(interactionData):
     return scrollingInteractionData
 
 
-def identify_unknown_jumps(interactionData):
-    """VS Code offers ways to jump that aren't tracked -> treat them separately"""
+def identify_histogram_jumps(interactionData):
+    """Histogram jumps were mixed together with general navigation -> identify them"""
     refactoredData = []
 
     for interaction in interactionData:
         if interaction["interactionType"] == "ChangeVisibleRanges":
             ranges = parseRanges(interaction)
-            if (abs(ranges[0][0] - ranges[1][0]) > 50 and abs(ranges[0][1] - ranges[1][1]) > 50):
+            if (abs(ranges[0][0] - ranges[1][0]) > 30 and abs(ranges[0][1] - ranges[1][1]) > 0):
                 jumpInteraction = copy.deepcopy(interaction)
+                # jumpInteraction["interactionType"] = "NavigationJump"
+                # jumpInteraction["origin"] = "Visualization"
+                # jumpInteraction["backwards"] = True  # simplifies code
+                # jumpInteraction["targetFilePath"] = jumpInteraction["sourceFilePath"]
                 jumpInteraction["interactionType"] = "UnknownJump"
                 interaction = jumpInteraction
         refactoredData.append(interaction)
@@ -214,12 +270,34 @@ def process_jumps(interactionData):
     i = 0
     while i < len(interactionData):
         if interactionData[i]["interactionType"] in navigationInteractions:
-            triggeredByUiInteraction = interactionData[i]["interactionType"] != "NavigationJump"
-            jumpEntryIndex = i+2 if triggeredByUiInteraction else i+1
+            additionalInteractions = 1 if interactionData[i]["interactionType"] != "NavigationJump" else 0
 
+            if (i + additionalInteractions + 1 >= len(interactionData)):
+                additionalInteractions = 0
+            else:
+                nextInteraction = interactionData[i +
+                                                  additionalInteractions + 1]
+
+            jumpInSameFile = nextInteraction["interactionType"] != "ChangeFile"
+
+            if not jumpInSameFile:
+                additionalInteractions += 1
+                nextInteraction = interactionData[i +
+                                                  additionalInteractions + 1]
+
+            viewAdjustment = (nextInteraction["interactionType"] == "ChangeVisibleRanges" or nextInteraction["interactionType"] ==
+                              "UnknownJump") and interactionData[i + additionalInteractions]["sourceRange"] == nextInteraction["sourceRange"]
+
+            if viewAdjustment:
+                additionalInteractions += 1
+
+            jumpEntryIndex = i + additionalInteractions
             combinedEntry = interactionData[jumpEntryIndex]
             combinedEntry["interactionType"] = "NavigationJump"
             combinedEntry["backwards"] = interactionData[i]["backwards"]
+
+            if jumpInSameFile:
+                combinedEntry["targetFilePath"] = combinedEntry["sourceFilePath"]
 
             if interactionData[i]["interactionType"] == "ClickJumpButton":
                 combinedEntry["origin"] = "SidebarButton"
@@ -228,8 +306,15 @@ def process_jumps(interactionData):
             else:
                 combinedEntry["origin"] = "KeyboardShortcut"
 
+            if "targetRange" not in combinedEntry:
+                if "sourceRange" in interactionData[jumpEntryIndex + 1]:
+                    combinedEntry["targetRange"] = interactionData[jumpEntryIndex + 1]["sourceRange"]
+                else:
+                    combinedEntry["targetRange"] = str(
+                        combinedEntry["targetLine"]) + "-" + str(combinedEntry["targetLine"])
+
             jumpInteractionData.append(combinedEntry)
-            i += 3 if triggeredByUiInteraction else 2
+            i = jumpEntryIndex + 1
         else:
             jumpInteractionData.append(interactionData[i])
             i += 1
@@ -254,7 +339,7 @@ def refineInteractionData(interactionData):
         print(
             f"Removed {len(fixedInteractionData) - len(cleanedInteractionData)} duplicate interaction entries.")
 
-    jumpsInteractionData = identify_unknown_jumps(cleanedInteractionData)
+    jumpsInteractionData = identify_histogram_jumps(cleanedInteractionData)
     scrollingInteractionData = process_scrolling(jumpsInteractionData)
     refinedInteractionData = remove_micronavigations(scrollingInteractionData)
     refinedInteractionData = combine_edits(refinedInteractionData)
@@ -307,8 +392,6 @@ def getScrollingDistance(interactions):
             continue
 
         rangeData = parseRanges(interaction)
-        direction = rangeChangeDirection(interaction)
-
         upperBorderChange = abs(rangeData[0][0] - rangeData[1][0])
         lowerBorderChange = abs(rangeData[0][1] - rangeData[1][1])
         scrollingDistance += max(upperBorderChange, lowerBorderChange)
