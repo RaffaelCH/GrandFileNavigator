@@ -418,17 +418,19 @@ def getScrollingMetrics(interactions):
     return scrollingDistance
 
 
-def approximateNavigationTime(interactions):
+def approximateNavigationTime(interactions, interactionToIgnore=[]):
     navigationTime = 0
     isNavigating = False
     lastNavigationStartTime = 0
     lastNavigationEndTime = 0
 
-    navigationInteractions = ["NavigationJump", "Scroll",
-                              "UnknownJump", "ChangeVisibleRanges", "ChangeFile"]
+    navigationInteractions = ["NavigationJump", "ChangeFile"]
+    navigationInteractions = [
+        i for i in navigationInteractions if i not in interactionToIgnore]
+
     for interaction in interactions:
         # interruptions of < 1s are ignored
-        if interaction["timeStamp"] - lastNavigationEndTime > 1000:
+        if interaction["timeStamp"] - lastNavigationEndTime > 1000 and isNavigating:
             # navigations take at least 0.5s
             navigationTime += max((lastNavigationEndTime -
                                   lastNavigationStartTime), 500)
