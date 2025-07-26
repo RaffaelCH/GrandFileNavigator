@@ -3,7 +3,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from .helpers import remove_micronavigations
 
-step_size = 100  # plot step size in ms
 
 relevant_interaction_types = ["Scroll", "ChangeVisibleRanges", "ChangeFile",
                               "EditFile", "EditingSession", "NavigationJump", "SidebarVisible"]
@@ -82,7 +81,7 @@ def convert_interactions(interactions):
         elif 'timeStamp' in item:
             point_interactions.append({
                 'type': item['interactionType'],
-                'time': item['timeStamp'] / step_size
+                'time': item['timeStamp']
             })
 
     return point_interactions, duration_interactions
@@ -116,13 +115,8 @@ def plot_interactions(interactions, extension_active):
         relevant = [d for d in duration_interactions if d['type'] == i_type]
         for i, d in enumerate(relevant):
             start, end = d['start'], d['end']
-            if end - start < step_size:
-                if (start + end) > step_size:
-                    end += step_size
-                else:
-                    start -= step_size
             ax.plot(
-                [start / step_size, end / step_size],
+                [start, end],
                 [i_type, i_type],
                 linewidth=6,
                 color=type_to_color[i_type],
@@ -130,7 +124,7 @@ def plot_interactions(interactions, extension_active):
             )
 
     # Formatting
-    ax.set_xlabel("Time (0.1s)")
+    ax.set_xlabel("Time (s)")
     ax.set_ylabel("Interaction Type")
     ax.legend(
         title="Interaction Type",
@@ -138,6 +132,9 @@ def plot_interactions(interactions, extension_active):
         loc='upper left',
         borderaxespad=0
     )
+    xticks = plt.gca().get_xticks()[1:]
+    xtick_labels = [str(tick_count / 1000) for tick_count in xticks]
+    plt.xticks(xticks, xtick_labels)
     plt.title("Temporal Distribution of Interactions")
     plt.tight_layout()
     plt.show()
