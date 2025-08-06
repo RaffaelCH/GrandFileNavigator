@@ -424,7 +424,8 @@ def approximateNavigationTime(interactions, interactionToIgnore=[]):
     lastNavigationStartTime = 0
     lastNavigationEndTime = 0
 
-    navigationInteractions = ["NavigationJump", "ChangeFile"]
+    navigationInteractions = ["NavigationJump",
+                              "UnknownJump", "ChangeVisibleRanges", "ChangeFile", "Scroll"]
     navigationInteractions = [
         i for i in navigationInteractions if i not in interactionToIgnore]
 
